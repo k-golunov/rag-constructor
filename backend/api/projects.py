@@ -57,7 +57,7 @@ def _get_project_or_404(project_id: UUID, db: Session) -> Project:
 # ---------------------------------------------------------------------------
 
 @router.post(
-    "/",
+    "/provider",
     response_model=ProjectResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Создать новый проект",
@@ -83,7 +83,7 @@ def create_project(
 
 
 @router.get(
-    "/",
+    "/provider",
     response_model=ProjectListResponse,
     summary="Список всех проектов",
 )
@@ -114,7 +114,7 @@ def list_projects(
 
 
 @router.get(
-    "/{project_id}",
+    "provider/{project_id}",
     response_model=ProjectResponse,
     summary="Получить проект по ID",
 )
@@ -138,7 +138,7 @@ def get_project(
 
 
 @router.patch(
-    "/{project_id}",
+    "provider/{project_id}",
     response_model=ProjectResponse,
     summary="Обновить настройки проекта",
 )
@@ -173,7 +173,7 @@ def update_project(
 
 
 @router.delete(
-    "/{project_id}",
+    "provider/{project_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Удалить проект",
 )
