@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: rag_studio
+      POSTGRES_DB: rag_constructor
     ports:
       - "5432:5432"
     volumes:
