@@ -17,6 +17,8 @@ from fastapi.testclient import TestClient
 # Вспомогательные данные
 # ---------------------------------------------------------------------------
 
+BASE_URL = "/api/v1/public/provider/projects"
+
 VALID_PROJECT_PAYLOAD = {
     "name": "Тестовый проект",
     "chunk_size": 500,
@@ -29,7 +31,7 @@ VALID_PROJECT_PAYLOAD = {
 
 def _create_project(client: TestClient, payload: dict | None = None) -> dict:
     """Вспомогательная функция: создаёт проект и возвращает JSON-ответ."""
-    response = client.post("/projects/", json=payload or VALID_PROJECT_PAYLOAD)
+    response = client.post(f"{BASE_URL}/", json=payload or VALID_PROJECT_PAYLOAD)
     assert response.status_code == 201, response.text
     return response.json()
 
@@ -41,7 +43,7 @@ def _create_project(client: TestClient, payload: dict | None = None) -> dict:
 class TestCreateProject:
     def test_create_returns_201(self, client: TestClient):
         """Успешное создание возвращает 201 и корректное тело."""
-        response = client.post("/projects/", json=VALID_PROJECT_PAYLOAD)
+        response = client.post(f"{BASE_URL}/", json=VALID_PROJECT_PAYLOAD)
 
         assert response.status_code == 201
         data = response.json()
@@ -60,7 +62,7 @@ class TestCreateProject:
             "embedding_model": "text-embedding-3-small",
             "llm_model": "gpt-4o-mini",
         }
-        response = client.post("/projects/", json=payload)
+        response = client.post(f"{BASE_URL}/", json=payload)
 
         assert response.status_code == 201
         data = response.json()
@@ -73,21 +75,21 @@ class TestCreateProject:
             "embedding_model": "text-embedding-3-small",
             "llm_model": "gpt-4o-mini",
         }
-        response = client.post("/projects/", json=payload)
+        response = client.post(f"{BASE_URL}/", json=payload)
 
         assert response.status_code == 422
 
     def test_create_missing_embedding_model_returns_422(self, client: TestClient):
         """Отсутствие embedding_model — ошибка валидации 422."""
         payload = {"name": "Проект", "llm_model": "gpt-4o-mini"}
-        response = client.post("/projects/", json=payload)
+        response = client.post(f"{BASE_URL}/", json=payload)
 
         assert response.status_code == 422
 
     def test_create_chunk_size_too_small_returns_422(self, client: TestClient):
         """chunk_size < 100 не проходит валидацию."""
         payload = {**VALID_PROJECT_PAYLOAD, "chunk_size": 10}
-        response = client.post("/projects/", json=payload)
+        response = client.post(f"{BASE_URL}/", json=payload)
 
         assert response.status_code == 422
 
@@ -99,7 +101,7 @@ class TestCreateProject:
 class TestListProjects:
     def test_list_empty_db(self, client: TestClient):
         """Пустая БД — возвращает total=0 и пустой список."""
-        response = client.get("/projects/")
+        response = client.get(f"{BASE_URL}/")
 
         assert response.status_code == 200
         data = response.json()
@@ -111,7 +113,7 @@ class TestListProjects:
         _create_project(client, {**VALID_PROJECT_PAYLOAD, "name": "Проект 1"})
         _create_project(client, {**VALID_PROJECT_PAYLOAD, "name": "Проект 2"})
 
-        response = client.get("/projects/")
+        response = client.get(f"{BASE_URL}/")
 
         assert response.status_code == 200
         data = response.json()
@@ -123,7 +125,7 @@ class TestListProjects:
         for i in range(5):
             _create_project(client, {**VALID_PROJECT_PAYLOAD, "name": f"Проект {i}"})
 
-        response = client.get("/projects/?skip=2&limit=2")
+        response = client.get(f"{BASE_URL}/?skip=2&limit=2")
 
         assert response.status_code == 200
         data = response.json()
@@ -141,7 +143,7 @@ class TestGetProject:
         created = _create_project(client)
         project_id = created["id"]
 
-        response = client.get(f"/projects/{project_id}")
+        response = client.get(f"{BASE_URL}/{project_id}")
 
         assert response.status_code == 200
         assert response.json()["id"] == project_id
@@ -150,7 +152,7 @@ class TestGetProject:
     def test_get_nonexistent_project_returns_404(self, client: TestClient):
         """Несуществующий UUID — 404."""
         fake_id = "00000000-0000-0000-0000-000000000000"
-        response = client.get(f"/projects/{fake_id}")
+        response = client.get(f"{BASE_URL}/{fake_id}")
 
         assert response.status_code == 404
         assert "не найден" in response.json()["detail"]
@@ -167,7 +169,7 @@ class TestUpdateProject:
         project_id = created["id"]
 
         response = client.patch(
-            f"/projects/{project_id}",
+            f"{BASE_URL}/{project_id}",
             json={"name": "Новое название"},
         )
 
@@ -184,7 +186,7 @@ class TestUpdateProject:
         project_id = created["id"]
 
         response = client.patch(
-            f"/projects/{project_id}",
+            f"{BASE_URL}/{project_id}",
             json={
                 "chunk_size": 1000,
                 "chunk_overlap": 200,
@@ -203,7 +205,7 @@ class TestUpdateProject:
         created = _create_project(client)
         project_id = created["id"]
 
-        response = client.patch(f"/projects/{project_id}", json={})
+        response = client.patch(f"{BASE_URL}/{project_id}", json={})
 
         assert response.status_code == 200
         data = response.json()
@@ -213,7 +215,7 @@ class TestUpdateProject:
     def test_update_nonexistent_project_returns_404(self, client: TestClient):
         """PATCH несуществующего проекта — 404."""
         fake_id = "00000000-0000-0000-0000-000000000000"
-        response = client.patch(f"/projects/{fake_id}", json={"name": "X"})
+        response = client.patch(f"{BASE_URL}/{fake_id}", json={"name": "X"})
 
         assert response.status_code == 404
 
@@ -228,7 +230,7 @@ class TestDeleteProject:
         created = _create_project(client)
         project_id = created["id"]
 
-        response = client.delete(f"/projects/{project_id}")
+        response = client.delete(f"{BASE_URL}/{project_id}")
 
         assert response.status_code == 204
         assert response.content == b""  # тело пустое
@@ -238,8 +240,8 @@ class TestDeleteProject:
         created = _create_project(client)
         project_id = created["id"]
 
-        client.delete(f"/projects/{project_id}")
-        response = client.get(f"/projects/{project_id}")
+        client.delete(f"{BASE_URL}/{project_id}")
+        response = client.get(f"{BASE_URL}/{project_id}")
 
         assert response.status_code == 404
 
@@ -248,9 +250,9 @@ class TestDeleteProject:
         _create_project(client, {**VALID_PROJECT_PAYLOAD, "name": "Оставить"})
         to_delete = _create_project(client, {**VALID_PROJECT_PAYLOAD, "name": "Удалить"})
 
-        client.delete(f"/projects/{to_delete['id']}")
+        client.delete(f"{BASE_URL}/{to_delete['id']}")
 
-        response = client.get("/projects/")
+        response = client.get(f"{BASE_URL}/")
         data = response.json()
         assert data["total"] == 1
         assert data["items"][0]["name"] == "Оставить"
@@ -258,6 +260,6 @@ class TestDeleteProject:
     def test_delete_nonexistent_project_returns_404(self, client: TestClient):
         """DELETE несуществующего UUID — 404."""
         fake_id = "00000000-0000-0000-0000-000000000000"
-        response = client.delete(f"/projects/{fake_id}")
+        response = client.delete(f"{BASE_URL}/{fake_id}")
 
         assert response.status_code == 404
