@@ -73,7 +73,6 @@
         </div>
       </div>
 
-      <!-- Единственная кнопка в шапке: «Редактировать» или «Отмена» -->
       <div class="project-header__actions">
         @if (!editMode()) {
           <button class="btn btn--primary" (click)="onEdit()">
@@ -263,21 +262,82 @@
                   }
                 </div>
 
+                <!-- split_by -->
+                <div class="field">
+                  <label class="field__label" for="split_by">
+                    Способ разбивки текста
+                    @if (editMode()) { <span class="field__req">*</span> }
+                  </label>
+                  @if (editMode()) {
+                    <div class="select-wrap">
+                      <select id="split_by" class="field__select" formControlName="split_by">
+                        @for (o of splitByOptions; track o.value) {
+                          <option [value]="o.value">{{ o.label }}</option>
+                        }
+                      </select>
+                      <span class="select-arrow material-symbols-outlined">expand_more</span>
+                    </div>
+                  } @else {
+                    <div class="field__value-display">{{ selectedSplitByLabel }}</div>
+                  }
+                </div>
+
+                <!-- chunking_strategy -->
+                <div class="field">
+                  <label class="field__label" for="chunking_strategy">
+                    Стратегия чанкинга
+                    @if (editMode()) { <span class="field__req">*</span> }
+                  </label>
+                  @if (editMode()) {
+                    <div class="select-wrap">
+                      <select id="chunking_strategy" class="field__select" formControlName="chunking_strategy">
+                        @for (o of chunkingStrategies; track o.value) {
+                          <option [value]="o.value">{{ o.label }}</option>
+                        }
+                      </select>
+                      <span class="select-arrow material-symbols-outlined">expand_more</span>
+                    </div>
+                  } @else {
+                    <div class="field__value-display">{{ selectedChunkingStrategyLabel }}</div>
+                  }
+                </div>
+
+                <!-- extract_tables -->
+                <div class="field field--span2">
+                  <label class="checkbox-label">
+                    <span class="checkbox-wrap">
+                      <input
+                        type="checkbox"
+                        class="checkbox-input"
+                        formControlName="extract_tables"
+                      />
+                      <span class="checkbox-box">
+                        <span class="material-symbols-outlined checkbox-check">check</span>
+                      </span>
+                    </span>
+                    <span class="checkbox-text">
+                      Извлекать таблицы из PDF
+                      <span class="field__hint inline-hint">Парсер будет пытаться распознать и сохранить табличные данные</span>
+                    </span>
+                  </label>
+                </div>
+
               </div>
             </section>
 
-            <!-- ── SECTION 3: Модели ── -->
+            <!-- ── SECTION 3: Эмбеддинги ── -->
             <section class="form-section">
               <h2 class="form-section__title">
                 <span class="form-section__num">3</span>
-                Модели
+                Модель эмбеддингов
               </h2>
 
               <div class="fields-grid fields-grid--2">
 
+                <!-- embedding_model -->
                 <div class="field">
                   <label class="field__label" for="embedding_model">
-                    Модель эмбеддингов
+                    Модель
                     @if (editMode()) { <span class="field__req">*</span> }
                   </label>
                   @if (editMode()) {
@@ -294,9 +354,99 @@
                   }
                 </div>
 
+                <!-- embedding_dimension -->
                 <div class="field">
+                  <label class="field__label" for="embedding_dimension">
+                    Размерность векторов
+                    @if (editMode()) { <span class="field__req">*</span> }
+                  </label>
+                  @if (editMode()) {
+                    <input
+                      id="embedding_dimension"
+                      type="number"
+                      class="field__input"
+                      [class.field__input--error]="f['embedding_dimension'].invalid && f['embedding_dimension'].touched"
+                      formControlName="embedding_dimension"
+                      min="1"
+                    />
+                    @if (f['embedding_dimension'].invalid && f['embedding_dimension'].touched) {
+                      <span class="field__error">Должно быть ≥ 1</span>
+                    }
+                    <span class="field__hint">1536 для ada-002 / text-embedding-3-small</span>
+                  } @else {
+                    <div class="field__value-display">{{ f['embedding_dimension'].value }}</div>
+                  }
+                </div>
+
+                <!-- embedding_api_url -->
+                <div class="field">
+                  <label class="field__label" for="embedding_api_url">URL API эмбеддингов</label>
+                  @if (editMode()) {
+                    <input
+                      id="embedding_api_url"
+                      type="url"
+                      class="field__input"
+                      [class.field__input--error]="f['embedding_api_url'].invalid && f['embedding_api_url'].touched"
+                      formControlName="embedding_api_url"
+                      placeholder="https://api.openai.com/v1"
+                    />
+                    @if (f['embedding_api_url'].invalid && f['embedding_api_url'].touched) {
+                      <span class="field__error">Введите корректный URL (https://…)</span>
+                    }
+                    <span class="field__hint">Оставьте пустым для URL по умолчанию</span>
+                  } @else {
+                    <div class="field__value-display">
+                      {{ f['embedding_api_url'].value || '—' }}
+                    </div>
+                  }
+                </div>
+
+                <!-- embedding_api_key -->
+                <div class="field">
+                  <label class="field__label" for="embedding_api_key">API ключ эмбеддингов</label>
+                  @if (editMode()) {
+                    <div class="password-wrap">
+                      <input
+                        id="embedding_api_key"
+                        [type]="showEmbedKey() ? 'text' : 'password'"
+                        class="field__input"
+                        formControlName="embedding_api_key"
+                        placeholder="sk-…"
+                        autocomplete="new-password"
+                      />
+                      <button
+                        type="button"
+                        class="password-toggle"
+                        (click)="showEmbedKey.set(!showEmbedKey())"
+                        tabindex="-1"
+                      >
+                        <span class="material-symbols-outlined">{{ showEmbedKey() ? 'visibility_off' : 'visibility' }}</span>
+                      </button>
+                    </div>
+                    <span class="field__hint">Оставьте пустым, если используется глобальный ключ</span>
+                  } @else {
+                    <div class="field__value-display">
+                      {{ f['embedding_api_key'].value ? '••••••••' : '—' }}
+                    </div>
+                  }
+                </div>
+
+              </div>
+            </section>
+
+            <!-- ── SECTION 4: LLM ── -->
+            <section class="form-section">
+              <h2 class="form-section__title">
+                <span class="form-section__num">4</span>
+                Языковая модель (LLM)
+              </h2>
+
+              <div class="fields-grid fields-grid--2">
+
+                <!-- llm_model -->
+                <div class="field field--span2">
                   <label class="field__label" for="llm_model">
-                    Языковая модель (LLM)
+                    Модель
                     @if (editMode()) { <span class="field__req">*</span> }
                   </label>
                   @if (editMode()) {
@@ -313,13 +463,66 @@
                   }
                 </div>
 
+                <!-- llm_api_url -->
+                <div class="field">
+                  <label class="field__label" for="llm_api_url">URL API LLM</label>
+                  @if (editMode()) {
+                    <input
+                      id="llm_api_url"
+                      type="url"
+                      class="field__input"
+                      [class.field__input--error]="f['llm_api_url'].invalid && f['llm_api_url'].touched"
+                      formControlName="llm_api_url"
+                      placeholder="https://api.openai.com/v1"
+                    />
+                    @if (f['llm_api_url'].invalid && f['llm_api_url'].touched) {
+                      <span class="field__error">Введите корректный URL (https://…)</span>
+                    }
+                    <span class="field__hint">Для Ollama: http://localhost:11434/v1</span>
+                  } @else {
+                    <div class="field__value-display">
+                      {{ f['llm_api_url'].value || '—' }}
+                    </div>
+                  }
+                </div>
+
+                <!-- llm_api_key -->
+                <div class="field">
+                  <label class="field__label" for="llm_api_key">API ключ LLM</label>
+                  @if (editMode()) {
+                    <div class="password-wrap">
+                      <input
+                        id="llm_api_key"
+                        [type]="showLlmKey() ? 'text' : 'password'"
+                        class="field__input"
+                        formControlName="llm_api_key"
+                        placeholder="sk-…"
+                        autocomplete="new-password"
+                      />
+                      <button
+                        type="button"
+                        class="password-toggle"
+                        (click)="showLlmKey.set(!showLlmKey())"
+                        tabindex="-1"
+                      >
+                        <span class="material-symbols-outlined">{{ showLlmKey() ? 'visibility_off' : 'visibility' }}</span>
+                      </button>
+                    </div>
+                    <span class="field__hint">Оставьте пустым, если используется глобальный ключ</span>
+                  } @else {
+                    <div class="field__value-display">
+                      {{ f['llm_api_key'].value ? '••••••••' : '—' }}
+                    </div>
+                  }
+                </div>
+
               </div>
             </section>
 
-            <!-- ── SECTION 4: Системный промпт ── -->
+            <!-- ── SECTION 5: Системный промпт ── -->
             <section class="form-section">
               <h2 class="form-section__title">
-                <span class="form-section__num">4</span>
+                <span class="form-section__num">5</span>
                 Системный промпт
               </h2>
 

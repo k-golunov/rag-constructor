@@ -13,36 +13,84 @@ from datetime import datetime
 from typing import List, Literal, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, HttpUrl, field_validator
 
 
 # ===========================================================================
 # Project
 # ===========================================================================
 
+SplitBy = Literal["paragraphs", "sentences", "tokens"]
+ChunkingStrategy = Literal["recursive"]
+
+
 class ProjectCreate(BaseModel):
     """Данные для создания нового проекта."""
 
+    # ── Основное ────────────────────────────────────────────────────────────
     name: str = Field(..., min_length=1, max_length=255, examples=["Мой RAG-проект"])
+
+    # ── Чанкинг ─────────────────────────────────────────────────────────────
     chunk_size: int = Field(800, ge=100, le=8000, description="Размер чанка в символах")
     chunk_overlap: int = Field(100, ge=0, le=2000, description="Перекрытие между чанками")
+    split_by: SplitBy = Field("paragraphs", description="Способ разбивки текста")
+    chunking_strategy: ChunkingStrategy = Field("recursive", description="Стратегия чанкинга")
+    extract_tables: bool = Field(False, description="Извлекать таблицы из PDF")
+
+    # ── Эмбеддинги ──────────────────────────────────────────────────────────
     embedding_model: str = Field(..., examples=["text-embedding-3-small"])
+    embedding_dimension: int = Field(1536, ge=1, description="Размерность векторов")
+    embedding_api_key: Optional[str] = Field(None, max_length=255)
+    embedding_api_url: Optional[str] = Field(None, max_length=512)
+
+    # ── LLM ─────────────────────────────────────────────────────────────────
     llm_model: str = Field(..., examples=["gpt-4o-mini"])
+    llm_api_key: Optional[str] = Field(None, max_length=255)
+    llm_api_url: Optional[str] = Field(None, max_length=512)
+
+    # ── Промпт ──────────────────────────────────────────────────────────────
     system_prompt: str = Field(
         "Вы полезный ассистент, отвечающий на вопросы по документам.",
         description="Системный промпт для LLM",
     )
 
+    @field_validator("embedding_api_url", "llm_api_url", mode="before")
+    @classmethod
+    def empty_str_to_none(cls, v: object) -> object:
+        """Преобразует пустую строку в None для URL-полей."""
+        if isinstance(v, str) and v.strip() == "":
+            return None
+        return v
+
 
 class ProjectUpdate(BaseModel):
-    """Частичное обновление проекта (все поля опциональны)."""
+    """Частичное обновление проекта — все поля опциональны."""
 
     name: Optional[str] = Field(None, min_length=1, max_length=255)
+
     chunk_size: Optional[int] = Field(None, ge=100, le=8000)
     chunk_overlap: Optional[int] = Field(None, ge=0, le=2000)
+    split_by: Optional[SplitBy] = None
+    chunking_strategy: Optional[ChunkingStrategy] = None
+    extract_tables: Optional[bool] = None
+
     embedding_model: Optional[str] = None
+    embedding_dimension: Optional[int] = Field(None, ge=1)
+    embedding_api_key: Optional[str] = Field(None, max_length=255)
+    embedding_api_url: Optional[str] = Field(None, max_length=512)
+
     llm_model: Optional[str] = None
+    llm_api_key: Optional[str] = Field(None, max_length=255)
+    llm_api_url: Optional[str] = Field(None, max_length=512)
+
     system_prompt: Optional[str] = None
+
+    @field_validator("embedding_api_url", "llm_api_url", mode="before")
+    @classmethod
+    def empty_str_to_none(cls, v: object) -> object:
+        if isinstance(v, str) and v.strip() == "":
+            return None
+        return v
 
 
 class ProjectResponse(BaseModel):
@@ -50,12 +98,24 @@ class ProjectResponse(BaseModel):
 
     id: UUID
     name: str
+    created_at: datetime
+
     chunk_size: int
     chunk_overlap: int
+    split_by: str
+    chunking_strategy: str
+    extract_tables: bool
+
     embedding_model: str
+    embedding_dimension: int
+    embedding_api_key: Optional[str]
+    embedding_api_url: Optional[str]
+
     llm_model: str
+    llm_api_key: Optional[str]
+    llm_api_url: Optional[str]
+
     system_prompt: str
-    created_at: datetime
 
     model_config = {"from_attributes": True}
 
@@ -75,24 +135,18 @@ DataSourceStatus = Literal["pending", "processing", "completed", "failed"]
 
 
 class DataSourceCreate(BaseModel):
-    """Данные, передаваемые при регистрации нового источника (до загрузки файла)."""
-
     project_id: UUID
     file_name: str = Field(..., min_length=1, max_length=512)
     file_path: str = Field(..., min_length=1, max_length=1024)
 
 
 class DataSourceStatusUpdate(BaseModel):
-    """Обновление статуса и результатов обработки источника."""
-
     status: DataSourceStatus
     chunks_count: Optional[int] = Field(None, ge=0)
     error_message: Optional[str] = None
 
 
 class DataSourceResponse(BaseModel):
-    """Полное представление источника данных в ответе API."""
-
     id: UUID
     project_id: UUID
     file_name: str
@@ -106,8 +160,6 @@ class DataSourceResponse(BaseModel):
 
 
 class DataSourceListResponse(BaseModel):
-    """Список источников данных проекта."""
-
     total: int
     items: List[DataSourceResponse]
 
@@ -120,8 +172,6 @@ ChatRole = Literal["user", "assistant"]
 
 
 class ChatMessageCreate(BaseModel):
-    """Одно сообщение для сохранения в историю чата."""
-
     project_id: UUID
     session_id: UUID
     role: ChatRole
@@ -129,8 +179,6 @@ class ChatMessageCreate(BaseModel):
 
 
 class ChatMessageResponse(BaseModel):
-    """Представление сообщения из истории чата."""
-
     id: int
     project_id: UUID
     session_id: UUID
@@ -142,8 +190,6 @@ class ChatMessageResponse(BaseModel):
 
 
 class ChatHistoryResponse(BaseModel):
-    """История чата в рамках одной сессии."""
-
     session_id: UUID
     project_id: UUID
     messages: List[ChatMessageResponse]

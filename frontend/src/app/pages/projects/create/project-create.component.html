@@ -13,10 +13,7 @@
   </nav>
 </header>
 
-<!-- PAGE -->
 <div class="page">
-
-  <!-- Breadcrumb -->
   <div class="breadcrumb">
     <a routerLink="/projects" class="breadcrumb__link">Проекты</a>
     <span class="breadcrumb__sep material-symbols-outlined">chevron_right</span>
@@ -25,37 +22,27 @@
 
   <div class="page__layout">
 
-    <!-- LEFT: FORM CARD -->
+    <!-- ══════════════════════════════════════════════
+         FORM CARD
+         ══════════════════════════════════════════════ -->
     <div class="form-card">
       <div class="form-card__header">
         <h1 class="form-card__title">Создать проект</h1>
-        <p class="form-card__subtitle">
-          Настройте параметры RAG-пайплайна. Всё можно изменить позже.
-        </p>
+        <p class="form-card__subtitle">Настройте параметры RAG-пайплайна. Всё можно изменить позже.</p>
       </div>
 
       <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="form">
 
-        <!-- ── SECTION: Основное ── -->
+        <!-- ── 1. Основное ── -->
         <section class="form-section">
           <h2 class="form-section__title">
-            <span class="form-section__num">1</span>
-            Основное
+            <span class="form-section__num">1</span>Основное
           </h2>
-
           <div class="field">
-            <label class="field__label" for="name">
-              Название проекта <span class="field__required">*</span>
-            </label>
-            <input
-              id="name"
-              type="text"
-              class="field__input"
+            <label class="field__label" for="name">Название проекта <span class="field__req">*</span></label>
+            <input id="name" type="text" class="field__input"
               [class.field__input--error]="f['name'].invalid && f['name'].touched"
-              formControlName="name"
-              placeholder="Например: Документация продукта"
-              autocomplete="off"
-            />
+              formControlName="name" placeholder="Например: Документация продукта" autocomplete="off"/>
             @if (f['name'].invalid && f['name'].touched) {
               <span class="field__error">
                 @if (f['name'].errors?.['required']) { Обязательное поле }
@@ -65,72 +52,87 @@
           </div>
         </section>
 
-        <!-- ── SECTION: Параметры чанкинга ── -->
+        <!-- ── 2. Чанкинг ── -->
         <section class="form-section">
           <h2 class="form-section__title">
-            <span class="form-section__num">2</span>
-            Параметры чанкинга
+            <span class="form-section__num">2</span>Параметры чанкинга
           </h2>
 
           <div class="field-row">
             <div class="field">
-              <label class="field__label" for="chunk_size">
-                Размер чанка (символов) <span class="field__required">*</span>
-              </label>
-              <input
-                id="chunk_size"
-                type="number"
-                class="field__input"
+              <label class="field__label" for="chunk_size">Размер чанка (символов) <span class="field__req">*</span></label>
+              <input id="chunk_size" type="number" class="field__input"
                 [class.field__input--error]="f['chunk_size'].invalid && f['chunk_size'].touched"
-                formControlName="chunk_size"
-                min="100"
-                max="8000"
-              />
+                formControlName="chunk_size" min="100" max="8000"/>
               @if (f['chunk_size'].invalid && f['chunk_size'].touched) {
-                <span class="field__error">Значение от 100 до 8000</span>
+                <span class="field__error">Значение от 100 до 8 000</span>
               }
-              <span class="field__hint">Рекомендуется: 500–1500</span>
+              <span class="field__hint">Рекомендуется: 500–1 500</span>
             </div>
-
             <div class="field">
-              <label class="field__label" for="chunk_overlap">
-                Перекрытие (символов) <span class="field__required">*</span>
-              </label>
-              <input
-                id="chunk_overlap"
-                type="number"
-                class="field__input"
+              <label class="field__label" for="chunk_overlap">Перекрытие (символов) <span class="field__req">*</span></label>
+              <input id="chunk_overlap" type="number" class="field__input"
                 [class.field__input--error]="f['chunk_overlap'].invalid && f['chunk_overlap'].touched"
-                formControlName="chunk_overlap"
-                min="0"
-                max="2000"
-              />
+                formControlName="chunk_overlap" min="0" max="2000"/>
               @if (f['chunk_overlap'].invalid && f['chunk_overlap'].touched) {
-                <span class="field__error">Значение от 0 до 2000</span>
+                <span class="field__error">Значение от 0 до 2 000</span>
               }
               <span class="field__hint">Обычно 10–20% от размера чанка</span>
             </div>
           </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label class="field__label" for="split_by">Способ разбивки текста <span class="field__req">*</span></label>
+              <div class="select-wrap">
+                <select id="split_by" class="field__select" formControlName="split_by">
+                  @for (o of splitByOptions; track o.value) {
+                    <option [value]="o.value">{{ o.label }}</option>
+                  }
+                </select>
+                <span class="select-arrow material-symbols-outlined">expand_more</span>
+              </div>
+            </div>
+            <div class="field">
+              <label class="field__label" for="chunking_strategy">Стратегия чанкинга <span class="field__req">*</span></label>
+              <div class="select-wrap">
+                <select id="chunking_strategy" class="field__select" formControlName="chunking_strategy">
+                  @for (o of chunkingStrategies; track o.value) {
+                    <option [value]="o.value">{{ o.label }}</option>
+                  }
+                </select>
+                <span class="select-arrow material-symbols-outlined">expand_more</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="checkbox-label">
+              <span class="checkbox-wrap">
+                <input type="checkbox" class="checkbox-input" formControlName="extract_tables"/>
+                <span class="checkbox-box">
+                  <span class="material-symbols-outlined checkbox-check">check</span>
+                </span>
+              </span>
+              <span class="checkbox-text">
+                Извлекать таблицы из PDF
+                <span class="field__hint inline-hint">Парсер будет пытаться распознать и сохранить табличные данные</span>
+              </span>
+            </label>
+          </div>
         </section>
 
-        <!-- ── SECTION: Модели ── -->
+        <!-- ── 3. Эмбеддинги ── -->
         <section class="form-section">
           <h2 class="form-section__title">
-            <span class="form-section__num">3</span>
-            Модели
+            <span class="form-section__num">3</span>Модель эмбеддингов
           </h2>
 
           <div class="field-row">
             <div class="field">
-              <label class="field__label" for="embedding_model">
-                Модель эмбеддингов <span class="field__required">*</span>
-              </label>
+              <label class="field__label" for="embedding_model">Модель <span class="field__req">*</span></label>
               <div class="select-wrap">
-                <select
-                  id="embedding_model"
-                  class="field__select"
-                  formControlName="embedding_model"
-                >
+                <select id="embedding_model" class="field__select" formControlName="embedding_model">
                   @for (m of embeddingModels; track m.value) {
                     <option [value]="m.value">{{ m.label }}</option>
                   }
@@ -138,53 +140,108 @@
                 <span class="select-arrow material-symbols-outlined">expand_more</span>
               </div>
             </div>
-
             <div class="field">
-              <label class="field__label" for="llm_model">
-                Языковая модель (LLM) <span class="field__required">*</span>
-              </label>
-              <div class="select-wrap">
-                <select
-                  id="llm_model"
-                  class="field__select"
-                  formControlName="llm_model"
-                >
-                  @for (m of llmModels; track m.value) {
-                    <option [value]="m.value">{{ m.label }}</option>
-                  }
-                </select>
-                <span class="select-arrow material-symbols-outlined">expand_more</span>
+              <label class="field__label" for="embedding_dimension">Размерность векторов <span class="field__req">*</span></label>
+              <input id="embedding_dimension" type="number" class="field__input"
+                [class.field__input--error]="f['embedding_dimension'].invalid && f['embedding_dimension'].touched"
+                formControlName="embedding_dimension" min="1"/>
+              @if (f['embedding_dimension'].invalid && f['embedding_dimension'].touched) {
+                <span class="field__error">Должно быть ≥ 1</span>
+              }
+              <span class="field__hint">1536 для text-embedding-3-small/ada-002, 3072 для text-embedding-3-large</span>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label class="field__label" for="embedding_api_url">URL API эмбеддингов</label>
+              <input id="embedding_api_url" type="url" class="field__input"
+                [class.field__input--error]="f['embedding_api_url'].invalid && f['embedding_api_url'].touched"
+                formControlName="embedding_api_url" placeholder="https://api.openai.com/v1"/>
+              @if (f['embedding_api_url'].invalid && f['embedding_api_url'].touched) {
+                <span class="field__error">Введите корректный URL (https://…)</span>
+              }
+              <span class="field__hint">Оставьте пустым для использования URL по умолчанию</span>
+            </div>
+            <div class="field">
+              <label class="field__label" for="embedding_api_key">API ключ эмбеддингов</label>
+              <div class="password-wrap">
+                <input id="embedding_api_key"
+                  [type]="showEmbedKey() ? 'text' : 'password'"
+                  class="field__input"
+                  formControlName="embedding_api_key"
+                  placeholder="sk-…" autocomplete="new-password"/>
+                <button type="button" class="password-toggle" (click)="showEmbedKey.set(!showEmbedKey())" tabindex="-1">
+                  <span class="material-symbols-outlined">{{ showEmbedKey() ? 'visibility_off' : 'visibility' }}</span>
+                </button>
               </div>
+              <span class="field__hint">Оставьте пустым, если используется глобальный ключ</span>
             </div>
           </div>
         </section>
 
-        <!-- ── SECTION: Системный промпт ── -->
+        <!-- ── 4. LLM ── -->
         <section class="form-section">
           <h2 class="form-section__title">
-            <span class="form-section__num">4</span>
-            Системный промпт
+            <span class="form-section__num">4</span>Языковая модель (LLM)
           </h2>
 
           <div class="field">
-            <label class="field__label" for="system_prompt">
-              Инструкции для модели
-            </label>
-            <textarea
-              id="system_prompt"
-              class="field__textarea"
-              [class.field__input--error]="f['system_prompt'].invalid && f['system_prompt'].touched"
-              formControlName="system_prompt"
-              rows="4"
-              placeholder="Вы полезный ассистент, отвечающий на вопросы по документам."
-            ></textarea>
-            <span class="field__hint">
-              Задайте роль, стиль ответов и ограничения для ассистента
-            </span>
+            <label class="field__label" for="llm_model">Модель <span class="field__req">*</span></label>
+            <div class="select-wrap">
+              <select id="llm_model" class="field__select" formControlName="llm_model">
+                @for (m of llmModels; track m.value) {
+                  <option [value]="m.value">{{ m.label }}</option>
+                }
+              </select>
+              <span class="select-arrow material-symbols-outlined">expand_more</span>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label class="field__label" for="llm_api_url">URL API LLM</label>
+              <input id="llm_api_url" type="url" class="field__input"
+                [class.field__input--error]="f['llm_api_url'].invalid && f['llm_api_url'].touched"
+                formControlName="llm_api_url" placeholder="https://api.openai.com/v1"/>
+              @if (f['llm_api_url'].invalid && f['llm_api_url'].touched) {
+                <span class="field__error">Введите корректный URL (https://…)</span>
+              }
+              <span class="field__hint">Для Ollama: http://localhost:11434/v1</span>
+            </div>
+            <div class="field">
+              <label class="field__label" for="llm_api_key">API ключ LLM</label>
+              <div class="password-wrap">
+                <input id="llm_api_key"
+                  [type]="showLlmKey() ? 'text' : 'password'"
+                  class="field__input"
+                  formControlName="llm_api_key"
+                  placeholder="sk-…" autocomplete="new-password"/>
+                <button type="button" class="password-toggle" (click)="showLlmKey.set(!showLlmKey())" tabindex="-1">
+                  <span class="material-symbols-outlined">{{ showLlmKey() ? 'visibility_off' : 'visibility' }}</span>
+                </button>
+              </div>
+              <span class="field__hint">Оставьте пустым, если используется глобальный ключ</span>
+            </div>
           </div>
         </section>
 
-        <!-- ── SERVER ERROR ── -->
+        <!-- ── 5. Системный промпт ── -->
+        <section class="form-section">
+          <h2 class="form-section__title">
+            <span class="form-section__num">5</span>Системный промпт
+          </h2>
+          <div class="field">
+            <label class="field__label" for="system_prompt">Инструкции для ассистента</label>
+            <textarea id="system_prompt" class="field__textarea"
+              [class.field__input--error]="f['system_prompt'].invalid && f['system_prompt'].touched"
+              formControlName="system_prompt" rows="4"
+              placeholder="Вы полезный ассистент, отвечающий на вопросы по документам."></textarea>
+            <span class="field__hint">Задайте роль, стиль ответов и ограничения для ассистента</span>
+          </div>
+        </section>
+
+        <!-- ── Ошибка сервера ── -->
         @if (serverError()) {
           <div class="alert alert--error">
             <span class="material-symbols-outlined">error_outline</span>
@@ -192,23 +249,14 @@
           </div>
         }
 
-        <!-- ── ACTIONS ── -->
+        <!-- ── Кнопки ── -->
         <div class="form-actions">
-          <button type="button" class="btn btn--outlined" (click)="onCancel()">
-            Отмена
-          </button>
-          <button
-            type="submit"
-            class="btn btn--primary"
-            [class.btn--loading]="submitting()"
-            [disabled]="submitting()"
-          >
+          <button type="button" class="btn btn--outlined" (click)="onCancel()">Отмена</button>
+          <button type="submit" class="btn btn--primary" [disabled]="submitting()">
             @if (submitting()) {
-              <span class="btn-spinner"></span>
-              Создание…
+              <span class="btn-spinner"></span>Создание…
             } @else {
-              <span class="btn__icon material-symbols-outlined">add</span>
-              Создать проект
+              <span class="btn__icon material-symbols-outlined">add</span>Создать проект
             }
           </button>
         </div>
@@ -216,35 +264,25 @@
       </form>
     </div>
 
-    <!-- RIGHT: HELP PANEL -->
+    <!-- ══════════════════════════════════════════════
+         HELP PANEL
+         ══════════════════════════════════════════════ -->
     <aside class="help-panel">
       <div class="help-card">
         <span class="help-card__icon material-symbols-outlined">tips_and_updates</span>
-        <h3 class="help-card__title">Советы по настройке</h3>
+        <h3 class="help-card__title">Советы</h3>
         <ul class="help-card__list">
-          <li>
-            <strong>Размер чанка</strong> влияет на точность поиска.
-            Меньший чанк — точнее, но больше запросов к API.
-          </li>
-          <li>
-            <strong>Перекрытие</strong> помогает не потерять контекст на
-            границах чанков. 10–20% от размера — хорошее начало.
-          </li>
-          <li>
-            <strong>text-embedding-3-small</strong> — быстрый и дешёвый
-            вариант для большинства задач.
-          </li>
-          <li>
-            <strong>gpt-4o-mini</strong> — оптимальный баланс качества
-            и стоимости для RAG.
-          </li>
+          <li><strong>Размер чанка</strong> — меньший чанк точнее, но дороже. Начните с 800.</li>
+          <li><strong>Перекрытие</strong> — 10–20% от размера чанка предотвращает потерю контекста.</li>
+          <li><strong>Абзацы</strong> — лучший вариант для большинства документов.</li>
+          <li><strong>URL API</strong> оставьте пустым для облачных провайдеров. Для Ollama укажите http://localhost:11434/v1.</li>
+          <li><strong>API ключ</strong> можно передать глобально через переменную окружения.</li>
         </ul>
       </div>
-
       <div class="help-card help-card--pipeline">
-        <h3 class="help-card__title">Пайплайн обработки</h3>
+        <h3 class="help-card__title">Пайплайн</h3>
         <div class="pipeline">
-          @for (step of ['Загрузка PDF', 'Парсинг текста', 'Чанкинг', 'Эмбеддинги', 'Qdrant', 'LLM-чат']; track step; let i = $index) {
+          @for (step of ['Загрузка PDF', 'Парсинг', 'Чанкинг', 'Эмбеддинги', 'Qdrant', 'LLM-чат']; track step; let i = $index) {
             <div class="pipeline__step">
               <span class="pipeline__num">{{ i + 1 }}</span>
               <span class="pipeline__label">{{ step }}</span>
