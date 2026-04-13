@@ -1,4 +1,5 @@
 from sqlalchemy import (
+    Boolean,
     Column,
     String,
     Integer,
@@ -18,10 +19,11 @@ from backend.db.database import Base
 # Project
 # ---------------------------------------------------------------------------
 class Project(Base):
-    """Проект RAG-конструктора с настройками чанкинга и моделей."""
+    """Проект RAG-конструктора с полным набором настроек пайплайна."""
 
     __tablename__ = "projects"
 
+    # ── Идентификация ────────────────────────────────────────────────────────
     id = Column(
         UUID(as_uuid=True),
         primary_key=True,
@@ -29,22 +31,38 @@ class Project(Base):
         nullable=False,
     )
     name = Column(String(255), nullable=False)
-    chunk_size = Column(Integer, default=800, nullable=False)
-    chunk_overlap = Column(Integer, default=100, nullable=False)
-    embedding_model = Column(String(100), nullable=False)
-    llm_model = Column(String(100), nullable=False)
-    system_prompt = Column(
-        Text,
-        nullable=False,
-        default="Вы полезный ассистент, отвечающий на вопросы по документам.",
-    )
     created_at = Column(
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
     )
 
-    # Связи
+    # ── Чанкинг ─────────────────────────────────────────────────────────────
+    chunk_size = Column(Integer, default=800, nullable=False)
+    chunk_overlap = Column(Integer, default=100, nullable=False)
+    split_by = Column(String(50), default="paragraphs", nullable=False)
+    chunking_strategy = Column(String(50), default="recursive", nullable=False)
+    extract_tables = Column(Boolean, default=False, nullable=False)
+
+    # ── Эмбеддинги ──────────────────────────────────────────────────────────
+    embedding_model = Column(String(100), nullable=False)
+    embedding_dimension = Column(Integer, default=1536, nullable=False)
+    embedding_api_key = Column(String(255), nullable=True)
+    embedding_api_url = Column(String(512), nullable=True)
+
+    # ── LLM ─────────────────────────────────────────────────────────────────
+    llm_model = Column(String(100), nullable=False)
+    llm_api_key = Column(String(255), nullable=True)
+    llm_api_url = Column(String(512), nullable=True)
+
+    # ── Промпт ──────────────────────────────────────────────────────────────
+    system_prompt = Column(
+        Text,
+        nullable=False,
+        default="Вы полезный ассистент, отвечающий на вопросы по документам.",
+    )
+
+    # ── Связи ────────────────────────────────────────────────────────────────
     data_sources = relationship(
         "DataSource",
         back_populates="project",
@@ -89,7 +107,6 @@ class DataSource(Base):
         nullable=False,
     )
 
-    # Связи
     project = relationship("Project", back_populates="data_sources")
 
 
@@ -122,5 +139,4 @@ class ChatHistory(Base):
         nullable=False,
     )
 
-    # Связи
     project = relationship("Project", back_populates="chat_history")
