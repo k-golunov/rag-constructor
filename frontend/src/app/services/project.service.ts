@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../environments/environment';
-import { Project, ProjectCreate, ProjectListResponse } from '../models/project.model';
+import { Project, ProjectCreate, ProjectListResponse, ProjectUpdate } from '../models/project.model';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectService {
@@ -37,5 +37,15 @@ export class ProjectService {
    */
   createProject(project: ProjectCreate): Observable<Project> {
     return this.http.post<Project>(this.baseUrl + '/', project);
+  }
+
+  /**
+   * Частично обновляет поля проекта (PATCH).
+   * Передавать только изменившиеся поля.
+   * @param id     UUID проекта.
+   * @param update Объект с обновляемыми полями.
+   */
+  updateProject(id: string, update: ProjectUpdate): Observable<Project> {
+    return this.http.patch<Project>(`${this.baseUrl}/${id}`, update);
   }
 }

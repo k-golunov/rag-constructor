@@ -20,6 +20,19 @@ export interface ProjectCreate {
   system_prompt: string;
 }
 
+/**
+ * DTO для частичного обновления проекта (ProjectUpdate из бэкенда).
+ * Все поля опциональны — передаются только изменяемые.
+ */
+export interface ProjectUpdate {
+  name?: string;
+  chunk_size?: number;
+  chunk_overlap?: number;
+  embedding_model?: string;
+  llm_model?: string;
+  system_prompt?: string;
+}
+
 /** Ответ бэкенда на запрос списка проектов (ProjectListResponse). */
 export interface ProjectListResponse {
   total: number;

@@ -27,11 +27,10 @@ export const routes: Routes = [
         title: 'Создать проект — RAG Constructor',
       },
       {
-        // Placeholder for project detail — replace with real component later
         path: ':id',
         loadComponent: () =>
-          import('./pages/projects/list/project-list.component').then(
-            (m) => m.ProjectListComponent,
+          import('./pages/projects/detail/project-detail.component').then(
+            (m) => m.ProjectDetailComponent,
           ),
         title: 'Проект — RAG Constructor',
       },
