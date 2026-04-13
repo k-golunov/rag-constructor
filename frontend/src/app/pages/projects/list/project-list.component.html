@@ -1,0 +1,117 @@
+<!-- HEADER BAR -->
+<header class="topbar">
+  <div class="topbar__brand" routerLink="/">
+    <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
+      <rect width="28" height="28" rx="6" fill="#1565C0"/>
+      <path d="M6 20L11 8L14 15L17 10L22 20H6Z" fill="white" opacity="0.9"/>
+      <circle cx="14" cy="10" r="2.5" fill="#64B5F6"/>
+    </svg>
+    <span>RAG Constructor</span>
+  </div>
+  <nav class="topbar__nav">
+    <a class="topbar__nav-link topbar__nav-link--active" routerLink="/projects">Проекты</a>
+  </nav>
+</header>
+
+<!-- MAIN CONTENT -->
+<div class="page">
+
+  <!-- PAGE HEADER -->
+  <div class="page__header">
+    <div class="page__header-left">
+      <h1 class="page__title">Мои проекты</h1>
+      @if (!loading()) {
+        <span class="page__meta">
+          создано {{ total() }} из 1001 возможных
+        </span>
+      }
+    </div>
+    <a class="btn btn--primary" routerLink="/projects/new">
+      <span class="btn__plus">+</span> Создать проект
+    </a>
+  </div>
+
+  <!-- LOADING STATE -->
+  @if (loading()) {
+    <div class="state-box">
+      <div class="spinner"></div>
+      <span class="state-box__text">Загрузка проектов…</span>
+    </div>
+  }
+
+  <!-- ERROR STATE -->
+  @if (!loading() && error()) {
+    <div class="state-box state-box--error">
+      <span class="state-icon material-symbols-outlined">error_outline</span>
+      <span class="state-box__text">{{ error() }}</span>
+      <button class="btn btn--outlined" (click)="loadProjects()">Повторить</button>
+    </div>
+  }
+
+  <!-- EMPTY STATE -->
+  @if (!loading() && !error() && projects().length === 0) {
+    <div class="state-box state-box--empty">
+      <span class="state-icon material-symbols-outlined">folder_open</span>
+      <p class="state-box__title">Нет проектов</p>
+      <p class="state-box__text">Создайте первый проект, чтобы начать работу с документами</p>
+      <a class="btn btn--primary" routerLink="/projects/new">
+        <span class="btn__plus">+</span> Новый проект
+      </a>
+    </div>
+  }
+
+  <!-- PROJECTS GRID -->
+  @if (!loading() && !error() && projects().length > 0) {
+    <div class="projects-grid">
+      @for (project of projects(); track project.id) {
+        <div class="project-card" (click)="navigateToProject(project.id)" role="button" [attr.aria-label]="'Открыть проект ' + project.name">
+
+          <!-- Card preview illustration -->
+          <div class="project-card__preview">
+            <div class="preview-mock">
+              <div class="preview-mock__bar"></div>
+              <div class="preview-mock__bar preview-mock__bar--short"></div>
+              <div class="preview-mock__icon">
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                  <rect width="36" height="36" rx="10" fill="#BBDEFB"/>
+                  <path d="M10 26L15 13L18.5 21L22 15L27 26H10Z" fill="#1565C0" opacity="0.65"/>
+                </svg>
+              </div>
+              <div class="preview-mock__chat">
+                <div class="preview-mock__msg"></div>
+                <div class="preview-mock__msg preview-mock__msg--reply"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card info -->
+          <div class="project-card__body">
+            <div class="project-card__title-row">
+              <h3 class="project-card__name">{{ project.name }}</h3>
+              <button class="icon-btn" title="Копировать ссылку" (click)="$event.stopPropagation()">
+                <span class="material-symbols-outlined">link</span>
+              </button>
+            </div>
+
+            <div class="project-card__slug">{{ project.id | slice:0:8 }}…</div>
+
+            <div class="project-card__tags">
+              <span class="tag">{{ project.embedding_model | slice:0:20 }}</span>
+              <span class="tag">{{ project.llm_model }}</span>
+            </div>
+
+            <div class="project-card__meta">
+              <span class="project-card__date">
+                {{ project.created_at | date:'dd.MM.yyyy' }}
+              </span>
+              <span class="project-card__chunk-info">
+                Чанк: {{ project.chunk_size }} / {{ project.chunk_overlap }}
+              </span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+</div>

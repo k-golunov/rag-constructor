@@ -1,0 +1,261 @@
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar__brand" routerLink="/">
+    <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
+      <rect width="28" height="28" rx="6" fill="#1565C0"/>
+      <path d="M6 20L11 8L14 15L17 10L22 20H6Z" fill="white" opacity="0.9"/>
+      <circle cx="14" cy="10" r="2.5" fill="#64B5F6"/>
+    </svg>
+    <span>RAG Constructor</span>
+  </div>
+  <nav class="topbar__nav">
+    <a class="topbar__nav-link" routerLink="/projects">Проекты</a>
+  </nav>
+</header>
+
+<!-- PAGE -->
+<div class="page">
+
+  <!-- Breadcrumb -->
+  <div class="breadcrumb">
+    <a routerLink="/projects" class="breadcrumb__link">Проекты</a>
+    <span class="breadcrumb__sep material-symbols-outlined">chevron_right</span>
+    <span class="breadcrumb__current">Новый проект</span>
+  </div>
+
+  <div class="page__layout">
+
+    <!-- LEFT: FORM CARD -->
+    <div class="form-card">
+      <div class="form-card__header">
+        <h1 class="form-card__title">Создать проект</h1>
+        <p class="form-card__subtitle">
+          Настройте параметры RAG-пайплайна. Всё можно изменить позже.
+        </p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="form">
+
+        <!-- ── SECTION: Основное ── -->
+        <section class="form-section">
+          <h2 class="form-section__title">
+            <span class="form-section__num">1</span>
+            Основное
+          </h2>
+
+          <div class="field">
+            <label class="field__label" for="name">
+              Название проекта <span class="field__required">*</span>
+            </label>
+            <input
+              id="name"
+              type="text"
+              class="field__input"
+              [class.field__input--error]="f['name'].invalid && f['name'].touched"
+              formControlName="name"
+              placeholder="Например: Документация продукта"
+              autocomplete="off"
+            />
+            @if (f['name'].invalid && f['name'].touched) {
+              <span class="field__error">
+                @if (f['name'].errors?.['required']) { Обязательное поле }
+                @if (f['name'].errors?.['maxlength']) { Максимум 255 символов }
+              </span>
+            }
+          </div>
+        </section>
+
+        <!-- ── SECTION: Параметры чанкинга ── -->
+        <section class="form-section">
+          <h2 class="form-section__title">
+            <span class="form-section__num">2</span>
+            Параметры чанкинга
+          </h2>
+
+          <div class="field-row">
+            <div class="field">
+              <label class="field__label" for="chunk_size">
+                Размер чанка (символов) <span class="field__required">*</span>
+              </label>
+              <input
+                id="chunk_size"
+                type="number"
+                class="field__input"
+                [class.field__input--error]="f['chunk_size'].invalid && f['chunk_size'].touched"
+                formControlName="chunk_size"
+                min="100"
+                max="8000"
+              />
+              @if (f['chunk_size'].invalid && f['chunk_size'].touched) {
+                <span class="field__error">Значение от 100 до 8000</span>
+              }
+              <span class="field__hint">Рекомендуется: 500–1500</span>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="chunk_overlap">
+                Перекрытие (символов) <span class="field__required">*</span>
+              </label>
+              <input
+                id="chunk_overlap"
+                type="number"
+                class="field__input"
+                [class.field__input--error]="f['chunk_overlap'].invalid && f['chunk_overlap'].touched"
+                formControlName="chunk_overlap"
+                min="0"
+                max="2000"
+              />
+              @if (f['chunk_overlap'].invalid && f['chunk_overlap'].touched) {
+                <span class="field__error">Значение от 0 до 2000</span>
+              }
+              <span class="field__hint">Обычно 10–20% от размера чанка</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── SECTION: Модели ── -->
+        <section class="form-section">
+          <h2 class="form-section__title">
+            <span class="form-section__num">3</span>
+            Модели
+          </h2>
+
+          <div class="field-row">
+            <div class="field">
+              <label class="field__label" for="embedding_model">
+                Модель эмбеддингов <span class="field__required">*</span>
+              </label>
+              <div class="select-wrap">
+                <select
+                  id="embedding_model"
+                  class="field__select"
+                  formControlName="embedding_model"
+                >
+                  @for (m of embeddingModels; track m.value) {
+                    <option [value]="m.value">{{ m.label }}</option>
+                  }
+                </select>
+                <span class="select-arrow material-symbols-outlined">expand_more</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="llm_model">
+                Языковая модель (LLM) <span class="field__required">*</span>
+              </label>
+              <div class="select-wrap">
+                <select
+                  id="llm_model"
+                  class="field__select"
+                  formControlName="llm_model"
+                >
+                  @for (m of llmModels; track m.value) {
+                    <option [value]="m.value">{{ m.label }}</option>
+                  }
+                </select>
+                <span class="select-arrow material-symbols-outlined">expand_more</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── SECTION: Системный промпт ── -->
+        <section class="form-section">
+          <h2 class="form-section__title">
+            <span class="form-section__num">4</span>
+            Системный промпт
+          </h2>
+
+          <div class="field">
+            <label class="field__label" for="system_prompt">
+              Инструкции для модели
+            </label>
+            <textarea
+              id="system_prompt"
+              class="field__textarea"
+              [class.field__input--error]="f['system_prompt'].invalid && f['system_prompt'].touched"
+              formControlName="system_prompt"
+              rows="4"
+              placeholder="Вы полезный ассистент, отвечающий на вопросы по документам."
+            ></textarea>
+            <span class="field__hint">
+              Задайте роль, стиль ответов и ограничения для ассистента
+            </span>
+          </div>
+        </section>
+
+        <!-- ── SERVER ERROR ── -->
+        @if (serverError()) {
+          <div class="alert alert--error">
+            <span class="material-symbols-outlined">error_outline</span>
+            {{ serverError() }}
+          </div>
+        }
+
+        <!-- ── ACTIONS ── -->
+        <div class="form-actions">
+          <button type="button" class="btn btn--outlined" (click)="onCancel()">
+            Отмена
+          </button>
+          <button
+            type="submit"
+            class="btn btn--primary"
+            [class.btn--loading]="submitting()"
+            [disabled]="submitting()"
+          >
+            @if (submitting()) {
+              <span class="btn-spinner"></span>
+              Создание…
+            } @else {
+              <span class="btn__icon material-symbols-outlined">add</span>
+              Создать проект
+            }
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- RIGHT: HELP PANEL -->
+    <aside class="help-panel">
+      <div class="help-card">
+        <span class="help-card__icon material-symbols-outlined">tips_and_updates</span>
+        <h3 class="help-card__title">Советы по настройке</h3>
+        <ul class="help-card__list">
+          <li>
+            <strong>Размер чанка</strong> влияет на точность поиска.
+            Меньший чанк — точнее, но больше запросов к API.
+          </li>
+          <li>
+            <strong>Перекрытие</strong> помогает не потерять контекст на
+            границах чанков. 10–20% от размера — хорошее начало.
+          </li>
+          <li>
+            <strong>text-embedding-3-small</strong> — быстрый и дешёвый
+            вариант для большинства задач.
+          </li>
+          <li>
+            <strong>gpt-4o-mini</strong> — оптимальный баланс качества
+            и стоимости для RAG.
+          </li>
+        </ul>
+      </div>
+
+      <div class="help-card help-card--pipeline">
+        <h3 class="help-card__title">Пайплайн обработки</h3>
+        <div class="pipeline">
+          @for (step of ['Загрузка PDF', 'Парсинг текста', 'Чанкинг', 'Эмбеддинги', 'Qdrant', 'LLM-чат']; track step; let i = $index) {
+            <div class="pipeline__step">
+              <span class="pipeline__num">{{ i + 1 }}</span>
+              <span class="pipeline__label">{{ step }}</span>
+            </div>
+            @if (i < 5) {
+              <span class="pipeline__arrow material-symbols-outlined">arrow_downward</span>
+            }
+          }
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</div>

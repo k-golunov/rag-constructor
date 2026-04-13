@@ -1,0 +1,137 @@
+<!-- ===== HEADER / NAVBAR ===== -->
+<header class="navbar">
+  <div class="navbar__brand">
+    <span class="navbar__logo-icon">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="28" height="28" rx="6" fill="#1565C0"/>
+        <path d="M6 20L11 8L14 15L17 10L22 20H6Z" fill="white" opacity="0.9"/>
+        <circle cx="14" cy="10" r="2.5" fill="#64B5F6"/>
+      </svg>
+    </span>
+    <span class="navbar__title">RAG Constructor</span>
+  </div>
+  <nav class="navbar__links">
+    <a class="navbar__link" routerLink="/projects">Проекты</a>
+    <a class="navbar__link" href="#features">Возможности</a>
+    <a class="navbar__link" href="#about">О продукте</a>
+  </nav>
+  <a class="btn btn--outlined" routerLink="/projects">Войти</a>
+</header>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero__content">
+    <div class="hero__badge">AI-ассистент по документам</div>
+    <h1 class="hero__title">
+      Создайте своего<br>
+      <span class="hero__title--accent">AI-ассистента</span><br>
+      за 5 минут без кода
+    </h1>
+    <p class="hero__subtitle">
+      Загружайте документы, настраивайте RAG-пайплайн через удобный
+      интерфейс и получайте умного ассистента, который знает всё о ваших данных.
+    </p>
+    <div class="hero__actions">
+      <a class="btn btn--primary btn--large" routerLink="/projects">
+        <span class="btn__icon">+</span>
+        Создать проект
+      </a>
+      <a class="btn btn--ghost btn--large" href="#features">Узнать больше</a>
+    </div>
+    <div class="hero__stats">
+      <div class="hero__stat">
+        <span class="hero__stat-value">1 000+</span>
+        <span class="hero__stat-label">проектов</span>
+      </div>
+      <div class="hero__stat-divider"></div>
+      <div class="hero__stat">
+        <span class="hero__stat-value">5 мин</span>
+        <span class="hero__stat-label">до первого ответа</span>
+      </div>
+      <div class="hero__stat-divider"></div>
+      <div class="hero__stat">
+        <span class="hero__stat-value">0</span>
+        <span class="hero__stat-label">строк кода</span>
+      </div>
+    </div>
+  </div>
+  <div class="hero__visual">
+    <div class="hero__card-preview">
+      <div class="preview__header">
+        <span class="preview__dot preview__dot--red"></span>
+        <span class="preview__dot preview__dot--yellow"></span>
+        <span class="preview__dot preview__dot--green"></span>
+        <span class="preview__title">Мои проекты</span>
+        <span class="preview__badge">+ Новый проект</span>
+      </div>
+      <div class="preview__body">
+        <div class="preview__project-card">
+          <div class="preview__project-icon">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+              <rect width="32" height="32" rx="8" fill="#E3F2FD"/>
+              <path d="M9 22L13 12L16 18L19 13L23 22H9Z" fill="#1565C0" opacity="0.7"/>
+            </svg>
+          </div>
+          <div class="preview__project-info">
+            <span class="preview__project-name">my-assistant</span>
+            <span class="preview__project-status preview__project-status--active">Опубликовано</span>
+          </div>
+        </div>
+        <div class="preview__project-card">
+          <div class="preview__project-icon">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+              <rect width="32" height="32" rx="8" fill="#E8F5E9"/>
+              <path d="M9 22L13 12L16 18L19 13L23 22H9Z" fill="#2E7D32" opacity="0.7"/>
+            </svg>
+          </div>
+          <div class="preview__project-info">
+            <span class="preview__project-name">docs-bot</span>
+            <span class="preview__project-status">Черновик</span>
+          </div>
+        </div>
+        <div class="preview__chat">
+          <div class="preview__message preview__message--user">Как настроить пайплайн?</div>
+          <div class="preview__message preview__message--bot">Откройте раздел «Настройки» и выберите модель эмбеддингов...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FEATURES ===== -->
+<section class="features" id="features">
+  <div class="features__container">
+    <div class="features__header">
+      <h2 class="features__title">Всё что нужно для работы с документами</h2>
+      <p class="features__subtitle">Мощный инструмент для создания RAG-ассистентов без технических знаний</p>
+    </div>
+    <div class="features__grid">
+      @for (feature of features; track feature.title) {
+        <div class="feature-card">
+          <div class="feature-card__icon-wrap">
+            <span class="feature-card__icon material-symbols-outlined">{{ feature.icon }}</span>
+          </div>
+          <h3 class="feature-card__title">{{ feature.title }}</h3>
+          <p class="feature-card__desc">{{ feature.description }}</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA ===== -->
+<section class="cta">
+  <div class="cta__container">
+    <h2 class="cta__title">Готовы начать?</h2>
+    <p class="cta__subtitle">Создайте первый проект бесплатно — без регистрации кредитной карты</p>
+    <a class="btn btn--primary btn--large btn--cta" routerLink="/projects">
+      <span class="btn__icon">+</span>
+      Попробовать бесплатно
+    </a>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <span class="footer__text">© 2026 RAG Constructor · Все права защищены</span>
+</footer>
