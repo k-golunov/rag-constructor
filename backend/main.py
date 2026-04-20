@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.api.projects import router as projects_router
+from backend.api.search import router as search_router
 from backend.config import settings
 from backend.db.database import engine
 from backend.db.init_db import init_db
@@ -81,5 +82,6 @@ async def health_check():
 # Роутеры
 # ---------------------------------------------------------------------------
 app.include_router(projects_router)
+app.include_router(search_router)
 # app.include_router(documents_router)
 # app.include_router(chat_router)
