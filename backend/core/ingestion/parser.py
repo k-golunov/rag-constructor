@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from pypdf import PdfReader
+from docx import Document as DocxDocument
 
 from backend.core.ingestion.base import BaseParser
 
@@ -43,10 +44,33 @@ class TextParser(BaseParser):
         return path.read_text(encoding="utf-8-sig", errors="replace")
 
 
+class DocxParser(BaseParser):
+    def parse(self, file_path: str) -> str:
+        path = Path(file_path)
+        if not path.exists():
+            raise ParserError(f"Файл не найден: {file_path}")
+
+        try:
+            doc = DocxDocument(str(path))
+        except Exception as exc:
+            raise ParserError(f"Не удалось открыть DOCX: {exc}") from exc
+
+        paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
+        for table in doc.tables:
+            for row in table.rows:
+                row_text = " | ".join(cell.text.strip() for cell in row.cells if cell.text.strip())
+                if row_text:
+                    paragraphs.append(row_text)
+        return "\n\n".join(paragraphs).strip()
+
+
 PARSER_REGISTRY: dict[str, type[BaseParser]] = {
     ".pdf": PDFParser,
     ".txt": TextParser,
+    ".docx": DocxParser,
 }
+
+SUPPORTED_EXTENSIONS: tuple[str, ...] = tuple(PARSER_REGISTRY.keys())
 
 
 def get_parser_for(filename: str) -> BaseParser | None:
