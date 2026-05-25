@@ -1,6 +1,6 @@
 ﻿from abc import ABC, abstractmethod
 from typing import List
-from core.Document import Document
+from backend.core.Document import Document
 
 class BaseVectorStore(ABC):
     @abstractmethod

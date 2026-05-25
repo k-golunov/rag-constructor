@@ -193,3 +193,26 @@ class ChatHistoryResponse(BaseModel):
     session_id: UUID
     project_id: UUID
     messages: List[ChatMessageResponse]
+
+
+# ===========================================================================
+# Chat / Generate
+# ===========================================================================
+
+
+class GenerateRequest(BaseModel):
+    """Запрос на генерацию ответа LLM с учётом найденного контекста."""
+
+    query: str = Field(..., min_length=1, description="Вопрос пользователя")
+    context: str = Field(default="", description="Найденные чанки (строка)")
+    session_id: Optional[UUID] = Field(None, description="ID сессии для сохранения истории")
+    history: Optional[List[dict]] = Field(
+        None,
+        description='История диалога: [{"role": "user"|"assistant", "content": "..."}]',
+    )
+
+
+class GenerateResponse(BaseModel):
+    """Ответ LLM на вопрос пользователя."""
+
+    answer: str
