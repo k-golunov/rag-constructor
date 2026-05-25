@@ -188,6 +188,8 @@ class ChatMessageResponse(BaseModel):
 
     model_config = {"from_attributes": True}
 
+    model_config = {"from_attributes": True}
+
 
 class ChatHistoryResponse(BaseModel):
     session_id: UUID

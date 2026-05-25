@@ -79,6 +79,14 @@
             <span class="material-symbols-outlined btn__icon">edit</span>
             Редактировать
           </button>
+          <button class="btn btn--danger" [disabled]="deleting()" (click)="onDelete()">
+            @if (deleting()) {
+              <span class="btn-spinner btn-spinner--light"></span>
+            } @else {
+              <span class="material-symbols-outlined btn__icon">delete</span>
+            }
+            Удалить
+          </button>
         } @else {
           <button class="btn btn--outlined" [disabled]="saving()" (click)="onCancel()">
             <span class="material-symbols-outlined btn__icon">close</span>
@@ -89,6 +97,12 @@
     </div>
 
     <!-- ── BANNERS ── -->
+    @if (deleteError()) {
+      <div class="alert alert--error" role="alert">
+        <span class="material-symbols-outlined">error_outline</span>
+        {{ deleteError() }}
+      </div>
+    }
     @if (saveSuccess()) {
       <div class="alert alert--success" role="status">
         <span class="material-symbols-outlined">check_circle</span>
@@ -584,35 +598,132 @@
              TAB: DOCUMENTS
              ══════════════════════════════════════════ -->
         @if (activeTab() === 'documents') {
-          <div class="stub-panel">
-            <div class="stub-panel__inner">
-              <span class="stub-panel__icon material-symbols-outlined">description</span>
-              <h2 class="stub-panel__title">Документы</h2>
-              <p class="stub-panel__text">
-                Здесь будет список загруженных документов.<br>
-                Вы сможете добавлять файлы, отслеживать статус обработки и удалять источники данных.
-              </p>
-              <div class="stub-panel__steps">
-                <div class="stub-step">
-                  <span class="stub-step__num">1</span>
-                  <span class="stub-step__label">Загрузить PDF / DOCX / TXT</span>
-                </div>
-                <span class="stub-step__arrow material-symbols-outlined">arrow_forward</span>
-                <div class="stub-step">
-                  <span class="stub-step__num">2</span>
-                  <span class="stub-step__label">Парсинг и чанкинг</span>
-                </div>
-                <span class="stub-step__arrow material-symbols-outlined">arrow_forward</span>
-                <div class="stub-step">
-                  <span class="stub-step__num">3</span>
-                  <span class="stub-step__label">Индексация в Qdrant</span>
+          <div class="upload-panel">
+
+            <!-- Drop zone -->
+            <div
+              class="drop-zone"
+              [class.drop-zone--over]="dragOver()"
+              [class.drop-zone--loading]="uploading()"
+              (dragover)="onDragOver($event)"
+              (dragleave)="onDragLeave()"
+              (drop)="onDrop($event)"
+              (click)="fileInput.click()"
+            >
+              <input
+                #fileInput
+                type="file"
+                accept=".pdf,.docx,.txt,.md,.zip"
+                class="drop-zone__input"
+                (change)="onFileSelected($event)"
+              />
+              @if (uploading()) {
+                <div class="drop-zone__spinner"></div>
+                <span class="drop-zone__label">Обработка файла…</span>
+              } @else {
+                <span class="material-symbols-outlined drop-zone__icon">upload_file</span>
+                <span class="drop-zone__label">Перетащите файл или нажмите для выбора</span>
+                <span class="drop-zone__hint">PDF, DOCX, TXT, MD — или ZIP-архив</span>
+              }
+            </div>
+
+            <!-- Upload error -->
+            @if (uploadError()) {
+              <div class="alert alert--error" role="alert">
+                <span class="material-symbols-outlined">error_outline</span>
+                {{ uploadError() }}
+              </div>
+            }
+
+            <!-- Single file result -->
+            @if (uploadResult()) {
+              <div class="upload-result upload-result--success">
+                <span class="material-symbols-outlined upload-result__icon">check_circle</span>
+                <div class="upload-result__info">
+                  <span class="upload-result__name">{{ uploadResult()!.filename }}</span>
+                  <span class="upload-result__meta">
+                    Чанков: <strong>{{ uploadResult()!.chunks_count }}</strong>
+                    &nbsp;·&nbsp;
+                    Размер чанка: <strong>{{ uploadResult()!.chunk_size }}</strong>
+                    &nbsp;·&nbsp;
+                    Перекрытие: <strong>{{ uploadResult()!.chunk_overlap }}</strong>
+                  </span>
                 </div>
               </div>
-              <button class="btn btn--primary btn--stub" disabled>
-                <span class="material-symbols-outlined btn__icon">upload_file</span>
-                Загрузить документ — скоро
-              </button>
-            </div>
+            }
+
+            <!-- DataSources list -->
+            @if (dsLoading()) {
+              <div class="ds-loading">
+                <div class="drop-zone__spinner"></div>
+                <span>Загрузка документов…</span>
+              </div>
+            }
+            @if (dsError()) {
+              <div class="alert alert--error">
+                <span class="material-symbols-outlined">error_outline</span>
+                {{ dsError() }}
+              </div>
+            }
+            @if (!dsLoading() && dataSources().length > 0) {
+              <div class="ds-list">
+                @for (ds of dataSources(); track ds.id) {
+                  <div class="ds-item">
+                    <span class="material-symbols-outlined ds-item__icon">description</span>
+                    <div class="ds-item__info">
+                      <span class="ds-item__name">{{ ds.file_name }}</span>
+                      <span class="ds-item__meta">
+                        Чанков: <strong>{{ ds.chunks_count }}</strong>
+                        &nbsp;·&nbsp;
+                        <span class="ds-status ds-status--{{ ds.status }}">{{ ds.status }}</span>
+                      </span>
+                      @if (ds.error_message) {
+                        <span class="ds-item__error">{{ ds.error_message }}</span>
+                      }
+                    </div>
+                    <button
+                      class="icon-btn icon-btn--danger"
+                      title="Удалить"
+                      [disabled]="deletingDsId() === ds.id"
+                      (click)="deleteDataSource(ds.id)"
+                    >
+                      <span class="material-symbols-outlined">delete</span>
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Archive status -->
+            @if (archiveStatus()) {
+              @if (archiveStatus()!.status === 'processing') {
+                <div class="upload-result upload-result--processing">
+                  <div class="drop-zone__spinner"></div>
+                  <div class="upload-result__info">
+                    <span class="upload-result__name">Архив обрабатывается…</span>
+                    <span class="upload-result__meta">Страница обновится автоматически</span>
+                  </div>
+                </div>
+              } @else if (archiveStatus()!.status === 'completed') {
+                <div class="upload-result upload-result--success">
+                  <span class="material-symbols-outlined upload-result__icon">check_circle</span>
+                  <div class="upload-result__info">
+                    <span class="upload-result__name">Архив успешно обработан</span>
+                  </div>
+                </div>
+              } @else {
+                <div class="upload-result upload-result--error">
+                  <span class="material-symbols-outlined upload-result__icon">error_outline</span>
+                  <div class="upload-result__info">
+                    <span class="upload-result__name">Ошибка обработки архива</span>
+                    @if (archiveStatus()!.error) {
+                      <span class="upload-result__meta">{{ archiveStatus()!.error }}</span>
+                    }
+                  </div>
+                </div>
+              }
+            }
+
           </div>
         }
 
@@ -620,33 +731,87 @@
              TAB: CHAT
              ══════════════════════════════════════════ -->
         @if (activeTab() === 'chat') {
-          <div class="stub-panel">
-            <div class="stub-panel__inner">
-              <span class="stub-panel__icon material-symbols-outlined">chat</span>
-              <h2 class="stub-panel__title">Чат с ассистентом</h2>
-              <p class="stub-panel__text">
-                Здесь будет чат-интерфейс для общения с RAG-ассистентом.<br>
-                После загрузки документов вы сможете задавать вопросы по их содержимому.
-              </p>
-              <div class="chat-mock">
-                <div class="chat-mock__message chat-mock__message--user">
-                  Что написано в первом разделе документа?
+          <div class="chat-panel">
+
+            <!-- Chat toolbar -->
+            <div class="chat-toolbar">
+              <span class="chat-toolbar__label">
+                @if (chatSessionId()) {
+                  Сессия: <code class="chat-session-id">{{ chatSessionId()! | slice:0:8 }}…</code>
+                } @else {
+                  Новая сессия
+                }
+              </span>
+              <button class="btn btn--outlined btn--sm" (click)="newChatSession()">
+                <span class="material-symbols-outlined btn__icon">add</span>
+                Новая сессия
+              </button>
+            </div>
+
+            <!-- Messages -->
+            <div class="chat-messages" #chatScroll>
+              @if (chatMessages().length === 0) {
+                <div class="chat-empty">
+                  <span class="material-symbols-outlined chat-empty__icon">chat</span>
+                  <p>Задайте вопрос по загруженным документам</p>
                 </div>
-                <div class="chat-mock__message chat-mock__message--bot">
-                  <span class="chat-mock__avatar">
-                    <svg width="16" height="16" viewBox="0 0 28 28" fill="none">
+              }
+              @for (msg of chatMessages(); track $index) {
+                <div class="chat-msg chat-msg--{{ msg.role }}">
+                  @if (msg.role === 'assistant') {
+                    <span class="chat-msg__avatar">
+                      <svg width="18" height="18" viewBox="0 0 28 28" fill="none">
+                        <rect width="28" height="28" rx="6" fill="#1565C0"/>
+                        <path d="M6 20L11 8L14 15L17 10L22 20H6Z" fill="white" opacity="0.9"/>
+                      </svg>
+                    </span>
+                  }
+                  <div class="chat-msg__bubble">{{ msg.content }}</div>
+                </div>
+              }
+              @if (chatSending()) {
+                <div class="chat-msg chat-msg--assistant">
+                  <span class="chat-msg__avatar">
+                    <svg width="18" height="18" viewBox="0 0 28 28" fill="none">
                       <rect width="28" height="28" rx="6" fill="#1565C0"/>
                       <path d="M6 20L11 8L14 15L17 10L22 20H6Z" fill="white" opacity="0.9"/>
                     </svg>
                   </span>
-                  Ответ ассистента появится здесь после загрузки документов…
+                  <div class="chat-msg__bubble chat-msg__bubble--typing">
+                    <span></span><span></span><span></span>
+                  </div>
                 </div>
+              }
+            </div>
+
+            <!-- Chat error -->
+            @if (chatError()) {
+              <div class="alert alert--error" role="alert">
+                <span class="material-symbols-outlined">error_outline</span>
+                {{ chatError() }}
               </div>
-              <button class="btn btn--primary btn--stub" disabled>
-                <span class="material-symbols-outlined btn__icon">chat</span>
-                Открыть чат — скоро
+            }
+
+            <!-- Input -->
+            <div class="chat-input-row">
+              <textarea
+                class="chat-input"
+                rows="1"
+                placeholder="Напишите вопрос… (Enter — отправить, Shift+Enter — перенос)"
+                [value]="chatInput()"
+                (input)="setChatInput($event)"
+                (keydown)="onChatKeydown($event)"
+                [disabled]="chatSending()"
+              ></textarea>
+              <button
+                class="btn btn--primary chat-send-btn"
+                [disabled]="!chatInput().trim() || chatSending()"
+                (click)="sendMessage()"
+              >
+                <span class="material-symbols-outlined">send</span>
               </button>
             </div>
+
           </div>
         }
 
