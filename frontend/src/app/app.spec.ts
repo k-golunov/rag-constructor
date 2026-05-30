@@ -6,10 +6,13 @@ describe('App', () => {
   let app: App;
 
   beforeEach(async () => {
+    // Используем более раннюю инициализацию тестовой среды
     await TestBed.configureTestingModule({
       imports: [App],
-    }).compileComponents();
-    
+    })
+    .overrideTemplate(App, '<router-outlet />')
+    .compileComponents();
+
     fixture = TestBed.createComponent(App);
     app = fixture.componentInstance;
   });
