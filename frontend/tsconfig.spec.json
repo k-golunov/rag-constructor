@@ -6,14 +6,14 @@
     "outDir": "./out-tsc/spec",
     "types": [
       "vitest/globals",
-      "vitest/importMeta",
-      "vite/client",
       "node"
     ]
   },
   "include": [
     "src/**/*.spec.ts",
-    "src/**/*.d.ts",
-    "vitest.config.ts"
+    "src/**/*.d.ts"
   ]
+  "files": [
+    "src/test-setup.ts"
+  ],
 }

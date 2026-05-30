@@ -29,6 +29,7 @@
     "typescript": "~5.9.2",
     "vitest": "^4.0.8",
     "@vitest/browser": "^4.0.8",
-    "@testing-library/jest-dom": "^6.0.0"
+    "@testing-library/jest-dom": "^6.0.0",
+    "@vitest/coverage-v8": "^4.0.8"
   }
 }

@@ -1,24 +1,18 @@
 import '@testing-library/jest-dom';
-import { vi, type MockedFunction } from 'vitest';
-import { TestBed } from '@angular/core/testing';
+import { vi } from 'vitest';
 
 // Mock для describe, it, beforeEach и других jasmine-функций
-if (typeof describe === 'undefined') {
-  (global as any).describe = vi.describe;
-}
-if (typeof it === 'undefined') {
-  (global as any).it = vi.it;
-}
-if (typeof beforeEach === 'undefined') {
-  (global as any).beforeEach = vi.beforeEach;
-}
-if (typeof afterEach === 'undefined') {
-  (global as any).afterEach = vi.afterEach;
+if (typeof window !== 'undefined') {
+  (window as any).describe = vi.describe;
+  (window as any).it = vi.it;
+  (window as any).beforeEach = vi.beforeEach;
+  (window as any).afterEach = vi.afterEach;
 }
 
-// Убедиться, что тесты выполняются в async окружении
-TestBed.initTestEnvironment(
-  [],
-  undefined,
-  { teardown: { destroyAfterEach: true } }
-);
+// Для глобального окружения
+if (typeof global !== 'undefined') {
+  (global as any).describe = vi.describe;
+  (global as any).it = vi.it;
+  (global as any).beforeEach = vi.beforeEach;
+  (global as any).afterEach = vi.afterEach;
+}
