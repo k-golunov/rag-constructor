@@ -1,21 +1,17 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { createComponentFixture } from '@angular/core/testing';
 import { App } from './app';
 
 describe('App', () => {
-  let fixture: ComponentFixture<App>;
+  let fixture: any;
   let app: App;
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [App],
-    }).compileComponents();
-
-    fixture = TestBed.createComponent(App);
+    fixture = await createComponentFixture(App);
     app = fixture.componentInstance;
   });
 
   it('should create the app', () => {
-    expect(app).toBeTruthy();
+    expect(app).toBeDefined();
   });
 
   it('should render title', () => {

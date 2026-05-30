@@ -1,18 +1,14 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
-// Mock для describe, it, beforeEach и других jasmine-функций
-if (typeof window !== 'undefined') {
-  (window as any).describe = vi.describe;
-  (window as any).it = vi.it;
-  (window as any).beforeEach = vi.beforeEach;
-  (window as any).afterEach = vi.afterEach;
-}
+// Instead of attaching to window/global, we can use Vitest's built-in global APIs
+// directly. Vitest automatically provides these in test environment.
 
-// Для глобального окружения
-if (typeof global !== 'undefined') {
-  (global as any).describe = vi.describe;
-  (global as any).it = vi.it;
-  (global as any).beforeEach = vi.beforeEach;
-  (global as any).afterEach = vi.afterEach;
+// If you need to extend global declarations, you can do it like this:
+declare global {
+  // This allows us to use vitest's assertions in typescript
+  const describe: typeof vi.describe;
+  const it: typeof vi.it;
+  const beforeEach: typeof vi.beforeEach;
+  const afterEach: typeof vi.afterEach;
 }

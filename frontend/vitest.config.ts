@@ -1,6 +1,8 @@
 import { defineConfig } from 'vitest/config';
+import { angularVitestPlugins } from '@analogjs/vite-plugin-angular';
 
 export default defineConfig({
+  plugins: [...angularVitestPlugins()],
   test: {
     globals: true,
     environment: 'jsdom',
@@ -11,5 +13,8 @@ export default defineConfig({
       reportsDirectory: '../coverage/frontend',
       provider: 'v8',
     },
+  },
+  define: {
+    'process.env': {},
   },
 });
