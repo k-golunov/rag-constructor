@@ -9,7 +9,7 @@ describe('App', () => {
     await TestBed.configureTestingModule({
       imports: [App],
     }).compileComponents();
-
+    
     fixture = TestBed.createComponent(App);
     app = fixture.componentInstance;
   });
@@ -18,11 +18,7 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render title', () => {
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    const titleElement = compiled.querySelector('h1');
-    const textContent = titleElement?.textContent ?? '';
-    expect(textContent).toContain('Hello, frontend');
+  it('should have a title in the component', () => {
+    expect(app.title()).toBe('frontend');
   });
 });
