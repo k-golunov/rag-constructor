@@ -1,18 +1,21 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { App } from './app';
 
+// Создаем компонент с inline шаблоном для тестирования
+const createComponentWithInlineTemplate = () => {
+  return TestBed.configureTestingModule({
+    imports: [App],
+  })
+  .overrideTemplate(App, '<router-outlet></router-outlet>')
+  .compileComponents();
+};
+
 describe('App', () => {
   let fixture: ComponentFixture<App>;
   let app: App;
 
   beforeEach(async () => {
-    // Используем более раннюю инициализацию тестовой среды
-    await TestBed.configureTestingModule({
-      imports: [App],
-    })
-    .overrideTemplate(App, '<router-outlet />')
-    .compileComponents();
-
+    await createComponentWithInlineTemplate();
     fixture = TestBed.createComponent(App);
     app = fixture.componentInstance;
   });
