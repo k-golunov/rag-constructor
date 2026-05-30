@@ -1,3 +1,4 @@
+// Настройка тестового окружения для Vitest
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
@@ -12,3 +13,10 @@ declare global {
   const beforeEach: typeof vi.beforeEach;
   const afterEach: typeof vi.afterEach;
 }
+
+// Экспортируем глобальные переменные для тестов
+global.describe = describe;
+global.it = it;
+global.expect = expect;
+global.beforeEach = beforeEach;
+global.afterEach = afterEach;
