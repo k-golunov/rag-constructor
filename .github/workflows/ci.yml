@@ -25,8 +25,6 @@ jobs:
         run: |
           cd backend
           pip install -r requirements.txt
-          # Установка совместимой версии pytest-asyncio
-          pip install pytest-asyncio==0.21.1
 
       - name: Run black check
         run: |
@@ -65,7 +63,7 @@ jobs:
       - name: Run tests
         run: |
           cd frontend
-          npx vitest run
+          npx vitest run --reporter=verbose
 
       - name: Build
         run: |

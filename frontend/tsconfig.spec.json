@@ -5,11 +5,15 @@
   "compilerOptions": {
     "outDir": "./out-tsc/spec",
     "types": [
-      "vitest/globals"
+      "vitest/globals",
+      "vitest/importMeta",
+      "vite/client",
+      "node"
     ]
   },
   "include": [
+    "src/**/*.spec.ts",
     "src/**/*.d.ts",
-    "src/**/*.spec.ts"
+    "vitest.config.ts"
   ]
 }
