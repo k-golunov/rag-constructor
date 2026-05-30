@@ -32,9 +32,13 @@ class ProjectCreate(BaseModel):
 
     # ── Чанкинг ─────────────────────────────────────────────────────────────
     chunk_size: int = Field(800, ge=100, le=8000, description="Размер чанка в символах")
-    chunk_overlap: int = Field(100, ge=0, le=2000, description="Перекрытие между чанками")
+    chunk_overlap: int = Field(
+        100, ge=0, le=2000, description="Перекрытие между чанками"
+    )
     split_by: SplitBy = Field("paragraphs", description="Способ разбивки текста")
-    chunking_strategy: ChunkingStrategy = Field("recursive", description="Стратегия чанкинга")
+    chunking_strategy: ChunkingStrategy = Field(
+        "recursive", description="Стратегия чанкинга"
+    )
     extract_tables: bool = Field(False, description="Извлекать таблицы из PDF")
 
     # ── Эмбеддинги ──────────────────────────────────────────────────────────
@@ -205,7 +209,9 @@ class GenerateRequest(BaseModel):
 
     query: str = Field(..., min_length=1, description="Вопрос пользователя")
     context: str = Field(default="", description="Найденные чанки (строка)")
-    session_id: Optional[UUID] = Field(None, description="ID сессии для сохранения истории")
+    session_id: Optional[UUID] = Field(
+        None, description="ID сессии для сохранения истории"
+    )
     history: Optional[List[dict]] = Field(
         None,
         description='История диалога: [{"role": "user"|"assistant", "content": "..."}]',

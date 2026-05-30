@@ -76,7 +76,9 @@ async def upload_single(
             tmp_path, filename, project.chunk_size, project.chunk_overlap
         )
     except EmptyPDFError as exc:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        )
     except ParserError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
     finally:

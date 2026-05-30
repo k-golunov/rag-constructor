@@ -16,20 +16,19 @@ class OpenAIEmbedder(BaseEmbedder):
         self._client = None
         self._async_client = None
 
-
     @property
     def client(self) -> OpenAI:
         if self._client is None:
             self._client = OpenAI(api_key=self.api_key, base_url=self.api_base)
         return self._client
 
-
     @property
     def async_client(self) -> AsyncOpenAI:
         if self._async_client is None:
-            self._async_client = AsyncOpenAI(api_key=self.api_key, base_url=self.api_base)
+            self._async_client = AsyncOpenAI(
+                api_key=self.api_key, base_url=self.api_base
+            )
         return self._async_client
-
 
     async def embed(self, texts: List[str]) -> List[List[float]]:
         response = await self.async_client.embeddings.create(
@@ -37,7 +36,6 @@ class OpenAIEmbedder(BaseEmbedder):
             input=texts,
         )
         return [item.embedding for item in response.data]
-
 
     def embed_sync(self, texts: List[str]) -> List[List[float]]:
         response = self.client.embeddings.create(

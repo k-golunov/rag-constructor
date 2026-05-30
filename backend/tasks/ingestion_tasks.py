@@ -2,8 +2,11 @@
 from typing import List
 import asyncio
 
+
 @celery_app.task(bind=True, max_retries=3)
-def process_document_task(self, project_id: str, file_path: str, chunk_size: int, chunk_overlap: int):
+def process_document_task(
+    self, project_id: str, file_path: str, chunk_size: int, chunk_overlap: int
+):
     """
     Задача, которая:
     1. Парсит файл (использует Parser из ingestion)

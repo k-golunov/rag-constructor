@@ -35,6 +35,7 @@ def _mock_openai_response(text: str) -> MagicMock:
 # Успешная генерация
 # ---------------------------------------------------------------------------
 
+
 class TestGenerateAnswer:
     def test_generate_returns_answer(self, client):
         project = client.post(f"{BASE_URL}/", json=_project_payload()).json()
@@ -42,9 +43,7 @@ class TestGenerateAnswer:
 
         mock_response = _mock_openai_response("Это тестовый ответ.")
 
-        with patch(
-            "backend.core.llm.openai_llm.AsyncOpenAI"
-        ) as mock_openai_cls:
+        with patch("backend.core.llm.openai_llm.AsyncOpenAI") as mock_openai_cls:
             mock_client = AsyncMock()
             mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
             mock_openai_cls.return_value = mock_client
@@ -137,6 +136,7 @@ class TestGenerateAnswer:
 # ---------------------------------------------------------------------------
 # Ошибки
 # ---------------------------------------------------------------------------
+
 
 class TestGenerateErrors:
     def test_project_not_found(self, client):

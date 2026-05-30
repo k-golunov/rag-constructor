@@ -24,9 +24,27 @@ def get_vector_store(name: str, **kwargs) -> BaseVectorStore:
 
 def get_llm(name: str, **kwargs) -> BaseLLM:
     if name not in LLM_REGISTRY:
-        raise ValueError(f"LLM '{name}' not registered. Available: {list(LLM_REGISTRY)}")
+        raise ValueError(
+            f"LLM '{name}' not registered. Available: {list(LLM_REGISTRY)}"
+        )
     return LLM_REGISTRY[name](**kwargs)
 
 
-# Импорт провайдеров — триггерит авторегистрацию в реестрах
-from .llm import openai_llm  # noqa: E402, F401
+# Импорты провайдеров и регистрация должны происходить после определения реестров
+def _register_components():
+    """Функция для регистрации всех компонентов в реестрах."""
+    # Регистрация эмбеддеров
+    from .embeddings.openai_embedder import OpenAIEmbedder
+    from .embeddings.huggingface_embedder import HuggingFaceEmbedder
+
+    EMBEDDER_REGISTRY["openai"] = OpenAIEmbedder
+    EMBEDDER_REGISTRY["huggingface"] = HuggingFaceEmbedder
+
+    # Регистрация LLM
+    from .llm.openai_llm import OpenAILLM
+
+    LLM_REGISTRY["openai"] = OpenAILLM
+
+
+# Вызов функции регистрации
+_register_components()

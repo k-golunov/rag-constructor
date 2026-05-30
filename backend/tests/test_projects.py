@@ -40,6 +40,7 @@ def _create_project(client: TestClient, payload: dict | None = None) -> dict:
 # POST /projects/
 # ---------------------------------------------------------------------------
 
+
 class TestCreateProject:
     def test_create_returns_201(self, client: TestClient):
         """Успешное создание возвращает 201 и корректное тело."""
@@ -98,6 +99,7 @@ class TestCreateProject:
 # GET /projects/
 # ---------------------------------------------------------------------------
 
+
 class TestListProjects:
     def test_list_empty_db(self, client: TestClient):
         """Пустая БД — возвращает total=0 и пустой список."""
@@ -137,6 +139,7 @@ class TestListProjects:
 # GET /projects/{id}
 # ---------------------------------------------------------------------------
 
+
 class TestGetProject:
     def test_get_existing_project(self, client: TestClient):
         """Созданный проект можно получить по его ID."""
@@ -161,6 +164,7 @@ class TestGetProject:
 # ---------------------------------------------------------------------------
 # PATCH /projects/{id}
 # ---------------------------------------------------------------------------
+
 
 class TestUpdateProject:
     def test_update_name(self, client: TestClient):
@@ -224,6 +228,7 @@ class TestUpdateProject:
 # DELETE /projects/{id}
 # ---------------------------------------------------------------------------
 
+
 class TestDeleteProject:
     def test_delete_returns_204(self, client: TestClient):
         """Удаление существующего проекта возвращает 204 No Content."""
@@ -248,7 +253,9 @@ class TestDeleteProject:
     def test_deleted_project_removed_from_list(self, client: TestClient):
         """После удаления проект исчезает из общего списка."""
         _create_project(client, {**VALID_PROJECT_PAYLOAD, "name": "Оставить"})
-        to_delete = _create_project(client, {**VALID_PROJECT_PAYLOAD, "name": "Удалить"})
+        to_delete = _create_project(
+            client, {**VALID_PROJECT_PAYLOAD, "name": "Удалить"}
+        )
 
         client.delete(f"{BASE_URL}/{to_delete['id']}")
 

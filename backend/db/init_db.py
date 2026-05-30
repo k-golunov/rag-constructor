@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 # Вспомогательные функции
 # ---------------------------------------------------------------------------
 
+
 def _admin_url() -> str:
     """URL для подключения к служебной БД postgres (не к rag_constructor).
 
@@ -99,9 +100,7 @@ def run_migrations() -> None:
     # Передаём DATABASE_URL напрямую — не зависим от alembic.ini
     alembic_cfg.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
     # Указываем папку с миграциями относительно alembic.ini
-    alembic_cfg.set_main_option(
-        "script_location", str(alembic_ini.parent / "alembic")
-    )
+    alembic_cfg.set_main_option("script_location", str(alembic_ini.parent / "alembic"))
 
     logger.info("Запуск миграций Alembic (upgrade head)…")
     command.upgrade(alembic_cfg, "head")

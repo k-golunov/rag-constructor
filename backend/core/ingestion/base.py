@@ -5,13 +5,16 @@ from backend.core.Document import Document
 
 class BaseParser(ABC):
     """Извлекает сырой текст из файла."""
+
     @abstractmethod
     def parse(self, file_path: str) -> str:
         """Возвращает полный текст документа."""
         pass
 
+
 class BaseSplitter(ABC):
     """Разбивает текст на чанки."""
+
     @abstractmethod
     def split_text(self, text: str, metadata: dict) -> List[Document]:
         """

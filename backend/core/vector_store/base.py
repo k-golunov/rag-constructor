@@ -2,6 +2,7 @@
 from typing import List
 from backend.core.Document import Document
 
+
 class BaseVectorStore(ABC):
     @abstractmethod
     async def create_collection(self, collection_name: str, vector_size: int) -> None:

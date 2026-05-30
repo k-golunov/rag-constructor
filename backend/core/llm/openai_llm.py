@@ -5,7 +5,6 @@ from typing import AsyncIterator, List, Optional
 from openai import AsyncOpenAI
 from openai._types import NOT_GIVEN
 
-from backend.core.factories import LLM_REGISTRY
 from backend.core.llm.base import BaseLLM
 
 
@@ -83,14 +82,14 @@ class OpenAILLM(BaseLLM):
     ) -> List[dict]:
         """Формирует список сообщений для Chat Completions.
 
-        Структура: system (промпт + контекст) → history → user (вопрос).
+        Струкра: system (промпт + контекст) → history → user (вопрос).
         """
-        system_content = f"{self._system_prompt}\n\nКонтекст:\n{context}" if context else self._system_prompt
+        system_content = (
+            f"{self._system_prompt}\n\nКонтекст:\n{context}"
+            if context
+            else self._system_prompt
+        )
         messages: List[dict] = [{"role": "system", "content": system_content}]
         messages.extend(history)
         messages.append({"role": "user", "content": prompt})
         return messages
-
-
-# Регистрация в глобальном реестре
-LLM_REGISTRY["openai"] = OpenAILLM

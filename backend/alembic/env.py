@@ -26,8 +26,8 @@ import os
 # (например, запуск `alembic upgrade head` из папки backend/)
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from backend.config import settings          # noqa: E402
-from backend.db.database import Base         # noqa: E402
+from backend.config import settings  # noqa: E402
+from backend.db.database import Base  # noqa: E402
 import backend.db.models  # noqa: E402, F401  — регистрирует все модели в Base.metadata
 
 # ---------------------------------------------------------------------------
