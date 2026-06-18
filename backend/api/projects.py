@@ -30,6 +30,7 @@ router = APIRouter(prefix="/api/v1/public/provider/projects", tags=["projects"])
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _get_project_or_404(project_id: UUID, db: Session) -> Project:
     """Возвращает проект по ID или бросает HTTP 404.
 
@@ -55,6 +56,7 @@ def _get_project_or_404(project_id: UUID, db: Session) -> Project:
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
 
 @router.post(
     "/",

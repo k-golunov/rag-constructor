@@ -2,8 +2,9 @@
 REST API для RAG-чата.
 
 Эндпоинты:
-    POST /projects/{project_id}/chat              — задать вопрос ассистенту
+    POST /projects/{project_id}/chat              — задать вопрос ассистенту (полный RAG)
     GET  /projects/{project_id}/chat/{session_id} — история диалога
+    POST /projects/{project_id}/chat/generate     — генерация ответа по готовому контексту
 """
 
 import logging
@@ -15,10 +16,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from backend.core.factories import get_embedder, get_llm, get_vector_store
+from backend.core.factories import build_embedder, build_llm, build_vector_store, get_llm
 from backend.db.database import get_db
 from backend.db.models import ChatHistory, Project
-from backend.db.schemas import ChatHistoryResponse
+from backend.db.schemas import ChatHistoryResponse, GenerateRequest, GenerateResponse
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +43,17 @@ class ChatResponse(BaseModel):
 
 def _collection_name(project_id: UUID) -> str:
     return f"project_{str(project_id).replace('-', '_')}"
+
+
+def _get_project_or_404(project_id: UUID, db: Session) -> Project:
+    """Возвращает проект по ID или бросает HTTP 404."""
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if project is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Проект {project_id} не найден.",
+        )
+    return project
 
 
 @router.post(
@@ -73,9 +85,7 @@ async def chat(
     Raises:
         HTTPException: 404 если проект не найден, 502 при ошибке LLM.
     """
-    project = db.query(Project).filter(Project.id == project_id).first()
-    if project is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Проект не найден.")
+    project = _get_project_or_404(project_id, db)
 
     session_id = payload.session_id or str(uuid_module.uuid4())
     try:
@@ -99,14 +109,14 @@ async def chat(
     context = ""
     sources: List[str] = []
     try:
-        embedder = get_embedder(
-            model_name=project.embedding_model,
+        embedder = build_embedder(
+            project.embedding_model,
             api_key=project.embedding_api_key,
             api_base=project.embedding_api_url,
         )
         [query_vector] = await embedder.embed([payload.question])
 
-        vector_store = get_vector_store()
+        vector_store = build_vector_store()
         docs = await vector_store.search(_collection_name(project_id), query_vector, limit=5)
         context = "\n\n".join(doc.text for doc in docs)
         sources = list({doc.metadata.get("source", "") for doc in docs if doc.metadata.get("source")})
@@ -115,8 +125,8 @@ async def chat(
 
     # Вызов LLM
     try:
-        llm = get_llm(
-            model_name=project.llm_model,
+        llm = build_llm(
+            project.llm_model,
             system_prompt=project.system_prompt,
             api_key=project.llm_api_key,
             api_base=project.llm_api_url,
@@ -142,6 +152,54 @@ async def chat(
     db.commit()
 
     return ChatResponse(answer=answer, session_id=session_id, sources=sources)
+
+
+@router.post(
+    "/projects/{project_id}/chat/generate",
+    response_model=GenerateResponse,
+    summary="Сгенерировать ответ LLM по готовому контексту",
+)
+async def generate_answer(
+    project_id: UUID,
+    payload: GenerateRequest,
+    db: Session = Depends(get_db),
+) -> GenerateResponse:
+    """Принимает вопрос и готовый контекст, возвращает ответ LLM (без ретрива).
+
+    Args:
+        project_id: UUID проекта (определяет модель, ключ и системный промпт).
+        payload: Вопрос, контекст и опциональная история диалога.
+        db: Сессия БД.
+
+    Returns:
+        Объект с полем answer — текстовый ответ модели.
+
+    Raises:
+        HTTPException: 404 если проект не найден; 422 если LLM не сконфигурирован.
+    """
+    project = _get_project_or_404(project_id, db)
+
+    if not project.llm_model or not project.llm_api_key:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="LLM не сконфигурирован: заполните llm_model и llm_api_key в настройках проекта.",
+        )
+
+    llm = get_llm(
+        "openai",
+        model=project.llm_model,
+        api_key=project.llm_api_key,
+        api_url=project.llm_api_url,
+        system_prompt=project.system_prompt,
+    )
+
+    answer = await llm.generate(
+        prompt=payload.query,
+        context=payload.context,
+        history=payload.history,
+    )
+
+    return GenerateResponse(answer=answer)
 
 
 @router.get(

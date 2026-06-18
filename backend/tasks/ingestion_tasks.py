@@ -4,7 +4,7 @@ from pathlib import Path
 
 from .worker import celery_app
 from backend.config import settings
-from backend.core.factories import get_embedder, get_vector_store
+from backend.core.factories import build_embedder, build_vector_store
 from backend.core.ingestion.pipeline import process_file
 from backend.db.database import SessionLocal
 
@@ -58,8 +58,8 @@ def process_document_task(
         path = Path(file_path)
         chunks = process_file(path, path.name, chunk_size, chunk_overlap)
 
-        embedder = get_embedder(
-            model_name=embedding_model,
+        embedder = build_embedder(
+            embedding_model,
             api_key=embedding_api_key,
             api_base=embedding_api_url,
         )
@@ -69,7 +69,7 @@ def process_document_task(
             chunk.embedding = emb
 
         collection = _collection_name(project_id)
-        vector_store = get_vector_store()
+        vector_store = build_vector_store()
         asyncio.run(vector_store.create_collection(collection, embedding_dimension))
         asyncio.run(vector_store.upsert(collection, chunks))
 

@@ -19,7 +19,7 @@ from fastapi import (
 from sqlalchemy.orm import Session
 
 from backend.config import settings
-from backend.core.factories import get_embedder, get_vector_store
+from backend.core.factories import build_embedder, build_vector_store
 from backend.core.ingestion.parser import (
     SUPPORTED_EXTENSIONS,
     EmptyPDFError,
@@ -119,8 +119,8 @@ async def upload_single(
 
     # Эмбеддинг + индексация в Qdrant
     try:
-        embedder = get_embedder(
-            model_name=project.embedding_model,
+        embedder = build_embedder(
+            project.embedding_model,
             api_key=project.embedding_api_key,
             api_base=project.embedding_api_url,
         )
@@ -129,7 +129,7 @@ async def upload_single(
         for chunk, emb in zip(chunks, embeddings):
             chunk.embedding = emb
 
-        vector_store = get_vector_store()
+        vector_store = build_vector_store()
         collection = _collection_name(project_id)
         await vector_store.create_collection(collection, project.embedding_dimension)
         await vector_store.upsert(collection, chunks)
@@ -272,8 +272,8 @@ def _process_archive_full(
 
         # Синхронный эмбеддинг
         if all_chunks:
-            embedder = get_embedder(
-                model_name=embedding_model,
+            embedder = build_embedder(
+                embedding_model,
                 api_key=embedding_api_key,
                 api_base=embedding_api_url,
             )
@@ -283,7 +283,7 @@ def _process_archive_full(
                 chunk.embedding = emb
 
             collection = _collection_name(project_id)
-            vector_store = get_vector_store()
+            vector_store = build_vector_store()
             asyncio.run(vector_store.create_collection(collection, embedding_dimension))
             asyncio.run(vector_store.upsert(collection, all_chunks))
 

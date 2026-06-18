@@ -19,9 +19,9 @@ from pydantic_settings import BaseSettings
 _here = Path(__file__).parent  # backend/
 
 _ENV_CANDIDATES = [
-    _here / ".env",          # backend/.env
-    _here.parent / ".env",   # project_root/.env
-    Path(".env"),             # cwd/.env
+    _here / ".env",  # backend/.env
+    _here.parent / ".env",  # project_root/.env
+    Path(".env"),  # cwd/.env
 ]
 
 _env_file = next((str(p) for p in _ENV_CANDIDATES if p.exists()), None)

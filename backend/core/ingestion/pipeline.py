@@ -72,6 +72,10 @@ def process_archive(
         }
     except Exception as exc:
         logger.exception("Фоновая обработка %s упала", operation_id)
-        operations[operation_id] = {"status": "failed", "result": None, "error": str(exc)}
+        operations[operation_id] = {
+            "status": "failed",
+            "result": None,
+            "error": str(exc),
+        }
     finally:
         shutil.rmtree(tmp_dir, ignore_errors=True)
