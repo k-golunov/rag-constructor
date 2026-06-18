@@ -88,7 +88,7 @@
           <div class="project-card__body">
             <div class="project-card__title-row">
               <h3 class="project-card__name">{{ project.name }}</h3>
-              <button class="icon-btn" title="Копировать ссылку" (click)="$event.stopPropagation()">
+              <button class="icon-btn" title="Копировать ссылку" (click)="copyLink(project.id, $event)">
                 <span class="material-symbols-outlined">link</span>
               </button>
             </div>

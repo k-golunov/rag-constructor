@@ -48,4 +48,8 @@ export class ProjectService {
   updateProject(id: string, update: ProjectUpdate): Observable<Project> {
     return this.http.patch<Project>(`${this.baseUrl}/${id}`, update);
   }
+
+  deleteProject(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
 }

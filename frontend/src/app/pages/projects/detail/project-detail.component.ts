@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, signal } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import {
   AbstractControl,
@@ -8,9 +8,13 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { DatePipe } from '@angular/common';
+import { DatePipe, SlicePipe } from '@angular/common';
 
 import { ProjectService } from '../../../services/project.service';
+import { UploadService, UploadSingleResponse, OperationStatus } from '../../../services/upload.service';
+import { DataSourceService } from '../../../services/data-source.service';
+import { ChatService, ChatMessage, ChatResponse } from '../../../services/chat.service';
+import { DataSource } from '../../../models/data-source.model';
 import {
   Project,
   ProjectUpdate,
@@ -32,11 +36,11 @@ function optionalUrlValidator(control: AbstractControl): ValidationErrors | null
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [RouterLink, ReactiveFormsModule, DatePipe],
+  imports: [RouterLink, ReactiveFormsModule, DatePipe, SlicePipe],
   templateUrl: './project-detail.component.html',
   styleUrl: './project-detail.component.css',
 })
-export class ProjectDetailComponent implements OnInit {
+export class ProjectDetailComponent implements OnInit, OnDestroy {
   /** Route param injected via withComponentInputBinding() */
   @Input() id!: string;
 
@@ -62,6 +66,32 @@ export class ProjectDetailComponent implements OnInit {
   saveSuccess  = signal<boolean>(false);
   showEmbedKey = signal<boolean>(false);
   showLlmKey   = signal<boolean>(false);
+
+  // ── Delete state ────────────────────────────────────────────
+  deleting      = signal<boolean>(false);
+  deleteError   = signal<string | null>(null);
+
+  // ── DataSources state ────────────────────────────────────────
+  dataSources      = signal<DataSource[]>([]);
+  dsLoading        = signal<boolean>(false);
+  dsError          = signal<string | null>(null);
+  deletingDsId     = signal<string | null>(null);
+
+  // ── Chat state ───────────────────────────────────────────────
+  chatMessages   = signal<ChatMessage[]>([]);
+  chatSessionId  = signal<string | null>(null);
+  chatInput      = signal<string>('');
+  chatSending    = signal<boolean>(false);
+  chatError      = signal<string | null>(null);
+
+  // ── Upload state ────────────────────────────────────────────
+  uploading       = signal<boolean>(false);
+  uploadResult    = signal<UploadSingleResponse | null>(null);
+  uploadError     = signal<string | null>(null);
+  dragOver        = signal<boolean>(false);
+  archiveStatus   = signal<OperationStatus | null>(null);
+
+  private pollTimer: ReturnType<typeof setTimeout> | null = null;
 
   form!: FormGroup;
 
@@ -89,8 +119,16 @@ export class ProjectDetailComponent implements OnInit {
 
   private successTimer: ReturnType<typeof setTimeout> | null = null;
 
+  ngOnDestroy(): void {
+    if (this.successTimer) clearTimeout(this.successTimer);
+    if (this.pollTimer) clearTimeout(this.pollTimer);
+  }
+
   constructor(
     private readonly projectService: ProjectService,
+    private readonly uploadService: UploadService,
+    private readonly dataSourceService: DataSourceService,
+    private readonly chatService: ChatService,
     private readonly fb: FormBuilder,
     private readonly router: Router,
   ) {}
@@ -243,6 +281,80 @@ export class ProjectDetailComponent implements OnInit {
 
   setTab(tab: TabId): void {
     this.activeTab.set(tab);
+    if (tab === 'documents') this.loadDataSources();
+  }
+
+  // ── DataSources ────────────────────────────────────────────
+
+  loadDataSources(): void {
+    this.dsLoading.set(true);
+    this.dsError.set(null);
+    this.dataSourceService.getDataSources(this.id).subscribe({
+      next: (res) => {
+        this.dataSources.set(res.items);
+        this.dsLoading.set(false);
+      },
+      error: () => {
+        this.dsError.set('Не удалось загрузить список документов.');
+        this.dsLoading.set(false);
+      },
+    });
+  }
+
+  deleteDataSource(dsId: string): void {
+    if (!confirm('Удалить этот источник данных?')) return;
+    this.deletingDsId.set(dsId);
+    this.dataSourceService.deleteDataSource(dsId).subscribe({
+      next: () => {
+        this.dataSources.update(list => list.filter(d => d.id !== dsId));
+        this.deletingDsId.set(null);
+      },
+      error: () => {
+        this.deletingDsId.set(null);
+      },
+    });
+  }
+
+  // ── Chat ───────────────────────────────────────────────────
+
+  setChatInput(event: Event): void {
+    this.chatInput.set((event.target as HTMLTextAreaElement).value);
+  }
+
+  onChatKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      this.sendMessage();
+    }
+  }
+
+  sendMessage(): void {
+    const question = this.chatInput().trim();
+    if (!question || this.chatSending()) return;
+
+    this.chatMessages.update(msgs => [...msgs, { role: 'user', content: question }]);
+    this.chatInput.set('');
+    this.chatSending.set(true);
+    this.chatError.set(null);
+
+    this.chatService.sendMessage(this.id, question, this.chatSessionId()).subscribe({
+      next: (res: ChatResponse) => {
+        this.chatSessionId.set(res.session_id);
+        this.chatMessages.update(msgs => [...msgs, { role: 'assistant', content: res.answer }]);
+        this.chatSending.set(false);
+      },
+      error: (err) => {
+        this.chatMessages.update(msgs => msgs.slice(0, -1));
+        this.chatError.set(err?.error?.detail ?? 'Ошибка при отправке сообщения.');
+        this.chatSending.set(false);
+      },
+    });
+  }
+
+  newChatSession(): void {
+    this.chatSessionId.set(null);
+    this.chatMessages.set([]);
+    this.chatError.set(null);
   }
 
   // ── Slider sync ────────────────────────────────────────────
@@ -251,5 +363,92 @@ export class ProjectDetailComponent implements OnInit {
     const value = +(event.target as HTMLInputElement).value;
     this.form.get(controlName)?.setValue(value);
     this.form.get(controlName)?.markAsDirty();
+  }
+
+  // ── Delete ─────────────────────────────────────────────────
+
+  onDelete(): void {
+    if (!confirm(`Удалить проект «${this.project()!.name}»? Это действие необратимо.`)) return;
+    this.deleting.set(true);
+    this.deleteError.set(null);
+    this.projectService.deleteProject(this.id).subscribe({
+      next: () => this.router.navigate(['/projects']),
+      error: () => {
+        this.deleteError.set('Не удалось удалить проект. Попробуйте ещё раз.');
+        this.deleting.set(false);
+      },
+    });
+  }
+
+  // ── Upload ─────────────────────────────────────────────────
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.dragOver.set(true);
+  }
+
+  onDragLeave(): void {
+    this.dragOver.set(false);
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.dragOver.set(false);
+    const file = event.dataTransfer?.files?.[0];
+    if (file) this.uploadFile(file);
+  }
+
+  onFileSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) this.uploadFile(file);
+  }
+
+  private uploadFile(file: File): void {
+    this.uploading.set(true);
+    this.uploadResult.set(null);
+    this.uploadError.set(null);
+    this.archiveStatus.set(null);
+    if (this.pollTimer) clearTimeout(this.pollTimer);
+
+    const isZip = file.name.toLowerCase().endsWith('.zip');
+
+    if (isZip) {
+      this.uploadService.uploadArchive(this.id, file).subscribe({
+        next: ({ operation_id }) => this.pollArchiveStatus(operation_id),
+        error: (err) => {
+          this.uploadError.set(err?.error?.detail ?? 'Ошибка загрузки архива.');
+          this.uploading.set(false);
+        },
+      });
+    } else {
+      this.uploadService.uploadFile(this.id, file).subscribe({
+        next: (result) => {
+          this.uploadResult.set(result);
+          this.uploading.set(false);
+          this.loadDataSources();
+        },
+        error: (err) => {
+          this.uploadError.set(err?.error?.detail ?? 'Ошибка загрузки файла. Попробуйте ещё раз.');
+          this.uploading.set(false);
+        },
+      });
+    }
+  }
+
+  private pollArchiveStatus(operationId: string): void {
+    this.uploadService.getOperationStatus(operationId).subscribe({
+      next: (status) => {
+        this.archiveStatus.set(status);
+        if (status.status === 'processing') {
+          this.pollTimer = setTimeout(() => this.pollArchiveStatus(operationId), 2000);
+        } else {
+          this.uploading.set(false);
+        }
+      },
+      error: () => {
+        this.uploadError.set('Не удалось получить статус операции.');
+        this.uploading.set(false);
+      },
+    });
   }
 }

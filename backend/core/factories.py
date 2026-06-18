@@ -1,4 +1,6 @@
-﻿from typing import Dict, Type
+from typing import Dict, Optional, Type
+
+from backend.config import settings
 
 from .embeddings.base import BaseEmbedder
 from .ingestion.base import BaseParser, BaseSplitter
@@ -30,6 +32,77 @@ def get_llm(name: str, **kwargs) -> BaseLLM:
     return LLM_REGISTRY[name](**kwargs)
 
 
+# ---------------------------------------------------------------------------
+# Высокоуровневые билдеры для RAG-пайплайна.
+#
+# Реестры выше — низкоуровневый слой (провайдер выбирается по имени). Билдеры
+# инкапсулируют выбор провайдера по имени модели и подстановку дефолтов из
+# settings, чтобы API-роутеры и Celery-задачи не дублировали эту логику.
+# ---------------------------------------------------------------------------
+def build_embedder(
+    model_name: str,
+    api_key: Optional[str] = None,
+    api_base: Optional[str] = None,
+) -> BaseEmbedder:
+    """Возвращает эмбеддер по имени модели.
+
+    Модели ``sentence-transformers/*`` обслуживаются локальным HuggingFace,
+    остальные — OpenAI-совместимым провайдером.
+
+    Args:
+        model_name: Идентификатор модели эмбеддингов.
+        api_key: API-ключ (если не задан — берётся из settings).
+        api_base: Базовый URL API.
+
+    Returns:
+        Экземпляр BaseEmbedder.
+    """
+    if model_name.startswith("sentence-transformers/"):
+        return get_embedder("huggingface", model_name=model_name)
+    return get_embedder(
+        "openai",
+        model_name=model_name,
+        api_key=api_key or settings.OPENAI_API_KEY,
+        api_base=api_base or settings.OPENAI_BASE_URL,
+    )
+
+
+def build_vector_store() -> BaseVectorStore:
+    """Возвращает подключённое векторное хранилище (Qdrant) из настроек."""
+    return get_vector_store(
+        "qdrant",
+        url=settings.QDRANT_URL,
+        api_key=settings.QDRANT_API_KEY,
+    )
+
+
+def build_llm(
+    model_name: str,
+    system_prompt: str = "",
+    api_key: Optional[str] = None,
+    api_base: Optional[str] = None,
+) -> BaseLLM:
+    """Возвращает LLM по имени модели.
+
+    Args:
+        model_name: Идентификатор LLM.
+        system_prompt: Системный промпт.
+        api_key: API-ключ (если не задан — берётся из settings).
+        api_base: Базовый URL API.
+
+    Returns:
+        Экземпляр BaseLLM.
+    """
+    kwargs = {
+        "model": model_name,
+        "api_key": api_key or settings.OPENAI_API_KEY,
+        "api_url": api_base,
+    }
+    if system_prompt:
+        kwargs["system_prompt"] = system_prompt
+    return get_llm("openai", **kwargs)
+
+
 # Импорты провайдеров и регистрация должны происходить после определения реестров
 def _register_components():
     """Функция для регистрации всех компонентов в реестрах."""
@@ -39,6 +112,11 @@ def _register_components():
 
     EMBEDDER_REGISTRY["openai"] = OpenAIEmbedder
     EMBEDDER_REGISTRY["huggingface"] = HuggingFaceEmbedder
+
+    # Регистрация векторных хранилищ
+    from .vector_store.qdrant_store import QdrantVectorStore
+
+    VECTOR_STORE_REGISTRY["qdrant"] = QdrantVectorStore
 
     # Регистрация LLM
     from .llm.openai_llm import OpenAILLM

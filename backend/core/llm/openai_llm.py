@@ -3,7 +3,6 @@
 from typing import AsyncIterator, List, Optional
 
 from openai import AsyncOpenAI
-from openai._types import NOT_GIVEN
 
 from backend.core.llm.base import BaseLLM
 
@@ -31,7 +30,7 @@ class OpenAILLM(BaseLLM):
         self._system_prompt = system_prompt
         self._client = AsyncOpenAI(
             api_key=api_key,
-            base_url=api_url if api_url else NOT_GIVEN,
+            base_url=api_url or None,
         )
 
     async def generate(

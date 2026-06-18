@@ -52,4 +52,10 @@ export class ProjectListComponent implements OnInit {
   promptPreview(prompt: string): string {
     return prompt.length > 80 ? prompt.slice(0, 80) + '…' : prompt;
   }
+
+  copyLink(id: string, event: MouseEvent): void {
+    event.stopPropagation();
+    const url = `${window.location.origin}/projects/${id}`;
+    navigator.clipboard.writeText(url).catch(() => {});
+  }
 }
