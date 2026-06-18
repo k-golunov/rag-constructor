@@ -16,7 +16,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from backend.core.factories import build_embedder, build_llm, build_vector_store, get_llm
+from backend.core.factories import (
+    build_embedder,
+    build_llm,
+    build_vector_store,
+    get_llm,
+)
 from backend.db.database import get_db
 from backend.db.models import ChatHistory, Project
 from backend.db.schemas import ChatHistoryResponse, GenerateRequest, GenerateResponse
@@ -91,7 +96,9 @@ async def chat(
     try:
         session_uuid = UUID(session_id)
     except ValueError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Некорректный session_id.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Некорректный session_id."
+        )
 
     # История диалога для LLM
     history_records = (
@@ -117,9 +124,17 @@ async def chat(
         [query_vector] = await embedder.embed([payload.question])
 
         vector_store = build_vector_store()
-        docs = await vector_store.search(_collection_name(project_id), query_vector, limit=5)
+        docs = await vector_store.search(
+            _collection_name(project_id), query_vector, limit=5
+        )
         context = "\n\n".join(doc.text for doc in docs)
-        sources = list({doc.metadata.get("source", "") for doc in docs if doc.metadata.get("source")})
+        sources = list(
+            {
+                doc.metadata.get("source", "")
+                for doc in docs
+                if doc.metadata.get("source")
+            }
+        )
     except Exception as exc:
         logger.warning("Не удалось получить контекст из Qdrant: %s", exc)
 
@@ -131,24 +146,32 @@ async def chat(
             api_key=project.llm_api_key,
             api_base=project.llm_api_url,
         )
-        answer = await llm.generate(prompt=payload.question, context=context, history=history)
+        answer = await llm.generate(
+            prompt=payload.question, context=context, history=history
+        )
     except Exception as exc:
         logger.error("Ошибка LLM: %s", exc)
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Ошибка LLM: {exc}")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Ошибка LLM: {exc}"
+        )
 
     # Сохранение в БД
-    db.add(ChatHistory(
-        project_id=project_id,
-        session_id=session_uuid,
-        role="user",
-        content=payload.question,
-    ))
-    db.add(ChatHistory(
-        project_id=project_id,
-        session_id=session_uuid,
-        role="assistant",
-        content=answer,
-    ))
+    db.add(
+        ChatHistory(
+            project_id=project_id,
+            session_id=session_uuid,
+            role="user",
+            content=payload.question,
+        )
+    )
+    db.add(
+        ChatHistory(
+            project_id=project_id,
+            session_id=session_uuid,
+            role="assistant",
+            content=answer,
+        )
+    )
     db.commit()
 
     return ChatResponse(answer=answer, session_id=session_id, sources=sources)

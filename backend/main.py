@@ -44,7 +44,7 @@ async def lifespan(app: FastAPI):
             "  POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB",
             exc,
             _masked_db_url(settings.DATABASE_URL),
-            exc_info=True,   # печатает полный traceback в лог — упрощает отладку
+            exc_info=True,  # печатает полный traceback в лог — упрощает отладку
         )
 
     yield  # приложение принимает запросы

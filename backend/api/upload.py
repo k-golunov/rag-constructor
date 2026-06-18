@@ -95,10 +95,14 @@ async def upload_single(
         tmp_path.write_bytes(content)
 
     try:
-        chunks = process_file(tmp_path, filename, project.chunk_size, project.chunk_overlap)
+        chunks = process_file(
+            tmp_path, filename, project.chunk_size, project.chunk_overlap
+        )
     except EmptyPDFError as exc:
         saved_path.unlink(missing_ok=True)
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        )
     except ParserError as exc:
         saved_path.unlink(missing_ok=True)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
@@ -297,7 +301,11 @@ def _process_archive_full(
         }
     except Exception as exc:
         logger.exception("Фоновая обработка %s упала", operation_id)
-        operations[operation_id] = {"status": "failed", "result": None, "error": str(exc)}
+        operations[operation_id] = {
+            "status": "failed",
+            "result": None,
+            "error": str(exc),
+        }
     finally:
         shutil.rmtree(tmp_dir, ignore_errors=True)
 

@@ -84,6 +84,7 @@ def process_document_task(
     except Exception as exc:
         logger.exception("Ошибка обработки %s", file_path)
         from backend.db.models import DataSource
+
         ds = db.query(DataSource).filter(DataSource.id == data_source_id).first()
         if ds:
             ds.status = "failed"
