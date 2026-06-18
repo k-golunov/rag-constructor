@@ -1,4 +1,9 @@
-﻿FROM ubuntu:latest
-LABEL authors="user"
+FROM python:3.11
+WORKDIR /app
 
-ENTRYPOINT ["top", "-b"]
+COPY backend/requirements.txt /app/backend/requirements.txt
+RUN pip install --no-cache-dir -r /app/backend/requirements.txt
+COPY backend/ /app/backend/
+EXPOSE 8000
+
+CMD ["uvicorn", "backend.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
