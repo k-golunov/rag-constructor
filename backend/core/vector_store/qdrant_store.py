@@ -16,7 +16,10 @@ class QdrantVectorStore(BaseVectorStore):
     """
 
     def __init__(self, url: str, api_key: Optional[str] = None):
-        self._client = QdrantClient(url=url, api_key=api_key)
+        # check_compatibility=False — не дёргать /version при каждом подключении:
+        # qdrant/qdrant:latest часто новее pinned qdrant-client, и проверка
+        # совместимости лишь сыплет UserWarning, не влияя на работу.
+        self._client = QdrantClient(url=url, api_key=api_key, check_compatibility=False)
 
     async def create_collection(self, collection_name: str, vector_size: int) -> None:
         """Создаёт коллекцию, если она не существует.
