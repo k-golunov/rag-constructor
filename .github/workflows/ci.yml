@@ -2,9 +2,9 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ main, task18]
+    branches: [ main, task18 ]
   pull_request:
-    branches: [ main, task18]
+    branches: [ main, task18 ]
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -72,6 +72,8 @@ jobs:
 
   docker-build:
     needs: [backend-tests, frontend-tests]
+    # Сборка образа ТОЛЬКО при push в main (т.е. при мерже PR)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
