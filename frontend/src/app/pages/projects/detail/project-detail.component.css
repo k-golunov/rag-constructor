@@ -250,18 +250,16 @@
 }
 .tabs__tab-icon { font-size: 18px; }
 
-/* Animated underline indicator */
-.tabs__indicator {
+/* Keep the underline aligned with each tab, including longer labels. */
+.tabs__tab--active::after {
+  content: '';
   position: absolute;
   bottom: 0;
+  left: 0;
+  right: 0;
   height: 3px;
   background: var(--primary);
   border-radius: 3px 3px 0 0;
-  transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-              width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  /* calc: tab 0 starts at padding 8px; each tab ~140px wide */
-  left: calc(8px + var(--tab-index, 0) * 140px);
-  width: 140px;
 }
 
 .tabs__content {

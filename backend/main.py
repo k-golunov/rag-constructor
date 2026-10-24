@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.api.chat import router as chat_router
+from backend.api.question_sets import router as question_sets_router
 from backend.api.data_sources import router as data_sources_router
 from backend.api.projects import router as projects_router
 from backend.api.upload import router as upload_router
@@ -87,3 +88,4 @@ app.include_router(projects_router)
 app.include_router(upload_router)
 app.include_router(data_sources_router)
 app.include_router(chat_router)
+app.include_router(question_sets_router)

@@ -1,0 +1,203 @@
+<section class="question-sets">
+  <h2>Наборы вопросов</h2>
+  <p>
+    Каждое изменение создаёт новую версию. Прежние версии и данные завершённых запусков сохраняются.
+  </p>
+  <button type="button" [disabled]="busy()" (click)="load()">Обновить список наборов</button>
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+  <fieldset [disabled]="busy()">
+    <legend>Создать набор</legend>
+    <label>Название <input [(ngModel)]="name" /></label>
+    <label>Описание <input [(ngModel)]="description" /></label>
+    <button type="button" (click)="createSet()">Создать</button>
+  </fieldset>
+  @if (sets().length) {
+    <div class="row">
+      <label
+        >Набор
+        <select [ngModel]="setId" (ngModelChange)="selectSet($event)" [disabled]="busy()">
+          @for (set of sets(); track set.id) {
+            <option [value]="set.id">{{ set.name }}</option>
+          }
+        </select></label
+      >
+      <label
+        >Версия
+        <select
+          [ngModel]="version()?.id"
+          (ngModelChange)="selectVersion($event)"
+          [disabled]="busy()"
+        >
+          @for (item of versions(); track item.id) {
+            <option [value]="item.id">Версия {{ item.number }}</option>
+          }
+        </select></label
+      >
+    </div>
+    @if (moreSets()) {
+      <button type="button" [disabled]="busy()" (click)="loadMoreSets()">
+        Показать ещё наборы
+      </button>
+    }
+    @if (moreVersions()) {
+      <button type="button" [disabled]="busy()" (click)="loadMoreVersions()">
+        Показать более ранние версии
+      </button>
+    }
+  }
+  @if (version(); as selected) {
+    <p class="hint">
+      Версия {{ selected.number }} · {{ selected.examples.length }} вопросов ·
+      {{ selected.documents.length }} документов
+    </p>
+    @if (!latest) {
+      <p class="notice">
+        Историческая версия: её можно просматривать и использовать для запусков. Редактирование
+        доступно в последней версии.
+      </p>
+    }
+    <div class="row">
+      <button type="button" [disabled]="busy()" (click)="exportQuestions()">Экспорт JSON</button>
+      @if (latest) {
+        <button type="button" [disabled]="busy()" (click)="refreshDocuments()">
+          Обновить состав документов
+        </button>
+      }
+    </div>
+    @if (latest) {
+      <p class="hint">
+        Обновление состава создаёт новую непроверенную версию с текущими документами и убирает
+        прежние подтверждения только из новой версии.
+      </p>
+      <fieldset [disabled]="busy()">
+        <legend>Импорт вопросов</legend>
+        <input type="file" accept=".json,.jsonl,.csv" (change)="chooseFile($event)" />
+        <button type="button" [disabled]="!importFile" (click)="importQuestions()">
+          Добавить из файла
+        </button>
+        <p class="hint">
+          UTF-8, до 10 МБ. Импортированные примеры требуют проверки человеком. Эталонный ответ
+          необязателен.
+        </p>
+      </fieldset>
+      <fieldset [disabled]="busy()">
+        <legend>{{ editingId ? 'Редактировать вопрос в новой версии' : 'Добавить вопрос' }}</legend>
+        <label>Вопрос <textarea [(ngModel)]="question" rows="2"></textarea></label>
+        <label
+          >Эталонный ответ, если известен <textarea [(ngModel)]="reference" rows="2"></textarea>
+        </label>
+        <div class="row">
+          <label>Категория <input [(ngModel)]="category" /></label>
+          <label
+            >Назначение
+            <select [(ngModel)]="split">
+              <option value="tuning">Подбор настроек</option>
+              <option value="test">Итоговая проверка</option>
+            </select></label
+          >
+        </div>
+        <label class="checkbox"
+          ><input type="checkbox" [(ngModel)]="unanswerable" /> В документах нет ответа</label
+        >
+        <h3>Подтверждающие выдержки</h3>
+        <label
+          >Исходный документ
+          <select [(ngModel)]="evidenceDocument">
+            @for (document of selected.documents; track document.document_version_id) {
+              <option [value]="document.document_version_id">{{ document.file_name }}</option>
+            }
+          </select></label
+        >
+        <label>Точная выдержка <textarea [(ngModel)]="evidenceQuote" rows="2"></textarea></label>
+        <label
+          >Начальная позиция, если выдержка повторяется
+          <input type="number" min="0" [(ngModel)]="evidenceStart"
+        /></label>
+        <button type="button" (click)="addEvidence()">Добавить подтверждение</button>
+        @for (proof of evidence; track $index) {
+          <blockquote>
+            <strong>{{ documentName(proof.document_version_id) }}</strong>
+            <p>{{ proof.quote }}</p>
+            <button type="button" (click)="removeEvidence($index)">Убрать</button>
+          </blockquote>
+        }
+        <div class="row">
+          <button type="button" (click)="saveExample()">Сохранить новую версию</button
+          ><button type="button" (click)="clearEditor()">Очистить форму</button>
+        </div>
+      </fieldset>
+    }
+    <div class="row">
+      <label
+        >Показывать
+        <select [(ngModel)]="filter">
+          <option value="all">Все вопросы</option>
+          <option value="tuning">Для подбора настроек</option>
+          <option value="test">Для итоговой проверки</option>
+        </select></label
+      >
+      @if (latest) {
+        <label>Имя проверяющего <input [(ngModel)]="reviewer" /></label>
+      }
+    </div>
+    @for (example of visibleExamples(); track example.id) {
+      <article>
+        <h3>{{ example.question }}</h3>
+        <p class="hint">
+          {{ reviewLabel(example.review.status) }} ·
+          {{ example.split === 'tuning' ? 'Подбор настроек' : 'Итоговая проверка' }}
+          @if (example.category) {
+            · {{ example.category }}
+          }
+        </p>
+        @if (example.unanswerable) {
+          <p>Отмечено отсутствие ответа в документах.</p>
+        }
+        @if (example.reference_answer) {
+          <p><strong>Эталон:</strong> {{ example.reference_answer }}</p>
+        }
+        @for (proof of example.evidence; track $index) {
+          <blockquote>
+            <strong>{{ proof.file_name }}</strong>
+            <p>{{ proof.quote }}</p>
+          </blockquote>
+        }
+        @if (example.review.reviewer) {
+          <p class="hint">Проверяющий: {{ example.review.reviewer }}</p>
+        }
+        <div class="row">
+          @if (latest) {
+            <button type="button" [disabled]="busy()" (click)="edit(example)">Редактировать</button>
+            <button type="button" [disabled]="busy()" (click)="review(example, 'approved')">
+              Подтвердить проверку
+            </button>
+            <button type="button" [disabled]="busy()" (click)="review(example, 'rejected')">
+              Требует исправления
+            </button>
+            <button type="button" [disabled]="busy()" (click)="remove(example)">
+              Исключить из новой версии
+            </button>
+          }
+          <button
+            type="button"
+            [disabled]="busy() || example.review.status !== 'approved'"
+            (click)="run(example)"
+          >
+            Выполнить вопрос
+          </button>
+        </div>
+      </article>
+    } @empty {
+      <p>В этой версии и разделе пока нет вопросов.</p>
+    }
+    @if (answer(); as result) {
+      <article class="result">
+        <h3>Ответ · версия {{ result.version }}</h3>
+        <p>{{ result.answer }}</p>
+        <p class="hint">Запуск: {{ result.run_id }}</p>
+      </article>
+    }
+  }
+</section>

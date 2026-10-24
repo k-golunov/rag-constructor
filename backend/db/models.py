@@ -3,14 +3,17 @@ from sqlalchemy import (
     Column,
     String,
     Integer,
+    JSON,
     DateTime,
     Text,
     ForeignKey,
+    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import uuid
+from sqlalchemy import event, inspect
 
 from backend.db.database import Base
 
@@ -43,6 +46,8 @@ class Project(Base):
     split_by = Column(String(50), default="paragraphs", nullable=False)
     chunking_strategy = Column(String(50), default="recursive", nullable=False)
     extract_tables = Column(Boolean, default=False, nullable=False)
+    top_k = Column(Integer, default=5, nullable=False)
+    max_context_chars = Column(Integer, default=2000, nullable=False)
 
     # ── Эмбеддинги ──────────────────────────────────────────────────────────
     embedding_model = Column(String(100), nullable=False)
@@ -73,6 +78,11 @@ class Project(Base):
         back_populates="project",
         cascade="all, delete-orphan",
     )
+    execution_runs = relationship(
+        "ExecutionRun",
+        back_populates="project",
+        cascade="all, delete-orphan",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -97,6 +107,10 @@ class DataSource(Base):
     )
     file_name = Column(String(512), nullable=False)
     file_path = Column(String(1024), nullable=False)
+    document_version_id = Column(
+        UUID(as_uuid=True), ForeignKey("document_versions.id"), nullable=True
+    )
+    is_active = Column(Boolean, nullable=False, default=True)
     # Допустимые статусы: pending | processing | completed | failed
     status = Column(String(20), nullable=False, default="pending")
     chunks_count = Column(Integer, default=0, nullable=False)
@@ -133,6 +147,7 @@ class ChatHistory(Base):
     # Допустимые роли: user | assistant
     role = Column(String(20), nullable=False)
     content = Column(Text, nullable=False)
+    rag_metadata = Column(JSON, nullable=True)
     created_at = Column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -140,3 +155,173 @@ class ChatHistory(Base):
     )
 
     project = relationship("Project", back_populates="chat_history")
+
+
+class ExecutionRun(Base):
+    """Настройки, статус и полная трасса принятой попытки выполнения."""
+
+    __tablename__ = "execution_runs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    session_id = Column(UUID(as_uuid=True), nullable=True)
+    mode = Column(String(20), nullable=False)
+    status = Column(String(20), nullable=False, default="running")
+    stage = Column(String(20), nullable=False)
+    applied_settings = Column(JSON, nullable=False)
+    configuration_version_id = Column(
+        UUID(as_uuid=True), ForeignKey("configuration_versions.id"), nullable=True
+    )
+    index_version_id = Column(
+        UUID(as_uuid=True), ForeignKey("index_versions.id"), nullable=True
+    )
+    details = Column(JSON, nullable=False, default=dict)
+    response_trace = Column(JSON, nullable=True)
+    question_set_version_id = Column(
+        UUID(as_uuid=True), ForeignKey("question_set_versions.id"), nullable=True
+    )
+    question_example_id = Column(UUID(as_uuid=True), nullable=True)
+    error_code = Column(String(50), nullable=True)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    finished_at = Column(DateTime(timezone=True), nullable=True)
+
+    project = relationship("Project", back_populates="execution_runs")
+
+
+class DocumentVersion(Base):
+    __tablename__ = "document_versions"
+    __table_args__ = (UniqueConstraint("project_id", "file_name", "sha256"),)
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    file_name = Column(String(512), nullable=False)
+    sha256 = Column(String(64), nullable=False)
+    size_bytes = Column(Integer, nullable=False)
+    file_path = Column(String(1024), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class IndexVersion(Base):
+    __tablename__ = "index_versions"
+    __table_args__ = (UniqueConstraint("project_id", "fingerprint"),)
+
+    id = Column(UUID(as_uuid=True), primary_key=True)
+    project_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    fingerprint = Column(String(64), nullable=False)
+    collection_name = Column(String(255), nullable=False, unique=True)
+    settings = Column(JSON, nullable=False)
+    documents = Column(JSON, nullable=False)
+    documents_sha256 = Column(String(64), nullable=False)
+    document_chunks = Column(JSON, nullable=False, default=dict)
+    status = Column(String(20), nullable=False, default="pending")
+    chunks_count = Column(Integer, nullable=False, default=0)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class ConfigurationVersion(Base):
+    __tablename__ = "configuration_versions"
+    __table_args__ = (UniqueConstraint("project_id", "sha256"),)
+
+    id = Column(UUID(as_uuid=True), primary_key=True)
+    project_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    sha256 = Column(String(64), nullable=False)
+    settings = Column(JSON, nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class QuestionSet(Base):
+    __tablename__ = "question_sets"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=False, default="")
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class QuestionSetVersion(Base):
+    __tablename__ = "question_set_versions"
+    __table_args__ = (UniqueConstraint("question_set_id", "number"),)
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    question_set_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("question_sets.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    number = Column(Integer, nullable=False)
+    sha256 = Column(String(64), nullable=False)
+    documents = Column(JSON, nullable=False)
+    documents_sha256 = Column(String(64), nullable=False)
+    examples = Column(JSON, nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+@event.listens_for(DocumentVersion, "before_update")
+@event.listens_for(ConfigurationVersion, "before_update")
+@event.listens_for(QuestionSetVersion, "before_update")
+def _immutable_version(mapper, connection, target):
+    if any(attribute.history.has_changes() for attribute in inspect(target).attrs):
+        raise ValueError("Сохранённая версия неизменяема; создайте новую версию.")
+
+
+@event.listens_for(IndexVersion, "before_update")
+def _immutable_index_definition(mapper, connection, target):
+    state = inspect(target)
+    immutable_fields = (
+        "project_id",
+        "fingerprint",
+        "collection_name",
+        "settings",
+        "documents",
+        "documents_sha256",
+    )
+    if any(state.attrs[name].history.has_changes() for name in immutable_fields):
+        raise ValueError("Определение индекса неизменяемо; создайте новый индекс.")
+    previous = state.attrs.status.history.deleted
+    if (previous and previous[0] == "ready") or (
+        not previous and target.status == "ready"
+    ):
+        if any(
+            state.attrs[name].history.has_changes()
+            for name in ("status", "chunks_count", "document_chunks")
+        ):
+            raise ValueError("Готовый индекс неизменяем.")

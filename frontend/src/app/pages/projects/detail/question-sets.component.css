@@ -1,0 +1,110 @@
+:host {
+  display: block;
+  color: #263445;
+}
+.question-sets {
+  max-width: 1000px;
+  padding: 24px;
+}
+h2 {
+  margin-top: 0;
+}
+h3 {
+  font-size: 16px;
+}
+fieldset,
+article {
+  border: 1px solid #dce3ec;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+  background: #fff;
+}
+legend {
+  padding: 0 8px;
+  font-weight: 600;
+}
+label {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0;
+  flex: 1;
+  min-width: 160px;
+  font-size: 14px;
+}
+input,
+textarea,
+select {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #c7d1df;
+  border-radius: 6px;
+  font: inherit;
+}
+textarea {
+  resize: vertical;
+}
+.row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+button {
+  padding: 9px 14px;
+  border: 1px solid #aac0db;
+  border-radius: 7px;
+  color: #174a83;
+  background: #f5f9ff;
+  cursor: pointer;
+  margin: 4px 0;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.hint {
+  color: #65758a;
+  font-size: 13px;
+}
+.error {
+  color: #ad2424;
+  background: #fff0f0;
+  padding: 12px;
+  border-radius: 8px;
+}
+.notice {
+  background: #fff6dc;
+  padding: 12px;
+  border-radius: 8px;
+}
+blockquote {
+  margin: 12px 0;
+  border-left: 3px solid #8eafd4;
+  padding: 10px 16px;
+  background: #f7f9fc;
+  white-space: pre-wrap;
+}
+article > p,
+.result p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.checkbox input {
+  width: auto;
+}
+@media (max-width: 600px) {
+  .question-sets {
+    padding: 12px;
+  }
+  fieldset,
+  article {
+    padding: 12px;
+  }
+}

@@ -11,6 +11,32 @@ from backend.core.ingestion.splitter import RecursiveCharacterTextSplitter
 logger = logging.getLogger(__name__)
 
 
+def assign_embeddings(
+    chunks: List[Document],
+    embeddings: List[List[float]],
+    dimension: int,
+    embedding_model: str | None = None,
+) -> None:
+    """Проверяет весь пакет до присваивания и записи в хранилище."""
+    if not chunks:
+        raise ValueError("Документ не содержит фрагментов для индексации.")
+    if len(embeddings) != len(chunks):
+        raise ValueError(
+            "Количество эмбеддингов не соответствует количеству фрагментов."
+        )
+    for embedding in embeddings:
+        if len(embedding) != dimension:
+            raise ValueError(
+                f"Размерность эмбеддинга {len(embedding)} не соответствует "
+                f"настройкам проекта: {dimension}."
+            )
+    for chunk, embedding in zip(chunks, embeddings):
+        chunk.embedding = embedding
+        chunk.metadata["embedding_dimension"] = dimension
+        if embedding_model is not None:
+            chunk.metadata["embedding_model"] = embedding_model
+
+
 def process_file(
     file_path: Path,
     source_name: str,
@@ -24,7 +50,17 @@ def process_file(
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size, chunk_overlap=chunk_overlap
     )
-    return splitter.split_text(text, metadata={"source": source_name})
+    return splitter.split_text(
+        text,
+        metadata={
+            "source": source_name,
+            "index_settings": {
+                "chunk_size": chunk_size,
+                "chunk_overlap": chunk_overlap,
+                "chunking_strategy": "recursive",
+            },
+        },
+    )
 
 
 def process_archive(

@@ -133,9 +133,6 @@
             {{ tab.label }}
           </button>
         }
-        <div class="tabs__indicator"
-             [style.--tab-index]="tabs.findIndex(t => t.id === activeTab())">
-        </div>
       </div>
 
       <div class="tabs__content">
@@ -277,6 +274,27 @@
                 </div>
 
                 <!-- split_by -->
+                @if (form.hasError('chunkOverlap')) {
+                  <span class="field__error">Перекрытие должно быть меньше размера чанка.</span>
+                }
+                <div class="field">
+                  <label class="field__label" for="top_k">Количество найденных фрагментов (top_k)</label>
+                  @if (editMode()) {
+                    <input id="top_k" type="number" class="field__input" formControlName="top_k" min="1" max="100"/>
+                    <span class="field__hint">Целое число от 1 до 100.</span>
+                  } @else {
+                    <div class="field__value-display">{{ f['top_k'].value }}</div>
+                  }
+                </div>
+                <div class="field">
+                  <label class="field__label" for="max_context_chars">Максимальный контекст (символов)</label>
+                  @if (editMode()) {
+                    <input id="max_context_chars" type="number" class="field__input" formControlName="max_context_chars" min="1" max="100000"/>
+                    <span class="field__hint">От 1 до 100 000 символов найденного текста.</span>
+                  } @else {
+                    <div class="field__value-display">{{ f['max_context_chars'].value }}</div>
+                  }
+                </div>
                 <div class="field">
                   <label class="field__label" for="split_by">
                     Способ разбивки текста
@@ -323,7 +341,7 @@
                       <input
                         type="checkbox"
                         class="checkbox-input"
-                        formControlName="extract_tables"
+                        disabled
                       />
                       <span class="checkbox-box">
                         <span class="material-symbols-outlined checkbox-check">check</span>
@@ -331,7 +349,7 @@
                     </span>
                     <span class="checkbox-text">
                       Извлекать таблицы из PDF
-                      <span class="field__hint inline-hint">Парсер будет пытаться распознать и сохранить табличные данные</span>
+                      <span class="field__hint inline-hint">Пока недоступно. Этот параметр исключён из сравнения.</span>
                     </span>
                   </label>
                 </div>
@@ -815,6 +833,9 @@
           </div>
         }
 
+        @if (activeTab() === 'questions') {
+          <app-question-sets [projectId]="id" />
+        }
       </div><!-- /tabs__content -->
     </div><!-- /tabs -->
 

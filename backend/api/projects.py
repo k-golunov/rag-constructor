@@ -11,6 +11,8 @@ REST API для управления проектами RAG-конструкто
 
 from uuid import UUID
 
+from pydantic import ValidationError
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -24,6 +26,21 @@ from backend.db.schemas import (
 )
 
 router = APIRouter(prefix="/api/v1/public/provider/projects", tags=["projects"])
+
+
+def validate_project_configuration(project: Project, overrides=None) -> None:
+    """Проверяет итоговые настройки, включая частичный PATCH и старые проекты."""
+    values = {name: getattr(project, name) for name in ProjectCreate.model_fields}
+    values.update(overrides or {})
+    try:
+        ProjectCreate.model_validate(values)
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=exc.errors(
+                include_url=False, include_context=False, include_input=False
+            ),
+        ) from exc
 
 
 # ---------------------------------------------------------------------------
@@ -166,6 +183,7 @@ def update_project(
 
     # Применяем только те поля, которые явно переданы (exclude_unset=True)
     update_data = payload.model_dump(exclude_unset=True)
+    validate_project_configuration(project, update_data)
     for field, value in update_data.items():
         setattr(project, field, value)
 
