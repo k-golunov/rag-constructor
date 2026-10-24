@@ -56,6 +56,11 @@ class Settings(BaseSettings):
         содержит спецсимволы: @, #, $, %, /, : и т.д.
         """
         if v:
+            # SQLAlchemy 2.1 changed the implicit PostgreSQL driver to psycopg 3.
+            # The application installs psycopg2-binary, so pin only implicit URLs.
+            for scheme in ("postgresql://", "postgres://"):
+                if v.startswith(scheme):
+                    return "postgresql+psycopg2://" + v[len(scheme) :]
             return v
         data = info.data
         user = quote_plus(str(data.get("POSTGRES_USER", "postgres")))
@@ -63,7 +68,7 @@ class Settings(BaseSettings):
         host = data.get("POSTGRES_HOST", "localhost")
         port = data.get("POSTGRES_PORT", 5432)
         db = data.get("POSTGRES_DB", "rag_constructor")
-        return f"postgresql://{user}:{password}@{host}:{port}/{db}"
+        return f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{db}"
 
     # ------------------------------------------------------------------
     # Qdrant

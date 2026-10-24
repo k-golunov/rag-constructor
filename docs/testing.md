@@ -8,9 +8,9 @@
 backend/.venv/Scripts/python.exe -m pytest backend/tests -q
 ```
 
-В `backend/pytest.ini` указан `testpaths = backend/tests`, а импорты абсолютные `backend.*`. Поэтому запуск из корня с явным каталогом надёжнее прежней инструкции запускать только из backend.
+В `backend/pytest.ini` указаны `testpaths = tests` и `pythonpath = ..` относительно backend. Работают как запуск из корня с явным каталогом, так и `cd backend` → `pytest`, используемый CI.
 
-Фикстура подменяет `get_db` на SQLite in-memory, но `TestClient` запускает lifespan с настоящим `init_db`. Обычный прогон может подключиться к настроенному PostgreSQL, создать БД и применить миграции. Используйте отдельную тестовую БД или подмену инициализации.
+Фикстура подменяет `get_db` на SQLite in-memory и отключает `init_db` при запуске TestClient. Изолированные тесты не создают настоящую PostgreSQL-БД и не применяют её миграции. При импорте приложения всё равно нужен установленный DBAPI-драйвер из requirements.
 
 Четыре теста `test_embeddings.py` обращаются к внешнему API, если в окружении процесса есть `OPENAI_API_KEY`. Для исключения внешних вызовов используйте `--ignore=backend/tests/test_embeddings.py`. `.env.test` фикстура автоматически не загружает.
 
@@ -28,7 +28,7 @@ backend/.venv/Scripts/python.exe -c 'import pytest; from unittest.mock import pa
 backend/.venv/Scripts/python.exe -m backend.tests.test_parser_splitter 'C:/documents/guide.pdf'
 ```
 
-Она печатает фрагменты документа. Тестов загрузки, ZIP, удаления векторов и полного retrieval-чата нет. Тесты чата проверяют `/chat/generate` с подменённым LLM.
+Она печатает фрагменты документа. Сквозные изолированные проверки RAG, ZIP и версий индексов описаны в [rag-verification.md](rag-verification.md).
 
 ## Frontend
 
@@ -48,3 +48,12 @@ Production build встраивает Google Fonts и требует сетев�
 GitHub Actions запускает Black, Flake8 и pytest на Python 3.14; frontend проверяется на Node 20.x/22.x. Успешный push в `main` затем собирает и публикует backend-образ в Docker Hub. Полный Compose не развёртывается. Jenkins выполняет установку, тесты backend/frontend и сборку frontend.
 
 Ручная сквозная проверка: создать проект → загрузить TXT → убедиться в `completed` → задать вопрос с известным ответом → проверить источники и SQL-историю. Отдельно проверить ZIP, отказ Qdrant, смену модели и удаление. В данном анализе внешние эмбеддинги/LLM, реальная БД и контейнерный сквозной сценарий не запускались.
+
+## Выбор драйвера PostgreSQL
+
+Приложение устанавливает `psycopg2-binary` и явно использует
+`postgresql+psycopg2://`. Входящие URL `postgresql://` и `postgres://`
+нормализуются в настройках без изменения остальных частей строки. Это
+исключает зависимость от смены драйвера по умолчанию в SQLAlchemy 2.1.
+Явно указанный другой драйвер сохраняется; его зависимость необходимо установить отдельно.
+Регрессионные проверки находятся в `backend/tests/test_database_config.py`.
