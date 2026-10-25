@@ -135,10 +135,10 @@ def document_manifest(db, project_id):
     return manifest
 
 
-def plan_index(db, project, spec=None):
+def plan_index(db, project, spec=None, documents=None):
     """Фиксирует полный состав документов, независимо от последующих изменений."""
     lock_project(db, project.id)
-    manifest = document_manifest(db, project.id)
+    manifest = document_manifest(db, project.id) if documents is None else documents
     spec = spec or indexing_settings(project)
     digest = fingerprint({"settings": spec, "documents": manifest})
     index_id = uuid5(project.id, digest)

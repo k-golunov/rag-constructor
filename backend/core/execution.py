@@ -114,28 +114,9 @@ def execution_settings(project, mode, payload):
 
 
 def start_run(db, project, mode, applied_settings, session_id=None, secrets=()):
-    serialized = json.dumps(
-        redact(applied_settings, secrets),
-        ensure_ascii=False,
-        sort_keys=True,
-        separators=(",", ":"),
-    )
-    checksum = hashlib.sha256(serialized.encode("utf-8")).hexdigest()
-    config_id = uuid5(project.id, checksum)
-    # Serialize registration per project; copies never reference mutable project fields.
-    from backend.db.models import Project
-
-    db.query(Project).filter_by(id=project.id).with_for_update().one()
-    version = db.get(ConfigurationVersion, config_id)
-    if version is None:
-        version = ConfigurationVersion(
-            id=config_id,
-            project_id=project.id,
-            sha256=checksum,
-            settings=json.loads(serialized),
-        )
-        db.add(version)
-        db.flush()
+    version = configuration_version(db, project, applied_settings, secrets)
+    config_id, checksum = version.id, version.sha256
+    serialized = json.dumps(redact(applied_settings, secrets), ensure_ascii=False)
     run = ExecutionRun(
         project_id=project.id,
         session_id=session_id,
@@ -179,3 +160,36 @@ def complete_run(run):
     run.status = "success"
     run.stage = "completed"
     run.finished_at = datetime.now(timezone.utc)
+
+
+def configuration_version(db, project, applied_settings, secrets=()):
+    serialized = json.dumps(
+        redact(
+            {
+                key: value
+                for key, value in applied_settings.items()
+                if key != "evaluation"
+            },
+            secrets,
+        ),
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    checksum = hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+    config_id = uuid5(project.id, checksum)
+    # Serialize registration per project; copies never reference mutable project fields.
+    from backend.db.models import Project
+
+    db.query(Project).filter_by(id=project.id).with_for_update().one()
+    version = db.get(ConfigurationVersion, config_id)
+    if version is None:
+        version = ConfigurationVersion(
+            id=config_id,
+            project_id=project.id,
+            sha256=checksum,
+            settings=json.loads(serialized),
+        )
+        db.add(version)
+        db.flush()
+    return version

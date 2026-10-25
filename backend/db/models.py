@@ -8,6 +8,7 @@ from sqlalchemy import (
     Text,
     ForeignKey,
     UniqueConstraint,
+    false,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -295,6 +296,154 @@ class QuestionSetVersion(Base):
     )
 
 
+class BatchRun(Base):
+    __tablename__ = "batch_runs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    question_set_version_id = Column(
+        UUID(as_uuid=True), ForeignKey("question_set_versions.id"), nullable=False
+    )
+    name = Column(String(255), nullable=False)
+    status = Column(String(30), nullable=False, default="pending")
+    selection = Column(JSON, nullable=False)
+    repeats = Column(Integer, nullable=False)
+    rerun_of_id = Column(UUID(as_uuid=True), ForeignKey("batch_runs.id"), nullable=True)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    finished_at = Column(DateTime(timezone=True), nullable=True)
+    cancel_requested = Column(
+        Boolean, nullable=False, default=False, server_default=false()
+    )
+    active_job_id = Column(UUID(as_uuid=True), nullable=True)
+
+
+class BatchJob(Base):
+    """Durable outbox item: one logical question, bounded technical attempts."""
+
+    __tablename__ = "batch_jobs"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    batch_run_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("batch_runs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    result_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("batch_question_results.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    status = Column(String(20), nullable=False, default="queued", index=True)
+    policy = Column(JSON, nullable=False)
+    execution_attempts = Column(Integer, nullable=False, default=0)
+    available_at = Column(DateTime(timezone=True), nullable=False)
+    dispatched_at = Column(DateTime(timezone=True), nullable=True)
+    lease_expires_at = Column(DateTime(timezone=True), nullable=True)
+    started_at = Column(DateTime(timezone=True), nullable=True)
+    finished_at = Column(DateTime(timezone=True), nullable=True)
+    error_code = Column(String(50), nullable=True)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class BatchVariant(Base):
+    __tablename__ = "batch_variants"
+    __table_args__ = (UniqueConstraint("batch_run_id", "position"),)
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    batch_run_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("batch_runs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    position = Column(Integer, nullable=False)
+    name = Column(String(255), nullable=False)
+    configuration_version_id = Column(
+        UUID(as_uuid=True), ForeignKey("configuration_versions.id"), nullable=False
+    )
+    index_version_id = Column(
+        UUID(as_uuid=True), ForeignKey("index_versions.id"), nullable=False
+    )
+    project_snapshot = Column(JSON, nullable=False)
+    applied_settings = Column(JSON, nullable=False)
+
+
+class BatchQuestionResult(Base):
+    __tablename__ = "batch_question_results"
+    __table_args__ = (
+        UniqueConstraint("variant_id", "question_example_id", "repeat_number"),
+    )
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    variant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("batch_variants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    question_example_id = Column(UUID(as_uuid=True), nullable=False)
+    question_position = Column(Integer, nullable=False)
+    repeat_number = Column(Integer, nullable=False)
+    status = Column(String(20), nullable=False, default="pending")
+
+
+class BatchResultAttempt(Base):
+    __tablename__ = "batch_result_attempts"
+    __table_args__ = (UniqueConstraint("result_id", "number"),)
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    result_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("batch_question_results.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    number = Column(Integer, nullable=False)
+    kind = Column(String(20), nullable=False)
+    execution_run_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("execution_runs.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+    )
+
+
+class EvaluationCheck(Base):
+    """Immutable evaluator handoff, separate from collecting an answer."""
+
+    __tablename__ = "evaluation_checks"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    result_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("batch_question_results.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    execution_run_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("execution_runs.id", ondelete="CASCADE"),
+        nullable=True,
+    )
+    input_sha256 = Column(String(64), nullable=False)
+    input_snapshot = Column(JSON, nullable=False)
+    evaluator_descriptor = Column(JSON, nullable=False)
+    output = Column(JSON, nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+@event.listens_for(EvaluationCheck, "before_update")
+@event.listens_for(BatchVariant, "before_update")
 @event.listens_for(DocumentVersion, "before_update")
 @event.listens_for(ConfigurationVersion, "before_update")
 @event.listens_for(QuestionSetVersion, "before_update")
@@ -325,3 +474,27 @@ def _immutable_index_definition(mapper, connection, target):
             for name in ("status", "chunks_count", "document_chunks")
         ):
             raise ValueError("Готовый индекс неизменяем.")
+
+
+@event.listens_for(BatchRun, "before_update")
+@event.listens_for(BatchQuestionResult, "before_update")
+def _immutable_batch_definition(mapper, connection, target):
+    state = inspect(target)
+    mutable = (
+        {"status", "finished_at", "cancel_requested", "active_job_id"}
+        if isinstance(target, BatchRun)
+        else {"status"}
+    )
+    if any(
+        attribute.history.has_changes()
+        for attribute in state.attrs
+        if attribute.key not in mutable
+    ):
+        raise ValueError(
+            "Определение пакетного запуска неизменяемо; создайте повторный прогон."
+        )
+
+
+@event.listens_for(BatchResultAttempt, "before_update")
+def _immutable_batch_attempt(mapper, connection, target):
+    _immutable_version(mapper, connection, target)

@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import quote_plus
 
-from pydantic import field_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
 # ---------------------------------------------------------------------------
@@ -80,6 +80,10 @@ class Settings(BaseSettings):
     # Redis / Celery
     # ------------------------------------------------------------------
     REDIS_URL: str = "redis://localhost:6379/0"
+    BATCH_QUESTION_TIMEOUT_SECONDS: int = Field(180, ge=1, le=3600)
+    BATCH_JOB_MAX_ATTEMPTS: int = Field(3, ge=1, le=10)
+    BATCH_RETRY_DELAY_SECONDS: int = Field(10, ge=1, le=3600)
+    BATCH_WORKER_CONCURRENCY: int = Field(2, ge=1, le=16)
 
     # ------------------------------------------------------------------
     # LLM / Embeddings

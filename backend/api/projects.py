@@ -17,7 +17,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from backend.db.database import get_db
-from backend.db.models import Project
+from backend.db.models import Project, BatchRun
 from backend.db.schemas import (
     ProjectCreate,
     ProjectListResponse,
@@ -211,5 +211,10 @@ def delete_project(
         HTTPException: 404, если проект не найден.
     """
     project = _get_project_or_404(project_id, db)
+    # Remove dependent batches before project cascades delete their index/config parents.
+    # PostgreSQL checks those cross-cascade foreign keys before another cascade may finish.
+    db.query(BatchRun).filter_by(project_id=project_id).delete(
+        synchronize_session=False
+    )
     db.delete(project)
     db.commit()

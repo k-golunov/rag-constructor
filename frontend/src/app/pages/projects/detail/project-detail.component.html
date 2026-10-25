@@ -836,6 +836,9 @@
         @if (activeTab() === 'questions') {
           <app-question-sets [projectId]="id" />
         }
+        @if (activeTab() === 'batches') {
+          <app-batches [projectId]="id" />
+        }
       </div><!-- /tabs__content -->
     </div><!-- /tabs -->
 

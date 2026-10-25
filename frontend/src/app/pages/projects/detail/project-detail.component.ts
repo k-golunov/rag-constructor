@@ -11,6 +11,7 @@ import {
 import { DatePipe, SlicePipe } from '@angular/common';
 
 import { ProjectService } from '../../../services/project.service';
+import { BatchesComponent } from './batches.component';
 import { QuestionSetsComponent } from './question-sets.component';
 import { apiErrorMessage, chunkOverlapValidator } from '../../../models/settings-validation';
 import { UploadService, UploadSingleResponse, OperationStatus } from '../../../services/upload.service';
@@ -26,7 +27,7 @@ import {
   CHUNKING_STRATEGIES,
 } from '../../../models/project.model';
 
-export type TabId = 'settings' | 'documents' | 'chat' | 'questions';
+export type TabId = 'settings' | 'documents' | 'chat' | 'questions' | 'batches';
 
 /** Валидатор: если поле заполнено — должно начинаться с http:// или https:// */
 function optionalUrlValidator(control: AbstractControl): ValidationErrors | null {
@@ -38,7 +39,7 @@ function optionalUrlValidator(control: AbstractControl): ValidationErrors | null
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [RouterLink, ReactiveFormsModule, DatePipe, SlicePipe, QuestionSetsComponent],
+  imports: [RouterLink, ReactiveFormsModule, DatePipe, SlicePipe, QuestionSetsComponent, BatchesComponent],
   templateUrl: './project-detail.component.html',
   styleUrl: './project-detail.component.css',
 })
@@ -56,6 +57,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     { id: 'documents', label: 'Документы',  icon: 'description' },
     { id: 'chat',      label: 'Чат',        icon: 'chat'        },
     { id: 'questions', label: 'Наборы вопросов', icon: 'quiz' },
+    { id: 'batches', label: 'Анализ метрик', icon: 'analytics' },
   ];
 
   // ── State signals ──────────────────────────────────────────
