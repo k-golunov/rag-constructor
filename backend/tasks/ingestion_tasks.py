@@ -6,6 +6,7 @@ from uuid import UUID
 
 from .worker import celery_app
 from backend.core.factories import build_embedder, build_vector_store
+from backend.core.public_errors import DOCUMENT_PROCESSING_ERROR
 from backend.db.database import SessionLocal
 from backend.core.versioning import (
     register_document,
@@ -97,15 +98,17 @@ def process_document_task(
             "index_reused": reused,
         }
 
-    except Exception as exc:
+    except Exception:
         logger.exception("Ошибка обработки %s", file_path)
         from backend.db.models import DataSource
 
         ds = db.get(DataSource, UUID(data_source_id))
         if ds and ds.document_version_id == target_version:
             ds.status = "failed"
-            ds.error_message = str(exc)
+            ds.error_message = DOCUMENT_PROCESSING_ERROR
             db.commit()
-        raise self.retry(exc=exc, countdown=60)
+        raise self.retry(
+            exc=RuntimeError(DOCUMENT_PROCESSING_ERROR), countdown=60
+        ) from None
     finally:
         db.close()

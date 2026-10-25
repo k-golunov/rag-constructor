@@ -178,6 +178,13 @@ class DataSourceResponse(BaseModel):
     created_at: datetime
     document_version_id: Optional[UUID] = None
 
+    @field_validator("error_message", mode="before")
+    @classmethod
+    def neutral_public_error(cls, value):
+        from backend.core.public_errors import DOCUMENT_PROCESSING_ERROR
+
+        return DOCUMENT_PROCESSING_ERROR if value is not None else None
+
     model_config = {"from_attributes": True}
 
 

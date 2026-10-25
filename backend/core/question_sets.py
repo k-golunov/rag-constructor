@@ -3,6 +3,7 @@
 import copy
 import hashlib
 import os
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import UUID
@@ -185,7 +186,12 @@ def current_documents(db, project_id):
     try:
         return document_manifest(db, project_id)
     except ValueError as exc:
-        raise HTTPException(422, str(exc)) from exc
+        logging.getLogger(__name__).exception(
+            "Не удалось проверить версии документов проекта %s", project_id
+        )
+        raise HTTPException(
+            422, "Не удалось проверить версии документов. Загрузите источники повторно."
+        ) from exc
 
 
 def version_result(version):

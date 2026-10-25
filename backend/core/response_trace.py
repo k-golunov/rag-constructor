@@ -1,12 +1,15 @@
 """Persist the response chain and each attempt without credentials."""
 
 import asyncio
+import logging
 from datetime import datetime, timezone
 from time import perf_counter
 import re
 
 import httpx
 from openai import APIConnectionError, APITimeoutError
+
+logger = logging.getLogger(__name__)
 
 
 def token_usage(response):
@@ -138,11 +141,18 @@ class ResponseTrace:
 
     def record_error(self, stage, exc, attempt=None):
         self.last_error = exc
+        logger.error(
+            "Ошибка выполнения run=%s stage=%s attempt=%s",
+            self.run.id,
+            stage,
+            attempt,
+            exc_info=(type(exc), exc, exc.__traceback__),
+        )
         error = {
             "stage": stage,
             "attempt": attempt,
             "type": type(exc).__name__,
-            "message": self.clean(str(exc))[:2000],
+            "message": "Не удалось выполнить этап обработки. Подробности доступны в серверном журнале.",
             "retryable": is_retryable(exc),
         }
         status = getattr(exc, "status_code", None)

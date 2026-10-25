@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from backend.core.Document import Document
+from backend.core.public_errors import ARCHIVE_PROCESSING_ERROR
 from backend.core.ingestion.parser import EmptyPDFError, ParserError, get_parser_for
 from backend.core.ingestion.splitter import RecursiveCharacterTextSplitter
 
@@ -106,12 +107,12 @@ def process_archive(
             },
             "error": None,
         }
-    except Exception as exc:
+    except Exception:
         logger.exception("Фоновая обработка %s упала", operation_id)
         operations[operation_id] = {
             "status": "failed",
             "result": None,
-            "error": str(exc),
+            "error": ARCHIVE_PROCESSING_ERROR,
         }
     finally:
         shutil.rmtree(tmp_dir, ignore_errors=True)

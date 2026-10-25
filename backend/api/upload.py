@@ -20,6 +20,13 @@ from sqlalchemy.orm import Session
 
 from backend.api.projects import validate_project_configuration
 from backend.core.factories import build_embedder, build_vector_store
+from backend.core.public_errors import (
+    DOCUMENT_PROCESSING_ERROR,
+    ARCHIVE_PROCESSING_ERROR,
+    PARSER_ERROR,
+    EMPTY_PDF_ERROR,
+    public_operation_status,
+)
 from backend.core.ingestion.parser import (
     SUPPORTED_EXTENSIONS,
     EmptyPDFError,
@@ -98,9 +105,11 @@ async def upload_single(
     try:
         process_file(tmp_path, filename, project.chunk_size, project.chunk_overlap)
     except EmptyPDFError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+        logger.exception("PDF не содержит текста")
+        raise HTTPException(status_code=422, detail=EMPTY_PDF_ERROR) from exc
     except ParserError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        logger.exception("Ошибка чтения загруженного документа")
+        raise HTTPException(status_code=400, detail=PARSER_ERROR) from exc
     finally:
         tmp_path.unlink(missing_ok=True)
 
@@ -122,11 +131,11 @@ async def upload_single(
         reused = not await ensure_index(db, index, build_vector_store(), embedder)
         mark_sources(db, index)
         result_status = "completed"
-    except Exception as exc:
+    except Exception:
         logger.exception("Ошибка индексации %s", filename)
         if ds.document_version_id == uploaded_version_id:
             ds.status = "failed"
-            ds.error_message = str(exc)
+            ds.error_message = DOCUMENT_PROCESSING_ERROR
     db.commit()
     return {
         "filename": filename,
@@ -283,18 +292,18 @@ async def _process_archive_full(
                 **index_snapshot(index),
             },
         }
-    except Exception as exc:
+    except Exception:
         db.rollback()
         for source_id, version_id in added_versions.items():
             source = db.get(DataSource, source_id)
             if source is not None and source.document_version_id == version_id:
                 source.status = "failed"
-                source.error_message = str(exc)
+                source.error_message = DOCUMENT_PROCESSING_ERROR
         db.commit()
         operations[operation_id] = {
             "status": "failed",
             "result": None,
-            "error": str(exc),
+            "error": ARCHIVE_PROCESSING_ERROR,
         }
         logger.exception("Ошибка обработки архива %s", operation_id)
     finally:
@@ -325,4 +334,4 @@ async def get_operation_status(operation_id: str) -> Dict[str, Any]:
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Операция {operation_id} не найдена",
         )
-    return {"operation_id": operation_id, **op}
+    return {"operation_id": operation_id, **public_operation_status(op)}
