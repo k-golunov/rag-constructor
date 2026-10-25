@@ -1,59 +1,31 @@
-# Frontend
+# Frontend RAG Constructor
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.7.
+Angular 21.2, TypeScript 5.9, standalone-компоненты и ленивые маршруты. Команды из `frontend`:
 
-## Development server
-
-To start a local development server, run:
-
-```bash
-ng serve
+```powershell
+npm.cmd install --legacy-peer-deps
+npm.cmd start
+npm.cmd test -- --run
+npm.cmd run build
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Dev server: `http://localhost:4200`. Сборка: `dist/frontend/browser`. `npm test` запускает Vitest в режиме наблюдения; `--run` выполняет один прогон. E2E-набор не настроен. Production-сборка загружает Google Fonts, поэтому требует доступа к сети.
 
-## Code scaffolding
+| Маршрут | Назначение |
+| --- | --- |
+| `/` | Главная страница |
+| `/projects` | Список проектов |
+| `/projects/new` | Создание проекта |
+| `/projects/:id` | Настройки, документы, загрузка и чат |
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+Сервисы находятся в `src/app/services`, DTO — в `src/app/models`. На странице проекта доступны выбор/перетаскивание файла и polling статуса ZIP каждые две секунды. В выборе файла разрешён `.md`, однако backend его не поддерживает. Для одиночной загрузки текущий интерфейс показывает успешную карточку при HTTP 200, не проверяя поле `status`; действительный результат смотрите в списке источников.
 
-```bash
-ng generate component component-name
-```
+## Адрес API
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Сервисы импортируют `src/environments/environment.ts`, где указан `http://127.0.0.1:8000/api/v1/public/provider`. В `environment.prod.ts` задан относительный `/api/v1/public/provider`, но `angular.json` не содержит `fileReplacements`: production-сборка автоматически его не выбирает.
 
-```bash
-ng generate --help
-```
+Для размещения за nginx настройте выбор production-окружения или адрес в используемом файле и пересоберите приложение. Это настройка времени сборки, переменная уже запущенного контейнера её не изменяет. Открывайте локальный frontend через `localhost:4200`: CORS backend разрешает именно этот origin.
 
-## Building
+В Dockerfile остаётся `npm run build --prod`; команду контейнерной сборки следует согласовать с явным `npm run build -- --configuration production` и проверить весь образ. В рамках анализа Dockerfile не изменялся.
 
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Два теста `app.spec.ts` проверяют локальный упрощённый класс, а не настоящий Angular-компонент. Конфигурации `vitest.config.ts` и `.js` расходятся: первая содержит только комментарий. Подробности и результаты: [проверки](../docs/testing.md), [анализ](../docs/project-status.md).

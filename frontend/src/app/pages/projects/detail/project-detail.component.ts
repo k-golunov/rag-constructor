@@ -11,6 +11,9 @@ import {
 import { DatePipe, SlicePipe } from '@angular/common';
 
 import { ProjectService } from '../../../services/project.service';
+import { BatchesComponent } from './batches.component';
+import { QuestionSetsComponent } from './question-sets.component';
+import { apiErrorMessage, chunkOverlapValidator } from '../../../models/settings-validation';
 import { UploadService, UploadSingleResponse, OperationStatus } from '../../../services/upload.service';
 import { DataSourceService } from '../../../services/data-source.service';
 import { ChatService, ChatMessage, ChatResponse } from '../../../services/chat.service';
@@ -24,7 +27,7 @@ import {
   CHUNKING_STRATEGIES,
 } from '../../../models/project.model';
 
-export type TabId = 'settings' | 'documents' | 'chat';
+export type TabId = 'settings' | 'documents' | 'chat' | 'questions' | 'batches';
 
 /** Валидатор: если поле заполнено — должно начинаться с http:// или https:// */
 function optionalUrlValidator(control: AbstractControl): ValidationErrors | null {
@@ -36,7 +39,7 @@ function optionalUrlValidator(control: AbstractControl): ValidationErrors | null
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [RouterLink, ReactiveFormsModule, DatePipe, SlicePipe],
+  imports: [RouterLink, ReactiveFormsModule, DatePipe, SlicePipe, QuestionSetsComponent, BatchesComponent],
   templateUrl: './project-detail.component.html',
   styleUrl: './project-detail.component.css',
 })
@@ -53,6 +56,8 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     { id: 'settings',  label: 'Настройки',  icon: 'tune'        },
     { id: 'documents', label: 'Документы',  icon: 'description' },
     { id: 'chat',      label: 'Чат',        icon: 'chat'        },
+    { id: 'questions', label: 'Наборы вопросов', icon: 'quiz' },
+    { id: 'batches', label: 'Анализ метрик', icon: 'analytics' },
   ];
 
   // ── State signals ──────────────────────────────────────────
@@ -151,6 +156,8 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
       split_by:          ['paragraphs', Validators.required],
       chunking_strategy: ['recursive',  Validators.required],
       extract_tables:    [false],
+      top_k: [5, [Validators.required, Validators.min(1), Validators.max(100), Validators.pattern(/^\d+$/)]],
+      max_context_chars: [2000, [Validators.required, Validators.min(1), Validators.max(100000), Validators.pattern(/^\d+$/)]],
 
       // ── Эмбеддинги ────────────────────────────────────────
       embedding_model:     ['', Validators.required],
@@ -165,7 +172,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
 
       // ── Промпт ────────────────────────────────────────────
       system_prompt: ['', Validators.required],
-    });
+    }, { validators: chunkOverlapValidator });
     // Starts in readonly mode
     this.form.disable();
   }
@@ -178,6 +185,8 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
       split_by:            p.split_by,
       chunking_strategy:   p.chunking_strategy,
       extract_tables:      p.extract_tables,
+      top_k:               p.top_k,
+      max_context_chars:   p.max_context_chars,
       embedding_model:     p.embedding_model,
       embedding_dimension: p.embedding_dimension,
       embedding_api_key:   p.embedding_api_key,
@@ -220,6 +229,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     this.saveSuccess.set(false);
     this.editMode.set(true);
     this.form.enable();
+    this.form.patchValue({ extract_tables: false });
   }
 
   onCancel(): void {
@@ -269,8 +279,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
         this.successTimer = setTimeout(() => this.saveSuccess.set(false), 3000);
       },
       error: (err) => {
-        const detail: string =
-          err?.error?.detail ?? 'Не удалось сохранить изменения. Попробуйте позже.';
+        const detail = apiErrorMessage(err?.error?.detail, 'Не удалось сохранить изменения. Попробуйте позже.');
         this.saveError.set(detail);
         this.saving.set(false);
       },
@@ -345,7 +354,10 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.chatMessages.update(msgs => msgs.slice(0, -1));
-        this.chatError.set(err?.error?.detail ?? 'Ошибка при отправке сообщения.');
+        const detail = err?.error?.detail;
+        this.chatError.set(
+          (typeof detail === 'string' ? detail : detail?.message) ?? 'Ошибка при отправке сообщения.'
+        );
         this.chatSending.set(false);
       },
     });

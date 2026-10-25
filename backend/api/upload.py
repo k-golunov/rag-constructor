@@ -18,17 +18,35 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 
-from backend.config import settings
+from backend.api.projects import validate_project_configuration
 from backend.core.factories import build_embedder, build_vector_store
+from backend.core.public_errors import (
+    DOCUMENT_PROCESSING_ERROR,
+    ARCHIVE_PROCESSING_ERROR,
+    PARSER_ERROR,
+    EMPTY_PDF_ERROR,
+    public_operation_status,
+)
 from backend.core.ingestion.parser import (
     SUPPORTED_EXTENSIONS,
     EmptyPDFError,
     ParserError,
     get_parser_for,
 )
-from backend.core.ingestion.pipeline import process_archive, process_file
-from backend.db.database import get_db
+from backend.core.ingestion.pipeline import (
+    process_file,
+)
+from backend.db.database import get_db, SessionLocal
 from backend.db.models import DataSource, Project
+from backend.core.versioning import (
+    register_document,
+    plan_index,
+    ensure_index,
+    index_snapshot,
+    indexing_settings,
+    lock_project,
+    mark_sources,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -38,10 +56,6 @@ _OPERATIONS: Dict[str, Dict[str, Any]] = {}
 _FORMATS_HINT = ", ".join(SUPPORTED_EXTENSIONS)
 
 
-def _collection_name(project_id: UUID) -> str:
-    return f"project_{str(project_id).replace('-', '_')}"
-
-
 def _get_project(project_id: UUID, db: Session) -> Project:
     project = db.query(Project).filter(Project.id == project_id).first()
     if project is None:
@@ -49,6 +63,7 @@ def _get_project(project_id: UUID, db: Session) -> Project:
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Проект {project_id} не найден",
         )
+    validate_project_configuration(project)
     return project
 
 
@@ -81,80 +96,60 @@ async def upload_single(
             detail=f"Неподдерживаемое расширение: {filename}. Допустимые форматы: {_FORMATS_HINT}",
         )
 
-    # Сохраняем файл в upload_dir
-    upload_dir = Path(settings.UPLOAD_DIR) / str(project_id)
-    upload_dir.mkdir(parents=True, exist_ok=True)
-    saved_path = upload_dir / filename
+    if "/" in filename or "\\" in filename or filename in {".", ".."}:
+        raise HTTPException(status_code=400, detail="Ожидается имя файла без пути.")
     content = await file.read()
-    saved_path.write_bytes(content)
-
-    # Парсинг и чанкинг
-    suffix = Path(filename).suffix
-    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+    with tempfile.NamedTemporaryFile(delete=False, suffix=Path(filename).suffix) as tmp:
         tmp_path = Path(tmp.name)
         tmp_path.write_bytes(content)
-
     try:
-        chunks = process_file(
-            tmp_path, filename, project.chunk_size, project.chunk_overlap
-        )
+        process_file(tmp_path, filename, project.chunk_size, project.chunk_overlap)
     except EmptyPDFError as exc:
-        saved_path.unlink(missing_ok=True)
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
-        )
+        logger.exception("PDF не содержит текста")
+        raise HTTPException(status_code=422, detail=EMPTY_PDF_ERROR) from exc
     except ParserError as exc:
-        saved_path.unlink(missing_ok=True)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+        logger.exception("Ошибка чтения загруженного документа")
+        raise HTTPException(status_code=400, detail=PARSER_ERROR) from exc
     finally:
         tmp_path.unlink(missing_ok=True)
 
-    # Запись DataSource в БД
-    ds = DataSource(
-        project_id=project_id,
-        file_name=filename,
-        file_path=str(saved_path),
-        status="processing",
-        chunks_count=0,
-    )
-    db.add(ds)
-    db.commit()
-    db.refresh(ds)
-
-    # Эмбеддинг + индексация в Qdrant
+    spec = indexing_settings(project)
+    embedding_key, embedding_url = project.embedding_api_key, project.embedding_api_url
+    lock_project(db, project_id)
+    ds = register_document(db, project, filename, content)
+    uploaded_version_id = ds.document_version_id
+    source_id = ds.id
+    index = None
+    reused = False
+    result_status = "failed"
     try:
-        embedder = build_embedder(
-            project.embedding_model,
-            api_key=project.embedding_api_key,
-            api_base=project.embedding_api_url,
-        )
-        texts = [c.text for c in chunks]
-        embeddings = await embedder.embed(texts)
-        for chunk, emb in zip(chunks, embeddings):
-            chunk.embedding = emb
-
-        vector_store = build_vector_store()
-        collection = _collection_name(project_id)
-        await vector_store.create_collection(collection, project.embedding_dimension)
-        await vector_store.upsert(collection, chunks)
-
-        ds.status = "completed"
-        ds.chunks_count = len(chunks)
-    except Exception as exc:
-        logger.error("Ошибка векторизации %s: %s", filename, exc)
-        ds.status = "failed"
-        ds.error_message = str(exc)
-    finally:
+        index = plan_index(db, project, spec)
         db.commit()
-
+        embedder = build_embedder(
+            spec["embedding_model"], api_key=embedding_key, api_base=embedding_url
+        )
+        reused = not await ensure_index(db, index, build_vector_store(), embedder)
+        mark_sources(db, index)
+        result_status = "completed"
+    except Exception:
+        logger.exception("Ошибка индексации %s", filename)
+        if ds.document_version_id == uploaded_version_id:
+            ds.status = "failed"
+            ds.error_message = DOCUMENT_PROCESSING_ERROR
+    db.commit()
     return {
         "filename": filename,
         "project_id": str(project_id),
-        "data_source_id": str(ds.id),
-        "status": ds.status,
-        "chunk_size": project.chunk_size,
-        "chunk_overlap": project.chunk_overlap,
-        "chunks_count": ds.chunks_count,
+        "data_source_id": str(source_id),
+        "document_version_id": str(uploaded_version_id),
+        "status": result_status,
+        "chunk_size": spec["chunk_size"],
+        "chunk_overlap": spec["chunk_overlap"],
+        "chunks_count": (
+            index.document_chunks.get(str(uploaded_version_id), 0) if index else 0
+        ),
+        "index_reused": reused,
+        **(index_snapshot(index) if index is not None else {}),
     }
 
 
@@ -190,7 +185,7 @@ async def upload_archive(
         )
 
     tmp_dir = Path(tempfile.mkdtemp(prefix="rag_upload_"))
-    archive_path = tmp_dir / filename
+    archive_path = tmp_dir / "archive.zip"
     archive_path.write_bytes(await file.read())
 
     if not zipfile.is_zipfile(archive_path):
@@ -221,92 +216,98 @@ async def upload_archive(
     return {"operation_id": operation_id, "message": "Обработка архива начата"}
 
 
-def _process_archive_full(
-    archive_path: Path,
-    tmp_dir: Path,
-    project_id: UUID,
-    chunk_size: int,
-    chunk_overlap: int,
-    embedding_model: str,
-    embedding_api_key: str | None,
-    embedding_api_url: str | None,
-    embedding_dimension: int,
-    operations: Dict[str, Dict[str, Any]],
-    operation_id: str,
-) -> None:
-    """Фоновая задача: парсинг, синхронный эмбеддинг и уплотнение в Qdrant.
+async def _process_archive_full(
+    archive_path,
+    tmp_dir,
+    project_id,
+    chunk_size,
+    chunk_overlap,
+    embedding_model,
+    embedding_api_key,
+    embedding_api_url,
+    embedding_dimension,
+    operations,
+    operation_id,
+):
+    """ZIP uses the same versioned index builder as single upload and chat."""
+    from types import SimpleNamespace
 
-    Args:
-        archive_path: Путь к ZIP-архиву.
-        tmp_dir: Временная директория (будет удалена после обработки).
-        project_id: UUID проекта.
-        chunk_size: Размер чанка.
-        chunk_overlap: Перекрытие чанков.
-        embedding_model: Имя модели эмбеддингов.
-        embedding_api_key: API-ключ эмбеддера.
-        embedding_api_url: URL API эмбеддера.
-        embedding_dimension: Размерность векторов.
-        operations: Словарь для хранения статуса операций.
-        operation_id: Идентификатор операции.
-    """
-    import asyncio
-
-    extract_dir = tmp_dir / "extracted"
-    all_chunks = []
+    db = SessionLocal()
     skipped = []
-
+    added_versions = {}
     try:
-        extract_dir.mkdir(parents=True, exist_ok=True)
-        with zipfile.ZipFile(archive_path) as zf:
-            zf.extractall(extract_dir)
-
-        for path in extract_dir.rglob("*"):
-            if not path.is_file():
-                continue
-            if get_parser_for(path.name) is None:
-                skipped.append(path.name)
-                continue
-            try:
-                all_chunks.extend(
-                    process_file(path, path.name, chunk_size, chunk_overlap)
-                )
-            except (EmptyPDFError, ParserError) as exc:
-                logger.warning("Пропущен %s: %s", path.name, exc)
-                skipped.append(path.name)
-
-        # Синхронный эмбеддинг
-        if all_chunks:
-            embedder = build_embedder(
-                embedding_model,
-                api_key=embedding_api_key,
-                api_base=embedding_api_url,
+        project = lock_project(db, project_id)
+        spec = indexing_settings(
+            SimpleNamespace(
+                chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap,
+                embedding_model=embedding_model,
+                embedding_dimension=embedding_dimension,
+                embedding_api_url=embedding_api_url,
             )
-            texts = [c.text for c in all_chunks]
-            embeddings = embedder.embed_sync(texts)
-            for chunk, emb in zip(all_chunks, embeddings):
-                chunk.embedding = emb
-
-            collection = _collection_name(project_id)
-            vector_store = build_vector_store()
-            asyncio.run(vector_store.create_collection(collection, embedding_dimension))
-            asyncio.run(vector_store.upsert(collection, all_chunks))
-
+        )
+        added = []
+        with zipfile.ZipFile(archive_path) as archive:
+            seen = set()
+            for member in archive.infolist():
+                if member.is_dir():
+                    continue
+                name = member.filename.replace("\\", "/")
+                if name in seen:
+                    raise ValueError("В архиве повторяется имя документа.")
+                seen.add(name)
+                if get_parser_for(name) is None:
+                    skipped.append(name)
+                    continue
+                content = archive.read(member)
+                path = tmp_dir / (str(uuid.uuid4()) + Path(name).suffix)
+                path.write_bytes(content)
+                try:
+                    process_file(path, name, chunk_size, chunk_overlap)
+                except (EmptyPDFError, ParserError):
+                    skipped.append(name)
+                    continue
+                added.append(register_document(db, project, name, content))
+        if not added:
+            raise ValueError("Архив не содержит документов для индексации.")
+        index = plan_index(db, project, spec)
+        added_versions = {source.id: source.document_version_id for source in added}
+        db.commit()
+        embedder = build_embedder(
+            embedding_model, api_key=embedding_api_key, api_base=embedding_api_url
+        )
+        reused = not await ensure_index(db, index, build_vector_store(), embedder)
+        mark_sources(db, index)
+        db.commit()
         operations[operation_id] = {
             "status": "completed",
-            "result": {
-                "chunks_count": len(all_chunks),
-                "skipped_files": skipped,
-            },
             "error": None,
+            "result": {
+                "chunks_count": sum(
+                    index.document_chunks.get(str(version_id), 0)
+                    for version_id in added_versions.values()
+                ),
+                "skipped_files": skipped,
+                "index_reused": reused,
+                **index_snapshot(index),
+            },
         }
-    except Exception as exc:
-        logger.exception("Фоновая обработка %s упала", operation_id)
+    except Exception:
+        db.rollback()
+        for source_id, version_id in added_versions.items():
+            source = db.get(DataSource, source_id)
+            if source is not None and source.document_version_id == version_id:
+                source.status = "failed"
+                source.error_message = DOCUMENT_PROCESSING_ERROR
+        db.commit()
         operations[operation_id] = {
             "status": "failed",
             "result": None,
-            "error": str(exc),
+            "error": ARCHIVE_PROCESSING_ERROR,
         }
+        logger.exception("Ошибка обработки архива %s", operation_id)
     finally:
+        db.close()
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
@@ -333,4 +334,4 @@ async def get_operation_status(operation_id: str) -> Dict[str, Any]:
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Операция {operation_id} не найдена",
         )
-    return {"operation_id": operation_id, **op}
+    return {"operation_id": operation_id, **public_operation_status(op)}

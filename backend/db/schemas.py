@@ -13,19 +13,21 @@ from datetime import datetime
 from typing import List, Literal, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, HttpUrl, field_validator
+from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
 
 
 # ===========================================================================
 # Project
 # ===========================================================================
 
-SplitBy = Literal["paragraphs", "sentences", "tokens"]
+SplitBy = Literal["paragraphs"]
 ChunkingStrategy = Literal["recursive"]
 
 
 class ProjectCreate(BaseModel):
     """Данные для создания нового проекта."""
+
+    model_config = {"extra": "forbid"}
 
     # ── Основное ────────────────────────────────────────────────────────────
     name: str = Field(..., min_length=1, max_length=255, examples=["Мой RAG-проект"])
@@ -39,7 +41,9 @@ class ProjectCreate(BaseModel):
     chunking_strategy: ChunkingStrategy = Field(
         "recursive", description="Стратегия чанкинга"
     )
-    extract_tables: bool = Field(False, description="Извлекать таблицы из PDF")
+    extract_tables: Literal[False] = Field(False, description="Пока не поддерживается")
+    top_k: int = Field(5, ge=1, le=100)
+    max_context_chars: int = Field(2000, ge=1, le=100000)
 
     # ── Эмбеддинги ──────────────────────────────────────────────────────────
     embedding_model: str = Field(..., examples=["text-embedding-3-small"])
@@ -66,9 +70,17 @@ class ProjectCreate(BaseModel):
             return None
         return v
 
+    @model_validator(mode="after")
+    def validate_chunk_overlap(self):
+        if self.chunk_overlap >= self.chunk_size:
+            raise ValueError("chunk_overlap должен быть меньше chunk_size")
+        return self
+
 
 class ProjectUpdate(BaseModel):
     """Частичное обновление проекта — все поля опциональны."""
+
+    model_config = {"extra": "forbid"}
 
     name: Optional[str] = Field(None, min_length=1, max_length=255)
 
@@ -76,7 +88,9 @@ class ProjectUpdate(BaseModel):
     chunk_overlap: Optional[int] = Field(None, ge=0, le=2000)
     split_by: Optional[SplitBy] = None
     chunking_strategy: Optional[ChunkingStrategy] = None
-    extract_tables: Optional[bool] = None
+    extract_tables: Optional[Literal[False]] = None
+    top_k: Optional[int] = Field(None, ge=1, le=100)
+    max_context_chars: Optional[int] = Field(None, ge=1, le=100000)
 
     embedding_model: Optional[str] = None
     embedding_dimension: Optional[int] = Field(None, ge=1)
@@ -109,6 +123,9 @@ class ProjectResponse(BaseModel):
     split_by: str
     chunking_strategy: str
     extract_tables: bool
+
+    top_k: int
+    max_context_chars: int
 
     embedding_model: str
     embedding_dimension: int
@@ -159,6 +176,14 @@ class DataSourceResponse(BaseModel):
     chunks_count: int
     error_message: Optional[str]
     created_at: datetime
+    document_version_id: Optional[UUID] = None
+
+    @field_validator("error_message", mode="before")
+    @classmethod
+    def neutral_public_error(cls, value):
+        from backend.core.public_errors import DOCUMENT_PROCESSING_ERROR
+
+        return DOCUMENT_PROCESSING_ERROR if value is not None else None
 
     model_config = {"from_attributes": True}
 
@@ -189,6 +214,7 @@ class ChatMessageResponse(BaseModel):
     role: ChatRole
     content: str
     created_at: datetime
+    rag_metadata: Optional[dict] = None
 
     model_config = {"from_attributes": True}
 
@@ -209,6 +235,13 @@ class ChatHistoryResponse(BaseModel):
 class GenerateRequest(BaseModel):
     """Запрос на генерацию ответа LLM с учётом найденного контекста."""
 
+    model_config = {"extra": "forbid"}
+
+    max_context_chars: Optional[int] = Field(None, ge=1, le=100000)
+    max_attempts: int = Field(1, ge=1, le=3)
+    question_set_version_id: Optional[UUID] = None
+    question_example_id: Optional[UUID] = None
+
     query: str = Field(..., min_length=1, description="Вопрос пользователя")
     context: str = Field(default="", description="Найденные чанки (строка)")
     session_id: Optional[UUID] = Field(
@@ -224,3 +257,7 @@ class GenerateResponse(BaseModel):
     """Ответ LLM на вопрос пользователя."""
 
     answer: str
+    run_id: UUID
+    applied_settings: dict
+    context_chars: int
+    configuration_version_id: UUID

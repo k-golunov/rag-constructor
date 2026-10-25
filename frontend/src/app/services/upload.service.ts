@@ -10,6 +10,11 @@ export interface UploadSingleResponse {
   chunk_size: number;
   chunk_overlap: number;
   chunks_count: number;
+  status: 'completed' | 'failed';
+  data_source_id: string;
+  document_version_id: string;
+  index_version_id?: string;
+  index_reused: boolean;
 }
 
 export interface UploadArchiveResponse {

@@ -11,11 +11,13 @@ REST API для управления проектами RAG-конструкто
 
 from uuid import UUID
 
+from pydantic import ValidationError
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from backend.db.database import get_db
-from backend.db.models import Project
+from backend.db.models import Project, BatchRun
 from backend.db.schemas import (
     ProjectCreate,
     ProjectListResponse,
@@ -24,6 +26,21 @@ from backend.db.schemas import (
 )
 
 router = APIRouter(prefix="/api/v1/public/provider/projects", tags=["projects"])
+
+
+def validate_project_configuration(project: Project, overrides=None) -> None:
+    """Проверяет итоговые настройки, включая частичный PATCH и старые проекты."""
+    values = {name: getattr(project, name) for name in ProjectCreate.model_fields}
+    values.update(overrides or {})
+    try:
+        ProjectCreate.model_validate(values)
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=exc.errors(
+                include_url=False, include_context=False, include_input=False
+            ),
+        ) from exc
 
 
 # ---------------------------------------------------------------------------
@@ -166,6 +183,7 @@ def update_project(
 
     # Применяем только те поля, которые явно переданы (exclude_unset=True)
     update_data = payload.model_dump(exclude_unset=True)
+    validate_project_configuration(project, update_data)
     for field, value in update_data.items():
         setattr(project, field, value)
 
@@ -193,5 +211,10 @@ def delete_project(
         HTTPException: 404, если проект не найден.
     """
     project = _get_project_or_404(project_id, db)
+    # Remove dependent batches before project cascades delete their index/config parents.
+    # PostgreSQL checks those cross-cascade foreign keys before another cascade may finish.
+    db.query(BatchRun).filter_by(project_id=project_id).delete(
+        synchronize_session=False
+    )
     db.delete(project)
     db.commit()

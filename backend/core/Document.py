@@ -1,4 +1,4 @@
-﻿from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 import uuid
 
@@ -10,3 +10,4 @@ class Document(BaseModel):
     text: str
     metadata: Dict[str, Any] = {}
     embedding: Optional[List[float]] = None
+    score: Optional[float] = None
