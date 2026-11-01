@@ -3,6 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AbstractControl, ReactiveFormsModule, FormBuilder, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 
 import { ProjectService } from '../../../services/project.service';
+import { apiErrorMessage, chunkOverlapValidator } from '../../../models/settings-validation';
 import {
   CHUNKING_STRATEGIES,
   EMBEDDING_MODELS,
@@ -56,6 +57,8 @@ export class ProjectCreateComponent {
       split_by:          ['paragraphs', Validators.required],
       chunking_strategy: ['recursive',  Validators.required],
       extract_tables:    [false],
+      top_k: [5, [Validators.required, Validators.min(1), Validators.max(100), Validators.pattern(/^\d+$/)]],
+      max_context_chars: [2000, [Validators.required, Validators.min(1), Validators.max(100000), Validators.pattern(/^\d+$/)]],
 
       // ── Эмбеддинги ──────────────────────────────────────────
       embedding_model:     ['text-embedding-3-small', Validators.required],
@@ -70,7 +73,7 @@ export class ProjectCreateComponent {
 
       // ── Промпт ──────────────────────────────────────────────
       system_prompt: [this.DEFAULT_PROMPT, Validators.required],
-    });
+    }, { validators: chunkOverlapValidator });
   }
 
   get f() { return this.form.controls; }
@@ -91,8 +94,7 @@ export class ProjectCreateComponent {
         this.router.navigate(['/projects', created.id]);
       },
       error: (err) => {
-        const detail: string =
-          err?.error?.detail ?? 'Не удалось создать проект. Попробуйте позже.';
+        const detail = apiErrorMessage(err?.error?.detail, 'Не удалось создать проект. Попробуйте позже.');
         this.serverError.set(detail);
         this.submitting.set(false);
       },

@@ -38,7 +38,7 @@ def list_data_sources(
     """
     items = (
         db.query(DataSource)
-        .filter(DataSource.project_id == project_id)
+        .filter(DataSource.project_id == project_id, DataSource.is_active.is_(True))
         .order_by(DataSource.created_at.desc())
         .all()
     )
@@ -64,10 +64,13 @@ def delete_data_source(
         HTTPException: 404, если источник не найден.
     """
     ds = db.query(DataSource).filter(DataSource.id == data_source_id).first()
-    if ds is None:
+    if ds is None or not ds.is_active:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Источник данных не найден.",
         )
-    db.delete(ds)
+    # Historical versions and completed index manifests remain intact.
+    db.query(DataSource).filter_by(
+        project_id=ds.project_id, file_name=ds.file_name
+    ).update({"is_active": False})
     db.commit()

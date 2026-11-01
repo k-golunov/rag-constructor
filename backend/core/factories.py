@@ -63,7 +63,7 @@ def build_embedder(
         "openai",
         model_name=model_name,
         api_key=api_key or settings.OPENAI_API_KEY,
-        api_base=api_base or settings.OPENAI_BASE_URL,
+        api_base=api_base or settings.OPENAI_BASE_URL or "https://api.openai.com/v1",
     )
 
 
@@ -81,6 +81,7 @@ def build_llm(
     system_prompt: str = "",
     api_key: Optional[str] = None,
     api_base: Optional[str] = None,
+    max_context_chars: int = 2000,
 ) -> BaseLLM:
     """Возвращает LLM по имени модели.
 
@@ -96,7 +97,8 @@ def build_llm(
     kwargs = {
         "model": model_name,
         "api_key": api_key or settings.OPENAI_API_KEY,
-        "api_url": api_base,
+        "api_url": api_base or settings.OPENAI_BASE_URL or "https://api.openai.com/v1",
+        "max_context_chars": max_context_chars,
     }
     if system_prompt:
         kwargs["system_prompt"] = system_prompt

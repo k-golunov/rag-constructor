@@ -9,6 +9,7 @@ export interface DataSource {
   chunks_count: number;
   error_message: string | null;
   created_at: string;
+  document_version_id: string | null;
 }
 
 export interface DataSourceListResponse {

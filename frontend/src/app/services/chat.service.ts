@@ -14,6 +14,11 @@ export interface ChatResponse {
   answer: string;
   session_id: string;
   sources: string[];
+  retrieval_status: 'success' | 'no_context';
+  applied_settings: Record<string, unknown>;
+  context_chars: number;
+  run_id: string;
+  configuration_version_id: string;
 }
 
 export interface ChatHistoryResponse {

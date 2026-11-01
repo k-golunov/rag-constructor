@@ -14,12 +14,16 @@ x-backend-env: &backend-env
   POSTGRES_USER: postgres
   POSTGRES_PASSWORD: postgres
   POSTGRES_DB: rag_constructor
-  DATABASE_URL: postgresql://postgres:postgres@postgres:5432/rag_constructor
+  DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/rag_constructor
   QDRANT_URL: http://qdrant:6333
   REDIS_URL: redis://redis:6379/0
   OPENAI_API_KEY: ${OPENAI_API_KEY:-}
   OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
   UPLOAD_DIR: /app/uploads
+  BATCH_QUESTION_TIMEOUT_SECONDS: ${BATCH_QUESTION_TIMEOUT_SECONDS:-180}
+  BATCH_JOB_MAX_ATTEMPTS: ${BATCH_JOB_MAX_ATTEMPTS:-3}
+  BATCH_RETRY_DELAY_SECONDS: ${BATCH_RETRY_DELAY_SECONDS:-10}
+  BATCH_WORKER_CONCURRENCY: ${BATCH_WORKER_CONCURRENCY:-2}
 
 services:
   postgres:
@@ -47,6 +51,10 @@ services:
 
   redis:
     image: redis:alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redisdata:/data
     ports:
       - "6379:6379"
     healthcheck:
@@ -64,6 +72,11 @@ services:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
       - uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
     depends_on:
       postgres:
         condition: service_healthy
@@ -76,7 +89,8 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
-    command: celery -A backend.tasks.worker.celery_app worker --loglevel=info
+    command: celery -A backend.tasks.worker.celery_app worker --loglevel=info --queues=celery --concurrency=1
+    restart: unless-stopped
     environment: *backend-env
     volumes:
       - uploads:/app/uploads
@@ -87,6 +101,38 @@ services:
         condition: service_healthy
       qdrant:
         condition: service_started
+      backend:
+        condition: service_healthy
+
+  batch-worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: celery -A backend.tasks.worker.celery_app worker --loglevel=info --queues=batches
+    environment: *backend-env
+    volumes:
+      - uploads:/app/uploads
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: celery -A backend.tasks.worker.celery_app beat --loglevel=info --schedule=/tmp/celerybeat-schedule
+    environment: *backend-env
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
 
   frontend:
     build:
@@ -101,3 +147,4 @@ volumes:
   pgdata:
   qdrant_storage:
   uploads:
+  redisdata:

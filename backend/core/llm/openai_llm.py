@@ -5,6 +5,7 @@ from typing import AsyncIterator, List, Optional
 from openai import AsyncOpenAI
 
 from backend.core.llm.base import BaseLLM
+from backend.core.response_trace import token_usage
 
 
 class OpenAILLM(BaseLLM):
@@ -18,19 +19,28 @@ class OpenAILLM(BaseLLM):
     """
 
     MAX_CONTEXT_CHARS: int = 2000
+    DEFAULT_SYSTEM_PROMPT = (
+        "Вы полезный ассистент, отвечающий на вопросы по документам."
+    )
 
     def __init__(
         self,
         model: str,
         api_key: str,
         api_url: Optional[str] = None,
-        system_prompt: str = "Вы полезный ассистент, отвечающий на вопросы по документам.",
+        system_prompt: str = DEFAULT_SYSTEM_PROMPT,
+        max_context_chars: int = MAX_CONTEXT_CHARS,
     ) -> None:
         self._model = model
+        if max_context_chars < 1:
+            raise ValueError("max_context_chars должен быть положительным")
+        self._max_context_chars = max_context_chars
         self._system_prompt = system_prompt
+        self.last_usage = None
         self._client = AsyncOpenAI(
             api_key=api_key,
             base_url=api_url or None,
+            max_retries=0,
         )
 
     async def generate(
@@ -43,19 +53,33 @@ class OpenAILLM(BaseLLM):
 
         Args:
             prompt: Вопрос пользователя.
-            context: Строка найденных чанков (обрезается до MAX_CONTEXT_CHARS).
+            context: Текст, ограниченный явно заданным max_context_chars.
             history: История диалога в формате [{"role": ..., "content": ...}].
 
         Returns:
             Текстовый ответ модели.
         """
-        truncated_context = context[: self.MAX_CONTEXT_CHARS]
-        messages = self._build_messages(prompt, truncated_context, history or [])
+        self.last_usage = None
         response = await self._client.chat.completions.create(
-            model=self._model,
-            messages=messages,
+            **self.generation_request(prompt, context, history)
         )
-        return response.choices[0].message.content
+        self.last_usage = token_usage(response)
+        answer = response.choices[0].message.content
+        if not isinstance(answer, str) or not answer.strip():
+            raise ValueError("Модель не вернула текст ответа.")
+        return answer
+
+    def generation_request(self, prompt, context, history=None) -> dict:
+        """Единый источник фактически отправляемых параметров для аудита."""
+        return {
+            "model": self._model,
+            "stream": False,
+            "messages": self._build_messages(
+                prompt,
+                context[: self._max_context_chars],
+                history or [],
+            ),
+        }
 
     async def generate_stream(
         self,

@@ -8,6 +8,7 @@
 """
 
 import pytest
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -67,6 +68,6 @@ def client(db_session):
     Каждый тест получает свежую пустую базу данных.
     """
     app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as test_client:
+    with patch("backend.main.init_db"), TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()

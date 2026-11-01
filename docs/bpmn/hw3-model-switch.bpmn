@@ -1,0 +1,412 @@
+<?xml version='1.0' encoding='utf-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="hw3-model-switch" targetNamespace="https://rag-constructor.local/bpmn" exporter="RAG Constructor" exporterVersion="1.0">
+  <bpmn:process id="Switch" isExecutable="false" name="Сервис контроля качества и переключения моделей — проектируемый процесс">
+    <bpmn:startEvent id="s_start" name="Еженедельный таймер">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="WeeklyTimer">
+        <bpmn:timeCycle>R/P7D</bpmn:timeCycle>
+      </bpmn:timerEventDefinition>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="s_load" name="Загрузить эталонные вопросы и ограничения">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="s_base" name="Оценить текущую LLM на эталонных вопросах">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="s_need" name="Качество ниже порога?" default="Flow_5">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="s_snapshot" name="Сохранить текущую конфигурацию для отката">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="s_choose" name="Выбрать следующую LLM из списка кандидатов">
+      <bpmn:incoming>Flow_6</bpmn:incoming>
+      <bpmn:incoming>Flow_19</bpmn:incoming>
+      <bpmn:outgoing>Flow_7</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="s_available" name="Есть кандидат и ресурс?" default="Flow_8">
+      <bpmn:incoming>Flow_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_8</bpmn:outgoing>
+      <bpmn:outgoing>Flow_10</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="s_stable" name="Смена не требуется">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="s_stop" name="Записать причину остановки; сохранить текущую LLM">
+      <bpmn:incoming>Flow_8</bpmn:incoming>
+      <bpmn:outgoing>Flow_9</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="s_stopend" name="Без смены модели">
+      <bpmn:incoming>Flow_9</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="s_eval" name="Оценить кандидата: качество, задержка, стоимость">
+      <bpmn:incoming>Flow_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_11</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="s_accept" name="Все критерии выполнены?" default="Flow_17">
+      <bpmn:incoming>Flow_11</bpmn:incoming>
+      <bpmn:outgoing>Flow_12</bpmn:outgoing>
+      <bpmn:outgoing>Flow_17</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="s_switch" name="Переключить LLM проекта на кандидата">
+      <bpmn:incoming>Flow_12</bpmn:incoming>
+      <bpmn:outgoing>Flow_13</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="s_smoke" name="Выполнить контрольные запросы после смены">
+      <bpmn:incoming>Flow_13</bpmn:incoming>
+      <bpmn:outgoing>Flow_14</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="s_smokeok" name="Контроль пройден?" default="Flow_22">
+      <bpmn:incoming>Flow_14</bpmn:incoming>
+      <bpmn:outgoing>Flow_15</bpmn:outgoing>
+      <bpmn:outgoing>Flow_22</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="s_record" name="Сохранить версию, метрики и результат смены">
+      <bpmn:incoming>Flow_15</bpmn:incoming>
+      <bpmn:outgoing>Flow_16</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="s_success" name="Смена завершена">
+      <bpmn:incoming>Flow_16</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="s_reject" name="Записать отказ кандидату или ошибку проверки">
+      <bpmn:incoming>Flow_17</bpmn:incoming>
+      <bpmn:outgoing>Flow_18</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="s_retry" name="Есть ещё попытки и бюджет?" default="Flow_20">
+      <bpmn:incoming>Flow_18</bpmn:incoming>
+      <bpmn:outgoing>Flow_19</bpmn:outgoing>
+      <bpmn:outgoing>Flow_20</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="s_exhausted" name="Зафиксировать неуспех; оставить прежнюю LLM">
+      <bpmn:incoming>Flow_20</bpmn:incoming>
+      <bpmn:outgoing>Flow_21</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="s_exhaustend" name="Лимиты исчерпаны">
+      <bpmn:incoming>Flow_21</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="s_rollback" name="Восстановить предыдущую конфигурацию LLM">
+      <bpmn:incoming>Flow_22</bpmn:incoming>
+      <bpmn:outgoing>Flow_23</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="s_alert" name="Записать сбой; уведомить ответственного">
+      <bpmn:incoming>Flow_23</bpmn:incoming>
+      <bpmn:outgoing>Flow_24</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="s_rollbackend" name="Откат выполнен">
+      <bpmn:incoming>Flow_24</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="s_start" targetRef="s_load" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="s_load" targetRef="s_base" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="s_base" targetRef="s_need" />
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="s_need" targetRef="s_snapshot" name="Да">
+      <bpmn:conditionExpression>Да</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="s_need" targetRef="s_stable" name="Нет" />
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="s_snapshot" targetRef="s_choose" />
+    <bpmn:sequenceFlow id="Flow_7" sourceRef="s_choose" targetRef="s_available" />
+    <bpmn:sequenceFlow id="Flow_8" sourceRef="s_available" targetRef="s_stop" name="Нет" />
+    <bpmn:sequenceFlow id="Flow_9" sourceRef="s_stop" targetRef="s_stopend" />
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="s_available" targetRef="s_eval" name="Да">
+      <bpmn:conditionExpression>Да</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="s_eval" targetRef="s_accept" />
+    <bpmn:sequenceFlow id="Flow_12" sourceRef="s_accept" targetRef="s_switch" name="Да">
+      <bpmn:conditionExpression>Да</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_13" sourceRef="s_switch" targetRef="s_smoke" />
+    <bpmn:sequenceFlow id="Flow_14" sourceRef="s_smoke" targetRef="s_smokeok" />
+    <bpmn:sequenceFlow id="Flow_15" sourceRef="s_smokeok" targetRef="s_record" name="Да">
+      <bpmn:conditionExpression>Да</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_16" sourceRef="s_record" targetRef="s_success" />
+    <bpmn:sequenceFlow id="Flow_17" sourceRef="s_accept" targetRef="s_reject" name="Нет" />
+    <bpmn:sequenceFlow id="Flow_18" sourceRef="s_reject" targetRef="s_retry" />
+    <bpmn:sequenceFlow id="Flow_19" sourceRef="s_retry" targetRef="s_choose" name="Да">
+      <bpmn:conditionExpression>Да</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_20" sourceRef="s_retry" targetRef="s_exhausted" name="Нет" />
+    <bpmn:sequenceFlow id="Flow_21" sourceRef="s_exhausted" targetRef="s_exhaustend" />
+    <bpmn:sequenceFlow id="Flow_22" sourceRef="s_smokeok" targetRef="s_rollback" name="Нет" />
+    <bpmn:sequenceFlow id="Flow_23" sourceRef="s_rollback" targetRef="s_alert" />
+    <bpmn:sequenceFlow id="Flow_24" sourceRef="s_alert" targetRef="s_rollbackend" />
+    <bpmn:textAnnotation id="Criteria">
+      <bpmn:text>Пример проектных критериев (не результаты измерений):
+качество ответов ≥ 85%; не хуже текущей LLM; p95 ≤ 10 с; стоимость ≤ заданного бюджета. Ошибка или тайм-аут проверки → отказ кандидату.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_Criteria" sourceRef="s_accept" targetRef="Criteria" />
+    <bpmn:textAnnotation id="Limits">
+      <bpmn:text>Пример лимитов: максимум 3 кандидата и 30 минут на цикл. Проверять остаток бюджета перед каждым прогоном. При недоступности текущей LLM считать оценку неудовлетворительной.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_Limits" sourceRef="s_retry" targetRef="Limits" />
+  </bpmn:process>
+  <bpmn:collaboration id="Collaboration">
+    <bpmn:participant id="Participant_Switch" name="Сервис контроля качества и переключения моделей — проектируемый процесс" processRef="Switch" />
+  </bpmn:collaboration>
+  <bpmndi:BPMNDiagram id="Diagram">
+    <bpmndi:BPMNPlane id="Plane" bpmnElement="Collaboration">
+      <bpmndi:BPMNShape id="DI_Participant_Switch" bpmnElement="Participant_Switch" isHorizontal="true">
+        <dc:Bounds x="50" y="160" width="2140" height="1490" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="DI_Flow_1" bpmnElement="Flow_1">
+        <di:waypoint x="172" y="378.0" />
+        <di:waypoint x="270" y="378.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_2" bpmnElement="Flow_2">
+        <di:waypoint x="490" y="378.0" />
+        <di:waypoint x="570" y="378.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_3" bpmnElement="Flow_3">
+        <di:waypoint x="790" y="378.0" />
+        <di:waypoint x="890" y="378.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_4" bpmnElement="Flow_4">
+        <di:waypoint x="950" y="378.0" />
+        <di:waypoint x="1100" y="378.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1009.0" y="350" width="22.0" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_5" bpmnElement="Flow_5">
+        <di:waypoint x="920.0" y="408" />
+        <di:waypoint x="920.0" y="560" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="934.5" y="470" width="31.0" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_6" bpmnElement="Flow_6">
+        <di:waypoint x="1320" y="378.0" />
+        <di:waypoint x="1440" y="378.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_7" bpmnElement="Flow_7">
+        <di:waypoint x="1660" y="378.0" />
+        <di:waypoint x="1780" y="378.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_8" bpmnElement="Flow_8">
+        <di:waypoint x="1810.0" y="408" />
+        <di:waypoint x="1810" y="500" />
+        <di:waypoint x="1830" y="500" />
+        <di:waypoint x="1830.0" y="550" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1824.5" y="465" width="31.0" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_9" bpmnElement="Flow_9">
+        <di:waypoint x="1700" y="595.0" />
+        <di:waypoint x="1592" y="595.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_10" bpmnElement="Flow_10">
+        <di:waypoint x="1840" y="378.0" />
+        <di:waypoint x="2000" y="378" />
+        <di:waypoint x="2000" y="865" />
+        <di:waypoint x="1960" y="865.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2014.0" y="720" width="22.0" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_11" bpmnElement="Flow_11">
+        <di:waypoint x="1700" y="865.0" />
+        <di:waypoint x="1500" y="865.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_12" bpmnElement="Flow_12">
+        <di:waypoint x="1440" y="865.0" />
+        <di:waypoint x="1330" y="865.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1367.0" y="835" width="22.0" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_13" bpmnElement="Flow_13">
+        <di:waypoint x="1110" y="865.0" />
+        <di:waypoint x="1040" y="865.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_14" bpmnElement="Flow_14">
+        <di:waypoint x="820" y="865.0" />
+        <di:waypoint x="660" y="865.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_15" bpmnElement="Flow_15">
+        <di:waypoint x="600" y="865.0" />
+        <di:waypoint x="520" y="865.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="549.0" y="835" width="22.0" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_16" bpmnElement="Flow_16">
+        <di:waypoint x="300" y="865.0" />
+        <di:waypoint x="172" y="865.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_17" bpmnElement="Flow_17">
+        <di:waypoint x="1470.0" y="895" />
+        <di:waypoint x="1470" y="1145" />
+        <di:waypoint x="1700" y="1145.0" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1479.5" y="1000" width="31.0" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_18" bpmnElement="Flow_18">
+        <di:waypoint x="1960" y="1145.0" />
+        <di:waypoint x="2030" y="1145.0" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_19" bpmnElement="Flow_19">
+        <di:waypoint x="2090" y="1145.0" />
+        <di:waypoint x="2150" y="1145" />
+        <di:waypoint x="2150" y="240" />
+        <di:waypoint x="1550" y="240" />
+        <di:waypoint x="1550.0" y="333" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2137.0" y="1000" width="22.0" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_20" bpmnElement="Flow_20">
+        <di:waypoint x="2060.0" y="1175" />
+        <di:waypoint x="2060" y="1280" />
+        <di:waypoint x="2050" y="1280" />
+        <di:waypoint x="2050.0" y="1340" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2074.5" y="1245" width="31.0" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_21" bpmnElement="Flow_21">
+        <di:waypoint x="2050.0" y="1430" />
+        <di:waypoint x="2051.0" y="1530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_22" bpmnElement="Flow_22">
+        <di:waypoint x="630.0" y="895" />
+        <di:waypoint x="630.0" y="1100" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="644.5" y="1000" width="31.0" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_23" bpmnElement="Flow_23">
+        <di:waypoint x="630.0" y="1190" />
+        <di:waypoint x="630.0" y="1320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="DI_Flow_24" bpmnElement="Flow_24">
+        <di:waypoint x="630.0" y="1410" />
+        <di:waypoint x="630.0" y="1530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="DI_s_start" bpmnElement="s_start">
+        <dc:Bounds x="130" y="357" width="42" height="42" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="50" y="407" width="202" height="65" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_s_load" bpmnElement="s_load">
+        <dc:Bounds x="270" y="333" width="220" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_s_base" bpmnElement="s_base">
+        <dc:Bounds x="570" y="333" width="220" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_s_need" bpmnElement="s_need" isMarkerVisible="true">
+        <dc:Bounds x="890" y="348" width="60" height="60" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="795" y="285" width="250" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_s_snapshot" bpmnElement="s_snapshot">
+        <dc:Bounds x="1100" y="333" width="220" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_s_choose" bpmnElement="s_choose">
+        <dc:Bounds x="1440" y="333" width="220" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_s_available" bpmnElement="s_available" isMarkerVisible="true">
+        <dc:Bounds x="1780" y="348" width="60" height="60" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1685" y="285" width="250" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_s_stable" bpmnElement="s_stable">
+        <dc:Bounds x="899" y="560" width="42" height="42" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="819" y="610" width="202" height="65" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_s_stop" bpmnElement="s_stop">
+        <dc:Bounds x="1700" y="550" width="260" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_s_stopend" bpmnElement="s_stopend">
+        <dc:Bounds x="1550" y="574" width="42" height="42" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1470" y="624" width="202" height="65" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_s_eval" bpmnElement="s_eval">
+        <dc:Bounds x="1700" y="820" width="260" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_s_accept" bpmnElement="s_accept" isMarkerVisible="true">
+        <dc:Bounds x="1440" y="835" width="60" height="60" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1345" y="772" width="250" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_s_switch" bpmnElement="s_switch">
+        <dc:Bounds x="1110" y="820" width="220" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_s_smoke" bpmnElement="s_smoke">
+        <dc:Bounds x="820" y="820" width="220" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_s_smokeok" bpmnElement="s_smokeok" isMarkerVisible="true">
+        <dc:Bounds x="600" y="835" width="60" height="60" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="505" y="772" width="250" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_s_record" bpmnElement="s_record">
+        <dc:Bounds x="300" y="820" width="220" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_s_success" bpmnElement="s_success">
+        <dc:Bounds x="130" y="844" width="42" height="42" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="50" y="894" width="202" height="65" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_s_reject" bpmnElement="s_reject">
+        <dc:Bounds x="1700" y="1100" width="260" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_s_retry" bpmnElement="s_retry" isMarkerVisible="true">
+        <dc:Bounds x="2030" y="1115" width="60" height="60" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1935" y="1052" width="250" height="58" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_s_exhausted" bpmnElement="s_exhausted">
+        <dc:Bounds x="1940" y="1340" width="220" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_s_exhaustend" bpmnElement="s_exhaustend">
+        <dc:Bounds x="2030" y="1530" width="42" height="42" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1950" y="1580" width="202" height="65" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_s_rollback" bpmnElement="s_rollback">
+        <dc:Bounds x="520" y="1100" width="220" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_s_alert" bpmnElement="s_alert">
+        <dc:Bounds x="520" y="1320" width="220" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_s_rollbackend" bpmnElement="s_rollbackend">
+        <dc:Bounds x="609" y="1530" width="42" height="42" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="529" y="1580" width="202" height="65" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DI_Criteria" bpmnElement="Criteria">
+        <dc:Bounds x="840" y="1290" width="860" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="DI_Association_Criteria" bpmnElement="Association_Criteria">
+        <di:waypoint x="1470.0" y="895" />
+        <di:waypoint x="1270.0" y="1290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="DI_Limits" bpmnElement="Limits">
+        <dc:Bounds x="840" y="1470" width="860" height="120" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="DI_Association_Limits" bpmnElement="Association_Limits">
+        <di:waypoint x="2060.0" y="1175" />
+        <di:waypoint x="1270.0" y="1470" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

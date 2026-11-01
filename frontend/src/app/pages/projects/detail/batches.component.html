@@ -1,0 +1,553 @@
+<section class="analysis">
+  <div class="heading">
+    <div>
+      <span class="eyebrow">Эксперименты с документами</span>
+      <h2>Анализ метрик</h2>
+    </div>
+    <span class="badge">Сбор данных</span>
+  </div>
+  <div class="notice" role="note">
+    <strong>Расчёт метрик пока не подключён.</strong>
+    <p>
+      Здесь можно собрать ответы на одном наборе вопросов, сравнить условия выполнения и выгрузить
+      исходные данные. Оценки качества не рассчитываются.
+    </p>
+  </div>
+  @if (error()) {
+    <p role="alert" class="error">{{ error() }}</p>
+  }
+  @if (!sets().length && !busy()) {
+    <p class="empty">
+      Сначала создайте набор во вкладке «Наборы вопросов» и проверьте примеры человеком.
+    </p>
+  }
+  <fieldset [disabled]="busy()" class="setup">
+    <legend>1. Набор и варианты конфигурации</legend>
+    <div class="fields">
+      <label
+        >Название запуска<input [(ngModel)]="name" (ngModelChange)="invalidatePreview()"
+      /></label>
+      <label
+        >Набор вопросов<select [(ngModel)]="setId" (ngModelChange)="selectSet()">
+          <option value="">Выберите набор</option>
+          @for (set of sets(); track set.id) {
+            <option [value]="set.id">{{ set.name }}</option>
+          }
+        </select></label
+      >
+      <label
+        >Версия набора<select [(ngModel)]="versionId" (ngModelChange)="invalidatePreview()">
+          <option value="">Выберите версию</option>
+          @for (version of versions(); track version.id) {
+            <option [value]="version.id">
+              Версия {{ version.number }} ·
+              {{
+                version.review_status === 'approved' ? 'проверена' : 'есть непроверенные примеры'
+              }}
+            </option>
+          }
+        </select></label
+      >
+      <label
+        >Раздел вопросов<select [(ngModel)]="split" (ngModelChange)="invalidatePreview()">
+          <option value="tuning">Для подбора настроек</option>
+          <option value="test">Для итоговой проверки</option>
+        </select></label
+      >
+      <label
+        >Независимых прогонов<input
+          type="number"
+          min="1"
+          max="10"
+          [(ngModel)]="repeats"
+          (ngModelChange)="invalidatePreview()"
+      /></label>
+    </div>
+    <p class="hint">
+      Каждый вопрос выполняется отдельно, без истории. Все вопросы выбранного раздела должны быть
+      проверены человеком. После запуска страницу можно закрыть.
+    </p>
+    <div class="variant-grid">
+      @for (variant of forms; track $index; let i = $index) {
+        <fieldset class="variant">
+          <legend>Вариант {{ i + 1 }}</legend>
+          <label
+            >Название<input [(ngModel)]="variant.name" (ngModelChange)="invalidatePreview()"
+          /></label>
+          <label
+            >Базовая конфигурация<select
+              [(ngModel)]="variant.configuration_version_id"
+              (ngModelChange)="chooseConfiguration(variant)"
+            >
+              <option [ngValue]="undefined">Текущие настройки проекта</option>
+              @for (config of configurations(); track config.id) {
+                <option [value]="config.id">
+                  {{ config.name }} · {{ config.applied_settings['llm_model'] }} ·
+                  {{ config.sha256.slice(0, 8) }}
+                </option>
+              }
+            </select></label
+          >
+          <p class="hint">Пустые поля наследуют значения базовой конфигурации.</p>
+          <div class="fields">
+            <label
+              >Число фрагментов (top_k)<input
+                type="number"
+                min="1"
+                max="100"
+                [(ngModel)]="variant.settings.top_k"
+                (ngModelChange)="invalidatePreview()"
+                placeholder="Из базовой конфигурации"
+            /></label>
+            <label
+              >Контекст, символов<input
+                type="number"
+                min="1"
+                max="100000"
+                [(ngModel)]="variant.settings.max_context_chars"
+                (ngModelChange)="invalidatePreview()"
+                placeholder="Из базовой конфигурации"
+            /></label>
+            <label
+              >Размер фрагмента<input
+                type="number"
+                min="100"
+                max="8000"
+                [(ngModel)]="variant.settings.chunk_size"
+                (ngModelChange)="invalidatePreview()"
+            /></label>
+            <label
+              >Перекрытие фрагментов<input
+                type="number"
+                min="0"
+                max="2000"
+                [(ngModel)]="variant.settings.chunk_overlap"
+                (ngModelChange)="invalidatePreview()"
+            /></label>
+          </div>
+          <details>
+            <summary>Модели и дополнительные настройки</summary>
+            <div class="fields advanced">
+              <label
+                >Модель ответа<input
+                  [(ngModel)]="variant.settings.llm_model"
+                  (ngModelChange)="invalidatePreview()"
+              /></label>
+              <label
+                >Модель эмбеддингов<input
+                  [(ngModel)]="variant.settings.embedding_model"
+                  (ngModelChange)="invalidatePreview()"
+              /></label>
+              <label
+                >Размерность эмбеддингов<input
+                  type="number"
+                  min="1"
+                  [(ngModel)]="variant.settings.embedding_dimension"
+                  (ngModelChange)="invalidatePreview()"
+              /></label>
+              <label
+                >Порог поиска<input
+                  type="number"
+                  min="-1"
+                  max="1"
+                  step="0.05"
+                  [(ngModel)]="variant.settings.score_threshold"
+                  (ngModelChange)="invalidatePreview()"
+              /></label>
+              <label
+                >Технических попыток на этап<input
+                  type="number"
+                  min="1"
+                  max="3"
+                  [(ngModel)]="variant.settings.max_attempts"
+                  (ngModelChange)="invalidatePreview()"
+              /></label>
+              <label class="wide"
+                >Системный промпт<textarea
+                  rows="3"
+                  [(ngModel)]="variant.settings.system_prompt"
+                  (ngModelChange)="invalidatePreview()"
+                ></textarea>
+              </label>
+            </div>
+          </details>
+          @if (forms.length > 1) {
+            <button class="subtle" (click)="removeVariant(i)">Убрать вариант</button>
+          }
+        </fieldset>
+      }
+    </div>
+    @if (configurations().length < configurationsTotal()) {
+      <button (click)="loadConfigurations(true)">Загрузить ещё сохранённые конфигурации</button>
+    }
+    <p class="hint">
+      Температура, лимит токенов и seed пока не настраиваются и не участвуют в сравнении.
+    </p>
+    <div class="actions">
+      <button (click)="addVariant()" [disabled]="forms.length >= 20">Добавить вариант</button
+      ><button class="primary" (click)="prepare()" [disabled]="!versionId || !name.trim()">
+        Проверить настройки и индексы
+      </button>
+    </div>
+  </fieldset>
+  @if (preview(); as plan) {
+    <article class="plan">
+      <h3>2. Проверка перед сбором</h3>
+      <div class="stats">
+        <span
+          ><strong>{{ plan.question_count }}</strong> вопросов</span
+        ><span
+          ><strong>{{ plan.result_count }}</strong> ожидаемых результатов</span
+        ><span
+          ><strong>{{ plan.indexes_to_build }}</strong> индексов для построения</span
+        >
+      </div>
+      @if (plan.differences.length) {
+        <div class="table-scroll">
+          <table>
+            <caption>
+              Различающиеся действующие настройки
+            </caption>
+            <thead>
+              <tr>
+                <th>Настройка</th>
+                @for (variant of plan.variants; track $index) {
+                  <th>{{ variant.name }}</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of plan.differences; track row.parameter) {
+                <tr>
+                  <th>{{ parameter(row.parameter) }}</th>
+                  @for (cell of row.values; track $index) {
+                    <td>
+                      <pre>{{ value(cell) }}</pre>
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p>Действующие настройки вариантов совпадают.</p>
+      }
+      <div class="index-grid">
+        @for (variant of plan.variants; track $index) {
+          <div class="index-card">
+            <strong>{{ variant.name }}</strong>
+            <p>
+              {{
+                variant.index.requires_build ? 'Нужно построить индекс' : 'Совместимый индекс готов'
+              }}
+            </p>
+            @if (variant.index.shared_with) {
+              <p class="hint">Общий индекс с вариантом «{{ variant.index.shared_with }}».</p>
+            }
+            <p class="hint">
+              Документов: {{ variant.index.document_count }}. Построение выполняется в фоне при
+              сборе.
+            </p>
+            <details>
+              <summary>Все действующие настройки</summary>
+              <pre>{{ variant.applied_settings | json }}</pre>
+            </details>
+          </div>
+        }
+      </div>
+      <p class="hint">
+        Статус индекса показан по БД. Доступность Qdrant проверяется при выполнении. Предпросмотр не
+        строит индексы и не обращается к LLM.
+      </p>
+      <div class="actions">
+        <button class="primary" (click)="create()" [disabled]="busy()">Начать сбор ответов</button
+        ><button (click)="create(false)" [disabled]="busy()">Сохранить без запуска</button>
+      </div>
+    </article>
+  }
+  <div class="actions">
+    <h3>Сохранённые запуски</h3>
+    <button (click)="refresh()" [disabled]="busy()">Обновить</button>
+  </div>
+  @if (busy()) {
+    <p role="status" class="hint">Загружаем данные…</p>
+  }
+  <div class="runs">
+    @for (batch of batches(); track batch.id) {
+      <button
+        class="run"
+        [class.chosen]="selected()?.id === batch.id"
+        (click)="select(batch.id)"
+        [disabled]="busy()"
+      >
+        <strong>{{ batch.name }}</strong
+        ><span
+          >{{ status(batch.status) }} · {{ done(batch) }} из {{ total(batch) }} · Ошибок:
+          {{ batch.counts.error }}</span
+        >
+      </button>
+    }
+  </div>
+  @if (batches().length < batchTotal()) {
+    <button (click)="moreBatches()" [disabled]="busy()">Ещё запуски</button>
+  }
+  @if (selected(); as batch) {
+    <article class="collected">
+      <div class="actions">
+        <h3>{{ batch.name }}</h3>
+        <span class="badge">{{ status(batch.status) }}</span>
+      </div>
+      <p>
+        {{ batch.question_set?.name }} · Версия {{ batch.question_set?.number }} · Независимых
+        прогонов: {{ batch.repeats }}
+      </p>
+      <progress
+        [max]="total(batch) || 1"
+        [value]="done(batch)"
+        aria-label="Прогресс сбора ответов"
+      ></progress>
+      <p aria-live="polite">
+        Сохранено ответов: {{ batch.counts.success }} · Ошибок: {{ batch.counts.error }} ·
+        Выполняется: {{ batch.counts.running }} · Ожидает: {{ batch.counts.pending }}
+      </p>
+      <div class="actions">
+        <button
+          class="primary"
+          (click)="execute()"
+          [disabled]="
+            busy() ||
+            isActive(batch.status) ||
+            (!batch.counts.pending &&
+              batch.status !== 'interrupted' &&
+              batch.status !== 'cancelled')
+          "
+        >
+          Продолжить сбор
+        </button>
+        @if (isActive(batch.status)) {
+          <button (click)="cancel()" [disabled]="busy() || batch.status === 'cancelling'">
+            Отменить обработку
+          </button>
+        }
+        <button (click)="rerun()" [disabled]="busy()">Создать повторный прогон</button
+        ><button (click)="export('json')" [disabled]="busy()">Экспорт JSON</button
+        ><button (click)="export('csv')" [disabled]="busy()">Экспорт CSV</button>
+      </div>
+      @if (batch.status !== 'completed' && batch.status !== 'completed_with_errors') {
+        <p class="hint">
+          Экспорт доступен сейчас и будет отмечен как частичный. В него войдут все результаты
+          запуска, независимо от фильтра и страницы.
+        </p>
+      }
+      @if (batch.status === 'cancelling') {
+        <p>Текущий вопрос завершится в пределах таймаута. Следующие вопросы не запускаются.</p>
+      }
+      @if (batch.job?.error_code === 'broker_unavailable') {
+        <p role="status" class="error">
+          Очередь временно недоступна. Запрос сохранён в БД и будет отправлен повторно.
+        </p>
+      }
+      @if (batch.differences?.length) {
+        <details>
+          <summary>Сравнение зафиксированных настроек</summary>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Настройка</th>
+                  @for (variant of batch.variants; track variant.id) {
+                    <th>{{ variant.name }}</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of batch.differences; track row.parameter) {
+                  <tr>
+                    <th>{{ parameter(row.parameter) }}</th>
+                    @for (cell of row.values; track $index) {
+                      <td>
+                        <pre>{{ value(cell) }}</pre>
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </details>
+      }
+      @for (variant of batch.variants; track variant.id) {
+        <details>
+          <summary>{{ variant.name }} — условия выполнения</summary>
+          <p>
+            Конфигурация: <code>{{ variant.configuration_version_id }}</code
+            ><br />Индекс: <code>{{ variant.index_version_id }}</code> ·
+            {{ variant.index_status === 'ready' ? 'готов' : 'требует подготовки' }}
+          </p>
+          <pre>{{ variant.applied_settings | json }}</pre>
+        </details>
+      }
+      @if (batch.job) {
+        <details>
+          <summary>Фоновая задача и ограничения</summary>
+          <pre>{{ batch.job | json }}</pre>
+        </details>
+      }
+      <div class="fields filters">
+        <label
+          >Вариант<select
+            [(ngModel)]="resultVariant"
+            (ngModelChange)="loadResults(false)"
+            [disabled]="busy()"
+          >
+            <option value="">Все варианты</option>
+            @for (variant of batch.variants; track variant.id) {
+              <option [value]="variant.id">{{ variant.name }}</option>
+            }
+          </select></label
+        ><label
+          >Статус<select
+            [(ngModel)]="resultStatus"
+            (ngModelChange)="loadResults(false)"
+            [disabled]="busy()"
+          >
+            <option value="">Все результаты</option>
+            <option value="success">Ответ сохранён</option>
+            <option value="error">Ошибка</option>
+            <option value="pending">Ожидает выполнения</option>
+            <option value="running">Выполняется</option>
+          </select></label
+        >
+      </div>
+      <p class="hint">
+        Результатов по фильтру: {{ resultsTotal() }}. Это данные для оценки, расчёт метрик не
+        подключён.
+      </p>
+      @for (result of results(); track result.id) {
+        <section class="result">
+          <div class="actions">
+            <strong>{{ variantName(result.variant_id) }} · Прогон {{ result.repeat_number }}</strong
+            ><span class="badge" [class.failed]="result.status === 'error'">{{
+              status(result.status)
+            }}</span>
+          </div>
+          <h4>{{ result.example.question }}</h4>
+          <div class="answer-grid">
+            <div class="answer-card">
+              <h5>Полученный ответ</h5>
+              <p class="preserve">
+                {{
+                  latest(result)?.response_trace?.answer || errorLabel(latest(result)?.error_code)
+                }}
+              </p>
+              @if (latest(result)?.response_trace?.retrieval_status === 'no_context') {
+                <p class="hint">Подходящий контекст не найден.</p>
+              }
+              @if (result.status === 'error') {
+                <p class="error">
+                  Пример завершился ошибкой обработки и не считается успешным ответом.
+                </p>
+              }
+            </div>
+            <div class="answer-card">
+              <h5>Контекст, переданный модели</h5>
+              <p class="preserve">
+                {{ latest(result)?.response_trace?.context ?? 'Контекст ещё не передавался.' }}
+              </p>
+              @if (latest(result)?.response_trace?.context === '') {
+                <p class="hint">Передан пустой контекст.</p>
+              }
+            </div>
+            <div class="answer-card reference">
+              <h5>Эталон из набора</h5>
+              <p class="preserve">
+                {{ result.example.reference_answer ?? 'Эталонный ответ не задан.' }}
+              </p>
+              @if (result.example.unanswerable) {
+                <p class="hint">Пример размечен: ответа в документах нет.</p>
+              }
+              @for (evidence of result.example.evidence; track $index) {
+                <blockquote>{{ evidence.quote }}</blockquote>
+                <p class="hint">
+                  {{ evidence.file_name }} · символы {{ evidence.start_char }}–{{
+                    evidence.end_char
+                  }}
+                </p>
+              }
+            </div>
+          </div>
+          @if (latest(result)?.response_trace?.retrieved_chunks?.length) {
+            <details>
+              <summary>Найденные фрагменты и оценки поиска</summary>
+              @for (chunk of latest(result)?.response_trace?.retrieved_chunks; track $index) {
+                <div class="fragment">
+                  <strong>{{ $index + 1 }}. {{ chunk.metadata.source || 'Документ' }}</strong
+                  ><span class="hint">Оценка поиска: {{ chunk.score ?? 'неизвестна' }}</span>
+                  <p class="preserve">{{ chunk.text }}</p>
+                </div>
+              }
+            </details>
+          }
+          <details>
+            <summary>
+              История технических попыток ({{ result.attempts.length }}) и полная трасса
+            </summary>
+            @for (attempt of result.attempts; track attempt.number) {
+              <p>
+                Попытка {{ attempt.number }} ·
+                {{ attempt.kind === 'initial' ? 'первичная' : 'технический повтор' }} ·
+                {{ status(attempt.status) }}
+              </p>
+              <pre>{{ attempt | json }}</pre>
+            }
+            @if (!result.attempts.length) {
+              <pre>{{ result.jobs | json }}</pre>
+            }
+          </details>
+          <div class="format-check">
+            <div class="actions">
+              <button
+                (click)="checkFormat(result)"
+                [disabled]="busy() || result.status !== 'success'"
+              >
+                Проверить формат для будущих метрик</button
+              ><span class="hint"
+                >Тестовая заглушка. Повторной генерации и оценки качества нет.</span
+              >
+            </div>
+            @for (check of (result.evaluation_checks ?? []).slice(-3); track check.id) {
+              <p>
+                <strong>{{ checkStatus(check.output.status) }}</strong> ·
+                {{ check.output.explanation }}
+              </p>
+              @if (check.output.missing_data.length) {
+                <p class="hint">Не хватает данных: {{ missingData(check.output.missing_data) }}</p>
+              }
+              <details>
+                <summary>Версия оценщика, параметры и результат проверки</summary>
+                <pre>{{ check | json }}</pre>
+              </details>
+            }
+            @if (result.metric_input) {
+              <details>
+                <summary>Единый формат данных для модуля метрик</summary>
+                <pre>{{ result.metric_input | json }}</pre>
+              </details>
+            }
+          </div>
+          @if (result.status === 'error') {
+            <button (click)="retry(result)" [disabled]="busy() || isActive(batch.status)">
+              Повторить после ошибки
+            </button>
+          }
+        </section>
+      } @empty {
+        <p class="empty">Нет результатов, соответствующих фильтру.</p>
+      }
+      @if (results().length < resultsTotal()) {
+        <button (click)="loadResults(true)" [disabled]="busy()">Ещё результаты</button>
+      }
+    </article>
+  }
+</section>

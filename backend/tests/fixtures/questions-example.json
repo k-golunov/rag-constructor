@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "examples": [
+    {
+      "question": "Какой код доступа к архиву проекта Север?",
+      "reference_answer": "КЕДР-7429",
+      "evidence": [],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "question": "Какова площадь архива проекта Север?",
+      "reference_answer": null,
+      "evidence": [],
+      "category": "Нет ответа",
+      "unanswerable": true,
+      "split": "test"
+    }
+  ]
+}

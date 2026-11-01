@@ -10,6 +10,8 @@ export interface Project {
   split_by: string;
   chunking_strategy: string;
   extract_tables: boolean;
+  top_k: number;
+  max_context_chars: number;
 
   // Эмбеддинги
   embedding_model: string;
@@ -35,6 +37,8 @@ export interface ProjectCreate {
   split_by: string;
   chunking_strategy: string;
   extract_tables: boolean;
+  top_k: number;
+  max_context_chars: number;
 
   embedding_model: string;
   embedding_dimension: number;
@@ -60,6 +64,8 @@ export interface ProjectUpdate {
   split_by?: string;
   chunking_strategy?: string;
   extract_tables?: boolean;
+  top_k?: number;
+  max_context_chars?: number;
 
   embedding_model?: string;
   embedding_dimension?: number;
@@ -100,9 +106,7 @@ export const LLM_MODELS: { label: string; value: string }[] = [
 ];
 
 export const SPLIT_BY_OPTIONS: { label: string; value: string }[] = [
-  { label: 'Абзацы',      value: 'paragraphs' },
-  { label: 'Предложения', value: 'sentences'  },
-  { label: 'Токены',      value: 'tokens'     },
+  { label: 'Рекурсивно: абзацы → строки → предложения → символы', value: 'paragraphs' },
 ];
 
 export const CHUNKING_STRATEGIES: { label: string; value: string }[] = [
