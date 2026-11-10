@@ -11,13 +11,12 @@ REST API для управления проектами RAG-конструкто
 
 from uuid import UUID
 
-from pydantic import ValidationError
-
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from backend.db.database import get_db
-from backend.db.models import Project, BatchRun
+from backend.db.models import BatchRun, Project
 from backend.db.schemas import (
     ProjectCreate,
     ProjectListResponse,

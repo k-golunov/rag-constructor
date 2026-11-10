@@ -8,8 +8,8 @@ from uuid import UUID, uuid4
 import pytest
 
 from backend.db.models import ChatHistory, ExecutionRun, QuestionSetVersion
-from backend.tests.conftest import TestingSessionLocal
 from backend.tests import test_rag_pipeline as pipeline
+from backend.tests.conftest import TestingSessionLocal
 
 rag = pipeline.rag
 
@@ -323,11 +323,7 @@ def test_question_sets_and_bound_runs_work_without_passwords(qs):
 def test_question_set_api_does_not_require_authorization_headers(qs):
     schema = qs.client.get("/openapi.json").json()
     for path, operations in schema["paths"].items():
-        if (
-            "question-sets" in path
-            or path.endswith("/chat")
-            or path.endswith("/chat/generate")
-        ):
+        if "question-sets" in path or path.endswith(("/chat", "/chat/generate")):
             for operation in operations.values():
                 if isinstance(operation, dict):
                     assert not operation.get("security")

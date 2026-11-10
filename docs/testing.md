@@ -4,11 +4,15 @@
 
 Из корня репозитория:
 
-```powershell
-backend/.venv/Scripts/python.exe -m pytest backend/tests -q
+```bash
+poetry run pytest                  # весь набор
+poetry run pytest backend/tests/test_chat.py -q
+make cov                           # с покрытием
 ```
 
-В `backend/pytest.ini` указаны `testpaths = tests` и `pythonpath = ..` относительно backend. Работают как запуск из корня с явным каталогом, так и `cd backend` → `pytest`, используемый CI.
+Настройки pytest перенесены в `[tool.pytest.ini_options]` в корневом `pyproject.toml`:
+`testpaths = ["backend/tests"]`, `pythonpath = ["."]`. Запуск выполняется из корня — так же,
+как в CI и в pre-push хуке.
 
 Фикстура подменяет `get_db` на SQLite in-memory и отключает `init_db` при запуске TestClient. Изолированные тесты не создают настоящую PostgreSQL-БД и не применяют её миграции. При импорте приложения всё равно нужен установленный DBAPI-драйвер из requirements.
 
@@ -20,12 +24,15 @@ backend/.venv/Scripts/python.exe -m pytest backend/tests -q
 backend/.venv/Scripts/python.exe -c 'import pytest; from unittest.mock import patch; p = patch("backend.main.init_db"); p.start(); raise SystemExit(pytest.main(["backend/tests", "--ignore=backend/tests/test_embeddings.py", "-p", "no:asyncio", "-q"]))'
 ```
 
-`init_db` здесь заменён пустой функцией. `-p no:asyncio` обходит ошибку сбора при установленных pytest 9.0.3 / pytest-asyncio 0.23.0. Это обход для текущего синхронного набора, не решение для асинхронных тестов. В `requirements.txt` указан pytest-asyncio 1.4.0, то есть окружение отличается от manifest; чистую установку необходимо проверить отдельно.
+`init_db` здесь заменён пустой функцией. `-p no:asyncio` обходит ошибку сбора при старых
+pytest/pytest-asyncio; актуальное окружение собирается из `poetry.lock`
+(pytest-asyncio 1.4.x, в `pyproject.toml` задан `asyncio_default_fixture_loop_scope`),
+обход больше не нужен — чистый прогон `poetry run pytest` проходит целиком.
 
 `test_parser_splitter.py` — ручная утилита с `main`, а не набор pytest:
 
 ```powershell
-backend/.venv/Scripts/python.exe -m backend.tests.test_parser_splitter 'C:/documents/guide.pdf'
+poetry run python -m backend.tests.test_parser_splitter 'C:/documents/guide.pdf'
 ```
 
 Она печатает фрагменты документа. Сквозные изолированные проверки RAG, ZIP и версий индексов описаны в [rag-verification.md](rag-verification.md).
@@ -45,7 +52,8 @@ Production build встраивает Google Fonts и требует сетев�
 
 ## CI и ручной сценарий
 
-GitHub Actions запускает Black, Flake8 и pytest на Python 3.14; frontend проверяется на Node 20.x/22.x. Успешный push в `main` затем собирает и публикует backend-образ в Docker Hub. Полный Compose не развёртывается. Jenkins выполняет установку, тесты backend/frontend и сборку frontend.
+GitHub Actions запускает `poetry check --lock`, `pre-commit run --all-files` (то есть black,
+ruff и проверки гигиены файлов) и pytest на Python 3.12; frontend проверяется на Node 20.x/22.x. Успешный push в `main` затем собирает и публикует backend-образ в Docker Hub. Полный Compose не развёртывается. Jenkins выполняет установку, тесты backend/frontend и сборку frontend.
 
 Ручная сквозная проверка: создать проект → загрузить TXT → убедиться в `completed` → задать вопрос с известным ответом → проверить источники и SQL-историю. Отдельно проверить ZIP, отказ Qdrant, смену модели и удаление. В данном анализе внешние эмбеддинги/LLM, реальная БД и контейнерный сквозной сценарий не запускались.
 

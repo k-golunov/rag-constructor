@@ -1,15 +1,12 @@
-from typing import Dict, Optional, Type
-
 from backend.config import settings
 
 from .embeddings.base import BaseEmbedder
-from .ingestion.base import BaseParser, BaseSplitter
 from .llm.base import BaseLLM
 from .vector_store.base import BaseVectorStore
 
-EMBEDDER_REGISTRY: Dict[str, Type[BaseEmbedder]] = {}
-VECTOR_STORE_REGISTRY: Dict[str, Type[BaseVectorStore]] = {}
-LLM_REGISTRY: Dict[str, Type[BaseLLM]] = {}
+EMBEDDER_REGISTRY: dict[str, type[BaseEmbedder]] = {}
+VECTOR_STORE_REGISTRY: dict[str, type[BaseVectorStore]] = {}
+LLM_REGISTRY: dict[str, type[BaseLLM]] = {}
 
 
 def get_embedder(name: str, **kwargs) -> BaseEmbedder:
@@ -41,8 +38,8 @@ def get_llm(name: str, **kwargs) -> BaseLLM:
 # ---------------------------------------------------------------------------
 def build_embedder(
     model_name: str,
-    api_key: Optional[str] = None,
-    api_base: Optional[str] = None,
+    api_key: str | None = None,
+    api_base: str | None = None,
 ) -> BaseEmbedder:
     """Возвращает эмбеддер по имени модели.
 
@@ -79,8 +76,8 @@ def build_vector_store() -> BaseVectorStore:
 def build_llm(
     model_name: str,
     system_prompt: str = "",
-    api_key: Optional[str] = None,
-    api_base: Optional[str] = None,
+    api_key: str | None = None,
+    api_base: str | None = None,
     max_context_chars: int = 2000,
 ) -> BaseLLM:
     """Возвращает LLM по имени модели.
@@ -109,8 +106,8 @@ def build_llm(
 def _register_components():
     """Функция для регистрации всех компонентов в реестрах."""
     # Регистрация эмбеддеров
-    from .embeddings.openai_embedder import OpenAIEmbedder
     from .embeddings.huggingface_embedder import HuggingFaceEmbedder
+    from .embeddings.openai_embedder import OpenAIEmbedder
 
     EMBEDDER_REGISTRY["openai"] = OpenAIEmbedder
     EMBEDDER_REGISTRY["huggingface"] = HuggingFaceEmbedder

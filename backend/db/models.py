@@ -1,20 +1,22 @@
+import uuid
+
 from sqlalchemy import (
+    JSON,
     Boolean,
     Column,
-    String,
-    Integer,
-    JSON,
     DateTime,
-    Text,
     ForeignKey,
+    Integer,
+    String,
+    Text,
     UniqueConstraint,
+    event,
     false,
+    inspect,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-import uuid
-from sqlalchemy import event, inspect
 
 from backend.db.database import Base
 
@@ -466,14 +468,14 @@ def _immutable_index_definition(mapper, connection, target):
     if any(state.attrs[name].history.has_changes() for name in immutable_fields):
         raise ValueError("Определение индекса неизменяемо; создайте новый индекс.")
     previous = state.attrs.status.history.deleted
-    if (previous and previous[0] == "ready") or (
+    became_ready = (previous and previous[0] == "ready") or (
         not previous and target.status == "ready"
+    )
+    if became_ready and any(
+        state.attrs[name].history.has_changes()
+        for name in ("status", "chunks_count", "document_chunks")
     ):
-        if any(
-            state.attrs[name].history.has_changes()
-            for name in ("status", "chunks_count", "document_chunks")
-        ):
-            raise ValueError("Готовый индекс неизменяем.")
+        raise ValueError("Готовый индекс неизменяем.")
 
 
 @event.listens_for(BatchRun, "before_update")

@@ -92,7 +92,7 @@ API-ключи в этот снимок не включаются. Послед�
 Из корня репозитория:
 
 ```powershell
-backend/.venv/Scripts/python.exe -m pytest backend/tests/test_rag_pipeline.py -p no:asyncio -q
+poetry run pytest backend/tests/test_rag_pipeline.py -q
 ```
 
 Тест загружает `backend/tests/fixtures/rag_control.txt` через API, индексирует
@@ -113,7 +113,7 @@ Qdrant, отсутствующая коллекция, несовпадение 
 
 ```powershell
 $env:QDRANT_TEST_URL = 'http://localhost:6333'
-backend/.venv/Scripts/python.exe -m pytest backend/tests/test_rag_pipeline.py -p no:asyncio -q
+poetry run pytest backend/tests/test_rag_pipeline.py -q
 Remove-Item Env:QDRANT_TEST_URL
 ```
 

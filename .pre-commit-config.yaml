@@ -1,0 +1,64 @@
+# Хуки, которые запускаются до каждого коммита.
+# Установка: poetry run pre-commit install
+# Ручной прогон по всему репозиторию: poetry run pre-commit run --all-files
+default_install_hook_types: [pre-commit, pre-push]
+default_stages: [pre-commit]
+fail_fast: false
+
+repos:
+  # --- Гигиена файлов ------------------------------------------------------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+        # tsconfig/vscode/vite — JSONC с комментариями, строгий JSON-парсер их не примет.
+        exclude: ^frontend/(\.vscode/|tsconfig[^/]*\.json$|vite\.config\.json$|angular\.json$)
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: detect-private-key
+      - id: check-case-conflict
+
+  # --- Форматирование ------------------------------------------------------
+  - repo: https://github.com/psf/black
+    rev: 26.10.1
+    hooks:
+      - id: black
+        files: ^backend/.*\.py$
+
+  # --- Линтинг -------------------------------------------------------------
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.4
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+        files: ^backend/.*\.py$
+
+  # --- Зависимости и тесты -------------------------------------------------
+  # Проверяем, что pyproject.toml и poetry.lock согласованы.
+  - repo: local
+    hooks:
+      - id: poetry-check
+        name: poetry check --lock
+        entry: poetry check --lock
+        language: system
+        files: ^(pyproject\.toml|poetry\.lock|poetry\.toml)$
+        pass_filenames: false
+
+  # Тесты на pre-push: полный прогон слишком долгий для каждого коммита.
+  - repo: local
+    hooks:
+      - id: backend-tests
+        name: pytest (backend)
+        entry: poetry run pytest
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true

@@ -2,9 +2,9 @@
 
 import asyncio
 import logging
-from datetime import datetime, timezone
-from time import perf_counter
 import re
+from datetime import UTC, datetime
+from time import perf_counter
 
 import httpx
 from openai import APIConnectionError, APITimeoutError
@@ -167,7 +167,7 @@ class ResponseTrace:
                 "stage": name,
                 "number": number,
                 "status": "running",
-                "started_at": datetime.now(timezone.utc).isoformat(),
+                "started_at": datetime.now(UTC).isoformat(),
                 "duration_ms": None,
                 "token_usage": None,
             }

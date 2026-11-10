@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
 import uuid
+from typing import Any
+
+from pydantic import BaseModel, Field
 
 
 class Document(BaseModel):
@@ -8,6 +9,6 @@ class Document(BaseModel):
 
     id: str = Field(default_factory=lambda: uuid.uuid4().hex)
     text: str
-    metadata: Dict[str, Any] = {}
-    embedding: Optional[List[float]] = None
-    score: Optional[float] = None
+    metadata: dict[str, Any] = {}
+    embedding: list[float] | None = None
+    score: float | None = None

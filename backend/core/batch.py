@@ -1,16 +1,16 @@
 """Pinned batches, isolated RAG questions, and explicit retry lineage."""
 
-import copy
 import asyncio
+import copy
 import threading
 from contextlib import contextmanager, nullcontext
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from uuid import UUID
 from weakref import WeakValueDictionary
 
 from fastapi import HTTPException
-from sqlalchemy import text, func
+from sqlalchemy import func, text
 
 from backend.core.execution import (
     configuration_version,
@@ -19,20 +19,20 @@ from backend.core.execution import (
     resolved_api_url,
 )
 from backend.core.question_sets import check_no_credentials, project_or_404, set_or_404
-from backend.core.rag import execute_rag, _execution_secrets
-from backend.core.versioning import plan_index, index_snapshot
+from backend.core.rag import _execution_secrets, execute_rag
+from backend.core.versioning import index_snapshot, plan_index
 from backend.db.models import (
-    BatchRun,
     BatchJob,
-    BatchVariant,
     BatchQuestionResult,
     BatchResultAttempt,
-    ExecutionRun,
-    IndexVersion,
-    QuestionSetVersion,
+    BatchRun,
+    BatchVariant,
     ConfigurationVersion,
     EvaluationCheck,
+    ExecutionRun,
+    IndexVersion,
     QuestionSet,
+    QuestionSetVersion,
 )
 from backend.db.rag_schemas import ChatRequest
 from backend.db.schemas import ProjectCreate
@@ -372,7 +372,7 @@ async def execute_batch(
                         max_attempts=applied["max_attempts"],
                     )
 
-                    def on_started(run):
+                    def on_started(run, result=result):
                         if execution_metadata is not None:
                             run.details = {
                                 **run.details,
@@ -450,9 +450,7 @@ async def execute_batch(
                 if statuses["pending"] > 0
                 else "completed_with_errors" if statuses["error"] > 0 else "completed"
             )
-            batch.finished_at = (
-                None if batch.status == "pending" else datetime.now(timezone.utc)
-            )
+            batch.finished_at = None if batch.status == "pending" else datetime.now(UTC)
             db.commit()
         except BaseException:
             db.rollback()
@@ -544,9 +542,9 @@ def result_detail(db, result, examples=None):
         .order_by(BatchResultAttempt.number)
         .all()
     )
-    from backend.core.metric_inputs import build_metric_input
-    from backend.core.evaluators import checksum
     from backend.core.evaluation_checks import check_result
+    from backend.core.evaluators import checksum
+    from backend.core.metric_inputs import build_metric_input
 
     metric_input = build_metric_input(db, result, examples=examples).model_dump(
         mode="json"

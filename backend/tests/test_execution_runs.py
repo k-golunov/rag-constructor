@@ -2,16 +2,16 @@
 
 import hashlib
 import json
-from uuid import UUID
 from unittest.mock import AsyncMock
+from uuid import UUID
 
 import pytest
 
 from backend.config import settings
 from backend.core.llm.openai_llm import OpenAILLM
 from backend.db.models import ExecutionRun
-from backend.tests.conftest import TestingSessionLocal
 from backend.tests import test_rag_pipeline as pipeline
+from backend.tests.conftest import TestingSessionLocal
 
 rag = pipeline.rag
 upload = pipeline.upload

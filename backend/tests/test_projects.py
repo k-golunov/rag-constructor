@@ -9,9 +9,7 @@
     - DELETE /projects/{id}   — удаление (успех + 404 повторно)
 """
 
-import pytest
 from fastapi.testclient import TestClient
-
 
 # ---------------------------------------------------------------------------
 # Вспомогательные данные

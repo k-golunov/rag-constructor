@@ -9,8 +9,8 @@ from uuid import UUID
 import pytest
 
 from backend.db.models import ConfigurationVersion, ExecutionRun
-from backend.tests.conftest import TestingSessionLocal
 from backend.tests import test_rag_pipeline as pipeline
+from backend.tests.conftest import TestingSessionLocal
 
 rag = pipeline.rag
 upload = pipeline.upload
@@ -328,8 +328,9 @@ def test_explicit_credential_fields_in_error_text_are_redacted_without_known_val
 
 def test_client_retries_are_disabled_so_attempt_accounting_is_not_hidden(monkeypatch):
     from unittest.mock import MagicMock
-    from backend.core.llm.openai_llm import OpenAILLM
+
     from backend.core.embeddings.openai_embedder import OpenAIEmbedder
+    from backend.core.llm.openai_llm import OpenAILLM
 
     llm_client, embedding_client = MagicMock(), MagicMock()
     monkeypatch.setattr("backend.core.llm.openai_llm.AsyncOpenAI", llm_client)

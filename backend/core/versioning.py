@@ -1,12 +1,12 @@
 """Content-addressed document sets and isolated, reusable Qdrant indexes."""
 
+import asyncio
 import hashlib
 import json
-import asyncio
-from weakref import WeakKeyDictionary, WeakValueDictionary
 from importlib.metadata import version
 from pathlib import Path
 from uuid import UUID, uuid5
+from weakref import WeakKeyDictionary, WeakValueDictionary
 
 from backend.config import settings
 from backend.core.execution import _public_url, resolved_api_url
@@ -64,9 +64,9 @@ def register_document(db, project, name, content):
         try:
             with path.open("xb") as stored:
                 stored.write(content)
-        except FileExistsError:
+        except FileExistsError as exc:
             if hashlib.sha256(path.read_bytes()).hexdigest() != checksum:
-                raise ValueError("Конфликт сохранения версии документа.")
+                raise ValueError("Конфликт сохранения версии документа.") from exc
     version = (
         db.query(DocumentVersion)
         .filter_by(project_id=project.id, file_name=name, sha256=checksum)

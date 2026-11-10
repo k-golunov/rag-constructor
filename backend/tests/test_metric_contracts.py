@@ -3,8 +3,8 @@
 import asyncio
 import copy
 from types import SimpleNamespace
-from uuid import UUID, uuid4
 from unittest.mock import AsyncMock
+from uuid import UUID, uuid4
 
 import pytest
 from pydantic import BaseModel, ConfigDict, ValidationError
@@ -19,10 +19,10 @@ from backend.db.metric_schemas import (
     MetricResult,
 )
 from backend.db.models import BatchQuestionResult, EvaluationCheck, ExecutionRun
-from backend.tests.conftest import TestingSessionLocal
 from backend.tests import test_batches as batches
 from backend.tests import test_question_sets as sets
 from backend.tests import test_rag_pipeline as pipeline
+from backend.tests.conftest import TestingSessionLocal
 
 rag = pipeline.rag
 qs = sets.qs
@@ -403,9 +403,11 @@ def test_evidence_contract_is_independent_of_chunking(qs):
 
 def test_evaluation_migration_preserves_generation_tables():
     import importlib
+
     from alembic.migration import MigrationContext
     from alembic.operations import Operations
     from sqlalchemy import create_engine, inspect
+
     from backend.db.database import Base
 
     migration = importlib.import_module(

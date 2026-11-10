@@ -2,9 +2,9 @@
 
 import hashlib
 import io
+import zipfile
 from pathlib import Path
 from uuid import UUID
-import zipfile
 
 import pytest
 
@@ -15,8 +15,8 @@ from backend.db.models import (
     ExecutionRun,
     IndexVersion,
 )
-from backend.tests.conftest import TestingSessionLocal
 from backend.tests import test_rag_pipeline as pipeline
+from backend.tests.conftest import TestingSessionLocal
 
 rag = pipeline.rag
 upload = pipeline.upload
@@ -382,6 +382,7 @@ def test_stale_worker_cannot_restore_superseded_document(versioned, monkeypatch)
 def test_simultaneous_requests_build_one_index_without_duplicate_embeddings(versioned):
     import asyncio
     from unittest.mock import AsyncMock
+
     from backend.core.versioning import ensure_index, plan_index
     from backend.db.models import Project
 

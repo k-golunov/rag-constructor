@@ -1,8 +1,8 @@
 import os
-from typing import Generator
+from collections.abc import Generator
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 # ---------------------------------------------------------------------------
 # КРИТИЧНО для Windows с русской/нелатинской локалью (cp1251):
@@ -19,7 +19,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 # ---------------------------------------------------------------------------
 os.environ.setdefault("PGCLIENTENCODING", "UTF8")
 
-from backend.config import settings  # noqa: E402  (import после os.environ)
+from backend.config import settings
 
 # ---------------------------------------------------------------------------
 # Engine

@@ -8,34 +8,36 @@ REST API для RAG-чата.
 """
 
 import logging
-from uuid import UUID
 from time import perf_counter
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from backend.core.response_trace import ResponseTrace
-from backend.core.rag import (
-    execute_rag,
-    _generate_traced as generate_traced,
-    _execution_secrets,
+from backend.core.execution import (
+    complete_run,
+    execution_settings,
+    fail_run,
+    resolved_api_url,
+    start_run,
 )
-from backend.db.rag_schemas import ChatRequest, ChatResponse
-from backend.core.question_sets import evaluation_example
 from backend.core.factories import (
     build_embedder,
     build_llm,
     build_vector_store,
 )
-from backend.core.execution import (
-    execution_settings,
-    start_run,
-    fail_run,
-    complete_run,
-    resolved_api_url,
+from backend.core.question_sets import evaluation_example
+from backend.core.rag import (
+    _execution_secrets,
+    execute_rag,
 )
+from backend.core.rag import (
+    _generate_traced as generate_traced,
+)
+from backend.core.response_trace import ResponseTrace
 from backend.db.database import get_db
 from backend.db.models import ChatHistory, Project
+from backend.db.rag_schemas import ChatRequest, ChatResponse
 from backend.db.schemas import ChatHistoryResponse, GenerateRequest, GenerateResponse
 
 logger = logging.getLogger(__name__)

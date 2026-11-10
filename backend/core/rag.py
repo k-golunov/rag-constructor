@@ -5,22 +5,23 @@ import os
 import uuid as uuid_module
 from time import perf_counter
 from uuid import UUID
-from typing import List
+
 from fastapi import HTTPException, status
+
 from backend.api.projects import validate_project_configuration
 from backend.config import settings
-from backend.core.question_sets import evaluation_example, project_or_404
-from backend.core.factories import build_llm
-from backend.core.response_trace import ResponseTrace
 from backend.core.execution import (
-    execution_settings,
-    start_run,
-    fail_run,
     complete_run,
+    execution_settings,
+    fail_run,
     generation_details,
     resolved_api_url,
+    start_run,
 )
-from backend.core.versioning import plan_index, ensure_index, index_snapshot
+from backend.core.factories import build_llm
+from backend.core.question_sets import evaluation_example, project_or_404
+from backend.core.response_trace import ResponseTrace
+from backend.core.versioning import ensure_index, index_snapshot, plan_index
 from backend.db.models import ChatHistory
 from backend.db.rag_schemas import ChatResponse
 
@@ -85,7 +86,7 @@ async def execute_rag(
     generate,
     project_override=None,
     prepared=None,
-    on_started=None
+    on_started=None,
 ):
     execution_started = perf_counter()
     project = project_override or project_or_404(db, project_id)
@@ -128,10 +129,10 @@ async def execute_rag(
     session_id = payload.session_id or str(uuid_module.uuid4())
     try:
         session_uuid = UUID(session_id)
-    except ValueError:
+    except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Некорректный session_id."
-        )
+        ) from exc
 
     # История диалога для LLM
     history_records = (
@@ -163,7 +164,8 @@ async def execute_rag(
             409,
             "Состав документов индекса не совпадает с версией набора вопросов. Выберите исходный состав либо создайте новую версию набора.",
         )
-    secrets = _execution_secrets(project) + (
+    secrets = (
+        *_execution_secrets(project),
         provider_options["llm_key"],
         provider_options["embedding_key"],
     )
@@ -191,7 +193,7 @@ async def execute_rag(
 
     # Поиск контекста в Qdrant
     context = ""
-    sources: List[str] = []
+    sources: list[str] = []
     try:
         if index_error is not None:
             raise index_error

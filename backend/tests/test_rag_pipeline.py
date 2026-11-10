@@ -17,7 +17,6 @@ from backend.core.Document import Document
 from backend.core.ingestion.pipeline import assign_embeddings
 from backend.core.vector_store.qdrant_store import QdrantVectorStore
 
-
 BASE = "/api/v1/public/provider"
 CONTROL = Path(__file__).parent / "fixtures" / "rag_control.txt"
 QUESTION = "Какой код доступа к архиву проекта Север?"
@@ -253,6 +252,7 @@ def test_chat_rejects_unsupported_or_invalid_overrides(rag, payload):
 
 def test_legacy_ineffective_settings_block_chat_and_upload(rag):
     from uuid import UUID
+
     from backend.db.models import Project
     from backend.tests.conftest import TestingSessionLocal
 

@@ -10,12 +10,12 @@ import pytest
 from backend.api import upload as upload_api
 from backend.core.ingestion.parser import EmptyPDFError, ParserError
 from backend.core.public_errors import (
-    DOCUMENT_PROCESSING_ERROR,
     ARCHIVE_PROCESSING_ERROR,
+    DOCUMENT_PROCESSING_ERROR,
 )
 from backend.db.models import DataSource, ExecutionRun
-from backend.tests.conftest import TestingSessionLocal
 from backend.tests import test_rag_pipeline as pipeline
+from backend.tests.conftest import TestingSessionLocal
 
 rag = pipeline.rag
 SECRET = "opaque-provider-credential-without-recognizable-prefix"
@@ -124,6 +124,7 @@ def test_legacy_archive_handler_never_stores_exception_text(monkeypatch, tmp_pat
 
 def test_celery_ingestion_retry_uses_neutral_error(rag, monkeypatch):
     from unittest.mock import Mock
+
     from backend.tasks import ingestion_tasks as tasks
 
     response = pipeline.upload(rag).json()

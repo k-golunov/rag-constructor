@@ -1,20 +1,19 @@
 """Batch execution API. Creation pins inputs; execution can be resumed explicitly."""
 
-from uuid import UUID
 from typing import Literal
-from fastapi.responses import StreamingResponse
-from backend.core import metrics_analysis as analysis
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from pydantic import ValidationError
-from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from backend.core import batch as service
-from backend.core.batch_queue import enqueue, publish_job, cancel
+from backend.core import metrics_analysis as analysis
+from backend.core.batch_queue import cancel, enqueue, publish_job
 from backend.db.batch_schemas import BatchCreate
 from backend.db.database import get_db
-from backend.db.models import BatchRun, BatchQuestionResult, BatchVariant
+from backend.db.models import BatchQuestionResult, BatchRun, BatchVariant
 
 router = APIRouter(
     prefix="/api/v1/public/provider/projects/{project_id}/batches", tags=["batches"]

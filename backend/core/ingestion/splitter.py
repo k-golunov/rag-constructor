@@ -1,5 +1,3 @@
-from typing import List
-
 from langchain_text_splitters import (
     RecursiveCharacterTextSplitter as _LCRecursiveSplitter,
 )
@@ -21,9 +19,9 @@ class RecursiveCharacterTextSplitter(BaseSplitter):
             length_function=len,
         )
 
-    def split_text(self, text: str, metadata: dict) -> List[Document]:
+    def split_text(self, text: str, metadata: dict) -> list[Document]:
         raw_chunks = self._splitter.split_text(text or "")
-        docs: List[Document] = []
+        docs: list[Document] = []
         for idx, chunk in enumerate(raw_chunks):
             meta = {**(metadata or {}), "chunk_index": idx}
             docs.append(Document(text=chunk, metadata=meta))

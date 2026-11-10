@@ -2,12 +2,15 @@
 
 FastAPI API версии `0.1.0`. Запускайте из **корня репозитория**, поскольку используются абсолютные импорты `backend.*`:
 
-```powershell
-backend/.venv/Scripts/python.exe -m pip install -r backend/requirements.txt
-backend/.venv/Scripts/python.exe -m uvicorn backend.main:app --reload
+```bash
+./scripts/bootstrap.sh      # первый раз: окружение ./.venv + git-хуки
+poetry run uvicorn backend.main:app --reload
 ```
 
-Настройка инфраструктуры и `.env`: [руководство](../docs/operations.md). Источник зависимостей для текущих Docker/CI-сценариев — `requirements.txt`. В `pyproject.toml` находится другой список версий и нестандартная таблица `[project.dependencies]`; установка через `pip install -e backend` не является проверенным способом запуска.
+Единственный источник зависимостей — `pyproject.toml` и `poetry.lock` в корне репозитория;
+`requirements.txt` больше нет. Настройка окружения, Poetry, pre-commit и линтеров:
+[docs/development.md](../docs/development.md). Инфраструктура и `.env`:
+[docs/operations.md](../docs/operations.md).
 
 | Путь | Назначение |
 | --- | --- |

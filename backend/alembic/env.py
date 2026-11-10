@@ -10,25 +10,24 @@ Alembic environment configuration.
     alembic history               # история миграций
 """
 
-from logging.config import fileConfig
-
-from sqlalchemy import engine_from_config, pool
-
-from alembic import context
+import os
 
 # ---------------------------------------------------------------------------
 # Подключаем настройки и модели проекта
 # ---------------------------------------------------------------------------
 import sys
-import os
+from logging.config import fileConfig
+
+from alembic import context
+from sqlalchemy import engine_from_config, pool
 
 # Добавляем корень проекта в PYTHONPATH, чтобы работали абсолютные импорты
 # (например, запуск `alembic upgrade head` из папки backend/)
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from backend.config import settings  # noqa: E402
-from backend.db.database import Base  # noqa: E402
-import backend.db.models  # noqa: E402, F401  — регистрирует все модели в Base.metadata
+import backend.db.models  # noqa: F401  — регистрирует все модели в Base.metadata
+from backend.config import settings
+from backend.db.database import Base
 
 # ---------------------------------------------------------------------------
 # Alembic Config object

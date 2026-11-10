@@ -1,6 +1,6 @@
 """Database outbox, serial per-batch execution and recoverable Celery delivery."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -10,10 +10,10 @@ from backend.config import settings
 from backend.core import batch as execution
 from backend.db.models import (
     BatchJob,
-    BatchRun,
     BatchQuestionResult,
-    BatchVariant,
     BatchResultAttempt,
+    BatchRun,
+    BatchVariant,
     ExecutionRun,
 )
 
@@ -21,11 +21,11 @@ ACTIVE = {"queued", "published", "running"}
 
 
 def now():
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def aware(value):
-    return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value
+    return value.replace(tzinfo=UTC) if value.tzinfo is None else value
 
 
 def policy():
@@ -199,10 +199,13 @@ def publish_job(db, job, sender=None):
     ):
         db.commit()
         return False
-    if job.status in {"published", "running"}:
-        if job.lease_expires_at and aware(job.lease_expires_at) > timestamp:
-            db.commit()
-            return False
+    if (
+        job.status in {"published", "running"}
+        and job.lease_expires_at
+        and aware(job.lease_expires_at) > timestamp
+    ):
+        db.commit()
+        return False
     job.status, job.dispatched_at = "published", timestamp
     job.lease_expires_at = timestamp + timedelta(seconds=job.policy["time_limit"] + 30)
     db.commit()

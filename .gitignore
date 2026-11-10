@@ -1,9 +1,34 @@
-.idea
-.venv
-.env
+# --- IDE ---
+.idea/
+.vscode/*.log
+.DS_Store
 
-# Python
+# --- Окружение ---
+# .venv создаётся poetry внутри репозитория (см. poetry.toml).
+# В git он НЕ попадает: воспроизводимость обеспечивают pyproject.toml + poetry.lock.
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+!.env.test
+
+# --- Python ---
 __pycache__/
 *.py[cod]
+*.egg-info/
+build/
+dist/
 .pytest_cache/
 pytest-cache-files-*/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# --- Frontend ---
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
