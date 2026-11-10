@@ -14,23 +14,26 @@ OCR, HTML/CSV, локальный HuggingFace-эмбеддер и потоков
 
 ## Локальный запуск
 
-Нужны Docker Compose, Python и Node.js с npm. В Dockerfile указаны Python 3.11 и Node 20.19; локальная проверка выполнена на Python 3.14.0 и Node 24.13.0. Команды PowerShell из корня репозитория:
+Нужны Docker Compose, Python 3.12 и Node.js с npm. Backend ставится через Poetry: версии зависимостей зафиксированы в `poetry.lock`, виртуальное окружение создаётся в `./.venv` (см. `poetry.toml`). Полная инструкция по окружению — [docs/development.md](docs/development.md).
 
-```powershell
-Copy-Item .env.example .env
+Из корня репозитория:
+
+```bash
+cp .env.example .env
 # Замените OPENAI_API_KEY=sk-... в .env действительным ключом.
 docker compose up -d postgres qdrant redis
-python -m venv backend/.venv
-backend/.venv/Scripts/python.exe -m pip install -r backend/requirements.txt
-backend/.venv/Scripts/python.exe -m uvicorn backend.main:app --reload
+./scripts/bootstrap.sh      # poetry install + pre-commit install
+poetry run uvicorn backend.main:app --reload
 ```
+
+То же через `make`: `make setup`, `make run`, `make test`, `make lint`.
 
 В другом терминале из корня:
 
-```powershell
+```bash
 cd frontend
-npm.cmd install --legacy-peer-deps
-npm.cmd start
+npm install --legacy-peer-deps
+npm start
 ```
 
 Адреса: [интерфейс](http://localhost:4200), [Swagger](http://127.0.0.1:8000/docs), [OpenAPI](http://127.0.0.1:8000/openapi.json). При старте API создаёт БД при необходимости и применяет миграции. `/health` не проверяет доступность зависимостей.
@@ -45,7 +48,8 @@ Compose также предусматривает `docker compose up --build` д
 | --- | --- |
 | [Состояние проекта](docs/project-status.md) | Анализ, проблемы, приоритеты и результаты проверок |
 | [Архитектура](docs/architecture.md) | Компоненты, данные и потоки обработки |
-| [Запуск и эксплуатация](docs/operations.md) | Окружение, миграции, хранилища, диагностика |
+| [Окружение разработчика](docs/development.md) | Poetry, `.venv` в репозитории, pre-commit, линтеры, CI |
+| [Запуск и эксплуатация](docs/operations.md) | Инфраструктура, миграции, хранилища, диагностика |
 | [API](docs/api.md) | Маршруты и примеры запросов |
 | [Проверки](docs/testing.md) | Команды тестирования и ограничения покрытия |
 | [Backend](backend/README.md) | Навигация по серверному коду |

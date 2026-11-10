@@ -1,6 +1,6 @@
 # Запуск и эксплуатация
 
-Основной сценарий — в [README](../README.md). Команды рассчитаны на PowerShell и корень репозитория.
+Основной сценарий — в [README](../README.md). Команды выполняются из корня репозитория; окружение описано в [development.md](development.md).
 
 ## Настройки
 
@@ -37,15 +37,14 @@ docker compose logs --tail 100 postgres qdrant redis
 
 Startup подключается к служебной БД `postgres`, проверяет целевую БД, при необходимости создаёт её и вызывает Alembic `upgrade head`. Нужен доступ к служебной БД и право создания целевой БД, если её ещё нет. Ошибка инициализации только логируется: сервер продолжает работу.
 
-Ручные команды с явным корнем импортов:
+Ручные команды выполняются из каталога `backend`, чтобы alembic нашёл `alembic.ini`;
+`poetry run` при этом использует окружение `./.venv` из корня репозитория:
 
-```powershell
-$env:PYTHONPATH = (Get-Location).Path
-Push-Location backend
-.venv/Scripts/python.exe -m alembic current
-.venv/Scripts/python.exe -m alembic history
-.venv/Scripts/python.exe -m alembic upgrade head
-Pop-Location
+```bash
+cd backend
+PYTHONPATH=.. poetry run alembic current
+PYTHONPATH=.. poetry run alembic history
+PYTHONPATH=.. poetry run alembic upgrade head
 ```
 
 Новые ревизии создаются там же через `alembic revision --autogenerate -m "описание"`; сгенерированный код нужно проверить до применения. Файлы находятся в `backend/alembic/versions`.

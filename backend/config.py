@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 from urllib.parse import quote_plus
 
 from pydantic import Field, field_validator
@@ -45,7 +44,7 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = "1"
     POSTGRES_DB: str = "rag_constructor"
 
-    DATABASE_URL: Optional[str] = None
+    DATABASE_URL: str | None = None
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
@@ -74,7 +73,7 @@ class Settings(BaseSettings):
     # Qdrant
     # ------------------------------------------------------------------
     QDRANT_URL: str = "http://localhost:6333"
-    QDRANT_API_KEY: Optional[str] = None
+    QDRANT_API_KEY: str | None = None
 
     # ------------------------------------------------------------------
     # Redis / Celery
@@ -88,8 +87,8 @@ class Settings(BaseSettings):
     # ------------------------------------------------------------------
     # LLM / Embeddings
     # ------------------------------------------------------------------
-    OPENAI_API_KEY: Optional[str] = None
-    OPENAI_BASE_URL: Optional[str] = None
+    OPENAI_API_KEY: str | None = None
+    OPENAI_BASE_URL: str | None = None
 
     # ------------------------------------------------------------------
     # Файловое хранилище

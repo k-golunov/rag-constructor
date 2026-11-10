@@ -1,23 +1,23 @@
 """Real local Qdrant → common executor → pinned batch results."""
 
 import asyncio
-from uuid import UUID, uuid4
 from unittest.mock import AsyncMock
+from uuid import UUID, uuid4
+
 import pytest
 
+from backend.core.batch import execution_lock
 from backend.db.models import (
+    BatchJob,
+    BatchQuestionResult,
     BatchRun,
     BatchVariant,
-    BatchQuestionResult,
-    BatchResultAttempt,
     ChatHistory,
     ExecutionRun,
-    BatchJob,
 )
-from backend.core.batch import execution_lock
-from backend.tests.conftest import TestingSessionLocal
 from backend.tests import test_question_sets as sets
 from backend.tests import test_rag_pipeline as pipeline
+from backend.tests.conftest import TestingSessionLocal
 
 rag = pipeline.rag
 qs = sets.qs
@@ -34,8 +34,8 @@ def no_external_broker(monkeypatch):
 
 
 def drain(qs, batch):
-    from backend.core.batch_queue import perform_job
     from backend.api import chat
+    from backend.core.batch_queue import perform_job
 
     for _ in range(100):
         with TestingSessionLocal() as db:
@@ -344,9 +344,11 @@ def test_batch_definition_is_immutable(qs):
 
 def test_batch_migration_upgrade_and_downgrade():
     import importlib
+
     from alembic.migration import MigrationContext
     from alembic.operations import Operations
     from sqlalchemy import create_engine, inspect
+
     from backend.db.database import Base
 
     migration = importlib.import_module(

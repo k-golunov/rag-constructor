@@ -1,7 +1,6 @@
 """Read-only adapter from saved attempts to the evaluator contract. No RAG calls."""
 
 import os
-from uuid import UUID
 
 from fastapi import HTTPException
 from pydantic import ValidationError
@@ -11,10 +10,10 @@ from backend.core.evaluators import checksum
 from backend.core.response_trace import redact
 from backend.db.metric_schemas import Evidence, MetricInput, Provenance, RetrievedChunk
 from backend.db.models import (
-    BatchRun,
-    BatchVariant,
     BatchQuestionResult,
     BatchResultAttempt,
+    BatchRun,
+    BatchVariant,
     ConfigurationVersion,
     ExecutionRun,
     IndexVersion,

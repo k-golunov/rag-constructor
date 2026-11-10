@@ -4,7 +4,7 @@ import tempfile
 import uuid
 import zipfile
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 from uuid import UUID
 
 from fastapi import (
@@ -20,13 +20,6 @@ from sqlalchemy.orm import Session
 
 from backend.api.projects import validate_project_configuration
 from backend.core.factories import build_embedder, build_vector_store
-from backend.core.public_errors import (
-    DOCUMENT_PROCESSING_ERROR,
-    ARCHIVE_PROCESSING_ERROR,
-    PARSER_ERROR,
-    EMPTY_PDF_ERROR,
-    public_operation_status,
-)
 from backend.core.ingestion.parser import (
     SUPPORTED_EXTENSIONS,
     EmptyPDFError,
@@ -36,23 +29,30 @@ from backend.core.ingestion.parser import (
 from backend.core.ingestion.pipeline import (
     process_file,
 )
-from backend.db.database import get_db, SessionLocal
-from backend.db.models import DataSource, Project
+from backend.core.public_errors import (
+    ARCHIVE_PROCESSING_ERROR,
+    DOCUMENT_PROCESSING_ERROR,
+    EMPTY_PDF_ERROR,
+    PARSER_ERROR,
+    public_operation_status,
+)
 from backend.core.versioning import (
-    register_document,
-    plan_index,
     ensure_index,
     index_snapshot,
     indexing_settings,
     lock_project,
     mark_sources,
+    plan_index,
+    register_document,
 )
+from backend.db.database import SessionLocal, get_db
+from backend.db.models import DataSource, Project
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/public/provider/upload", tags=["upload"])
 
-_OPERATIONS: Dict[str, Dict[str, Any]] = {}
+_OPERATIONS: dict[str, dict[str, Any]] = {}
 _FORMATS_HINT = ", ".join(SUPPORTED_EXTENSIONS)
 
 
@@ -76,7 +76,7 @@ async def upload_single(
     project_id: UUID,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Загружает файл, разбивает на чанки, встраивает в Qdrant и сохраняет DataSource.
 
     Args:
@@ -163,7 +163,7 @@ async def upload_archive(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Принимает ZIP-архив и запускает фоновую обработку (парсинг, эмбеддинг, индексация).
 
     Args:
@@ -316,7 +316,7 @@ async def _process_archive_full(
     status_code=status.HTTP_200_OK,
     summary="Статус фоновой операции обработки архива",
 )
-async def get_operation_status(operation_id: str) -> Dict[str, Any]:
+async def get_operation_status(operation_id: str) -> dict[str, Any]:
     """Возвращает статус фоновой операции.
 
     Args:

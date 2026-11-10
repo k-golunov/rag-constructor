@@ -2,17 +2,17 @@
 
 import csv
 import io
-from uuid import UUID, uuid4
 from unittest.mock import AsyncMock
+from uuid import UUID, uuid4
 
 import pytest
 
 from backend.config import settings
 from backend.db.models import BatchRun, ConfigurationVersion, ExecutionRun, IndexVersion
-from backend.tests.conftest import TestingSessionLocal
 from backend.tests import test_batches as batches
 from backend.tests import test_question_sets as sets
 from backend.tests import test_rag_pipeline as pipeline
+from backend.tests.conftest import TestingSessionLocal
 
 rag = pipeline.rag
 qs = sets.qs
@@ -254,9 +254,10 @@ def test_analysis_endpoints_keep_project_scope(qs):
 
 
 def test_export_during_retry_is_partial_even_without_pending_questions(qs, monkeypatch):
-    from backend.core.batch_queue import perform_job
-    from backend.api import chat
     import asyncio
+
+    from backend.api import chat
+    from backend.core.batch_queue import perform_job
 
     monkeypatch.setattr(settings, "BATCH_JOB_MAX_ATTEMPTS", 2)
     version = batches.reviewed(qs)

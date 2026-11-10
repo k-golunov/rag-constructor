@@ -7,8 +7,9 @@
   чтобы каждый тест получал изолированную чистую БД.
 """
 
-import pytest
 from unittest.mock import patch
+
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker

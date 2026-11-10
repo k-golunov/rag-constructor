@@ -1,5 +1,5 @@
-from typing import List, Optional
-from openai import OpenAI, AsyncOpenAI
+from openai import AsyncOpenAI, OpenAI
+
 from backend.core.embeddings.base import BaseEmbedder
 from backend.core.response_trace import token_usage
 
@@ -8,8 +8,8 @@ class OpenAIEmbedder(BaseEmbedder):
     def __init__(
         self,
         model_name: str = "text-embedding-3-small",
-        api_key: Optional[str] = None,
-        api_base: Optional[str] = None,
+        api_key: str | None = None,
+        api_base: str | None = None,
     ):
         self.model_name = model_name
         self.api_key = api_key
@@ -34,7 +34,7 @@ class OpenAIEmbedder(BaseEmbedder):
             )
         return self._async_client
 
-    async def embed(self, texts: List[str]) -> List[List[float]]:
+    async def embed(self, texts: list[str]) -> list[list[float]]:
         self.last_usage = None
         response = await self.async_client.embeddings.create(
             model=self.model_name,
@@ -43,7 +43,7 @@ class OpenAIEmbedder(BaseEmbedder):
         self.last_usage = token_usage(response)
         return [item.embedding for item in response.data]
 
-    def embed_sync(self, texts: List[str]) -> List[List[float]]:
+    def embed_sync(self, texts: list[str]) -> list[list[float]]:
         self.last_usage = None
         response = self.client.embeddings.create(
             model=self.model_name,

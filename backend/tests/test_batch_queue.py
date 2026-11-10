@@ -2,21 +2,20 @@
 
 import asyncio
 from datetime import timedelta
-from uuid import UUID
 from unittest.mock import AsyncMock, Mock
+from uuid import UUID
 
 import pytest
 from fastapi import HTTPException
 
 from backend.api import chat
-from backend.config import settings
 from backend.core import batch_queue as queue
 from backend.core.batch import execution_lock
-from backend.db.models import BatchRun, BatchJob, BatchResultAttempt, ExecutionRun
-from backend.tests.conftest import TestingSessionLocal
+from backend.db.models import BatchJob, BatchRun
 from backend.tests import test_batches as batches
 from backend.tests import test_question_sets as sets
 from backend.tests import test_rag_pipeline as pipeline
+from backend.tests.conftest import TestingSessionLocal
 
 rag = pipeline.rag
 qs = sets.qs
@@ -213,9 +212,11 @@ def test_celery_registration_and_delivery_options():
 
 def test_queue_migration_round_trip():
     import importlib
+
     from alembic.migration import MigrationContext
     from alembic.operations import Operations
     from sqlalchemy import create_engine, inspect
+
     from backend.db.database import Base
 
     migration = importlib.import_module(
@@ -237,10 +238,10 @@ def test_queue_migration_round_trip():
                 batch_op.drop_column("cancel_requested")
                 batch_op.drop_column("active_job_id")
             migration.upgrade()
-            assert set(
-                inspect(connection).get_columns("batch_jobs")[i]["name"]
-                for i in range(len(inspect(connection).get_columns("batch_jobs")))
-            ) == set(Base.metadata.tables["batch_jobs"].columns.keys())
+            columns = inspect(connection).get_columns("batch_jobs")
+            assert {column["name"] for column in columns} == set(
+                Base.metadata.tables["batch_jobs"].columns.keys()
+            )
             migration.downgrade()
         assert "batch_jobs" not in inspect(connection).get_table_names()
     engine.dispose()

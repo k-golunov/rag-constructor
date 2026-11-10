@@ -5,18 +5,18 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from backend.core.evaluation_checks import create_check, check_result
+from backend.core.evaluation_checks import check_result, create_check
 from backend.core.evaluators import REGISTRY, checksum
-from backend.core.metric_inputs import scoped_result, build_metric_input
+from backend.core.metric_inputs import build_metric_input, scoped_result
 from backend.db.database import get_db
 from backend.db.metric_schemas import (
-    EvaluationCheckRequest,
-    MetricInput,
-    MetricResult,
-    MetricInputEnvelope,
-    EvaluationCheckResponse,
     EvaluationCheckList,
+    EvaluationCheckRequest,
+    EvaluationCheckResponse,
     EvaluatorCatalog,
+    MetricInput,
+    MetricInputEnvelope,
+    MetricResult,
 )
 from backend.db.models import EvaluationCheck, Project
 

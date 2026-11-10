@@ -3,16 +3,16 @@
 Полная цепочка ответа сохраняется отдельно в response_trace без публичных endpoints.
 """
 
-from datetime import datetime, timezone
 import hashlib
 import json
-from uuid import UUID, uuid5
+from datetime import UTC, datetime
 from urllib.parse import urlsplit, urlunsplit
+from uuid import UUID, uuid5
 
 from backend.config import settings
 from backend.core.llm.openai_llm import OpenAILLM
-from backend.db.models import ConfigurationVersion, ExecutionRun
 from backend.core.response_trace import redact
+from backend.db.models import ConfigurationVersion, ExecutionRun
 
 COMPARISON_PARAMETERS = [
     "top_k",
@@ -152,14 +152,14 @@ def fail_run(db, run, code):
     run.error_code = code
     if code == "retrieval_error":
         run.details = {**run.details, "retrieval_status": "error"}
-    run.finished_at = datetime.now(timezone.utc)
+    run.finished_at = datetime.now(UTC)
     db.commit()
 
 
 def complete_run(run):
     run.status = "success"
     run.stage = "completed"
-    run.finished_at = datetime.now(timezone.utc)
+    run.finished_at = datetime.now(UTC)
 
 
 def configuration_version(db, project, applied_settings, secrets=()):

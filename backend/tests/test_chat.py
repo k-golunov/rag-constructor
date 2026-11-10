@@ -5,9 +5,6 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
-import pytest
-
-
 BASE_URL = "/api/v1/public/provider/projects"
 
 

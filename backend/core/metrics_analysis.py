@@ -3,7 +3,7 @@
 import csv
 import io
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import text
@@ -19,7 +19,6 @@ from backend.db.models import (
     BatchVariant,
     ConfigurationVersion,
     IndexVersion,
-    QuestionSet,
     QuestionSetVersion,
 )
 
@@ -151,7 +150,7 @@ def metadata(db, batch):
     variants = service.variants(db, batch)
     return {
         "schema_version": 1,
-        "exported_at": datetime.now(timezone.utc),
+        "exported_at": datetime.now(UTC),
         "metrics": {"status": "not_implemented", "scores": None},
         "evaluation_contract": {
             "input_schema_version": 1,

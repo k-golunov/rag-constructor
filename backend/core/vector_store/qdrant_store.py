@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
 
@@ -15,7 +13,7 @@ class QdrantVectorStore(BaseVectorStore):
         api_key: API-ключ (опционально).
     """
 
-    def __init__(self, url: str, api_key: Optional[str] = None):
+    def __init__(self, url: str, api_key: str | None = None):
         # check_compatibility=False — не дёргать /version при каждом подключении:
         # qdrant/qdrant:latest часто новее pinned qdrant-client, и проверка
         # совместимости лишь сыплет UserWarning, не влияя на работу.
@@ -49,7 +47,7 @@ class QdrantVectorStore(BaseVectorStore):
     async def validate_collection(self, collection_name: str, vector_size: int) -> None:
         self._validate_dimension(collection_name, vector_size)
 
-    async def upsert(self, collection_name: str, documents: List[Document]) -> None:
+    async def upsert(self, collection_name: str, documents: list[Document]) -> None:
         """Вставляет или обновляет документы в коллекции.
 
         Args:
@@ -81,10 +79,10 @@ class QdrantVectorStore(BaseVectorStore):
     async def search(
         self,
         collection_name: str,
-        query_vector: List[float],
+        query_vector: list[float],
         limit: int = 5,
-        score_threshold: Optional[float] = None,
-    ) -> List[Document]:
+        score_threshold: float | None = None,
+    ) -> list[Document]:
         """Возвращает список наиболее похожих документов.
 
         Args:

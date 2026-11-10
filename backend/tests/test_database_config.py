@@ -19,10 +19,10 @@ def test_default_database_url_explicitly_selects_installed_driver():
         POSTGRES_PORT=5432,
         POSTGRES_DB="test-db",
     )
-    assert configured.DATABASE_URL == (
+    assert (
         f"postgresql+psycopg2://test-user:{quote_plus('test@password/#%')}"
         "@localhost:5432/test-db"
-    )
+    ) == configured.DATABASE_URL
     engine = create_engine(configured.DATABASE_URL)
     try:
         assert engine.dialect.driver == "psycopg2"
@@ -35,7 +35,7 @@ def test_default_database_url_explicitly_selects_installed_driver():
 def test_implicit_driver_is_normalized_without_changing_connection_data(scheme):
     suffix = "user:p%40ss%2Fword@localhost:5432/db?sslmode=require"
     configured = Settings(_env_file=None, DATABASE_URL=f"{scheme}://{suffix}")
-    assert configured.DATABASE_URL == f"postgresql+psycopg2://{suffix}"
+    assert f"postgresql+psycopg2://{suffix}" == configured.DATABASE_URL
     assert make_url(configured.DATABASE_URL).get_dialect().driver == "psycopg2"
 
 
@@ -48,4 +48,4 @@ def test_implicit_driver_is_normalized_without_changing_connection_data(scheme):
     ],
 )
 def test_explicit_driver_is_preserved(url):
-    assert Settings(_env_file=None, DATABASE_URL=url).DATABASE_URL == url
+    assert url == Settings(_env_file=None, DATABASE_URL=url).DATABASE_URL

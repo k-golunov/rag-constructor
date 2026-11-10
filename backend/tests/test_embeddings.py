@@ -1,5 +1,7 @@
 import os
+
 import pytest
+
 from backend.core.embeddings.openai_embedder import OpenAIEmbedder
 
 

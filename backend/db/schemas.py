@@ -10,11 +10,10 @@ Pydantic-схемы для валидации входящих данных и �
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Literal, Optional
+from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
-
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 # ===========================================================================
 # Project
@@ -48,13 +47,13 @@ class ProjectCreate(BaseModel):
     # ── Эмбеддинги ──────────────────────────────────────────────────────────
     embedding_model: str = Field(..., examples=["text-embedding-3-small"])
     embedding_dimension: int = Field(1536, ge=1, description="Размерность векторов")
-    embedding_api_key: Optional[str] = Field(None, max_length=255)
-    embedding_api_url: Optional[str] = Field(None, max_length=512)
+    embedding_api_key: str | None = Field(None, max_length=255)
+    embedding_api_url: str | None = Field(None, max_length=512)
 
     # ── LLM ─────────────────────────────────────────────────────────────────
     llm_model: str = Field(..., examples=["gpt-4o-mini"])
-    llm_api_key: Optional[str] = Field(None, max_length=255)
-    llm_api_url: Optional[str] = Field(None, max_length=512)
+    llm_api_key: str | None = Field(None, max_length=255)
+    llm_api_url: str | None = Field(None, max_length=512)
 
     # ── Промпт ──────────────────────────────────────────────────────────────
     system_prompt: str = Field(
@@ -82,26 +81,26 @@ class ProjectUpdate(BaseModel):
 
     model_config = {"extra": "forbid"}
 
-    name: Optional[str] = Field(None, min_length=1, max_length=255)
+    name: str | None = Field(None, min_length=1, max_length=255)
 
-    chunk_size: Optional[int] = Field(None, ge=100, le=8000)
-    chunk_overlap: Optional[int] = Field(None, ge=0, le=2000)
-    split_by: Optional[SplitBy] = None
-    chunking_strategy: Optional[ChunkingStrategy] = None
-    extract_tables: Optional[Literal[False]] = None
-    top_k: Optional[int] = Field(None, ge=1, le=100)
-    max_context_chars: Optional[int] = Field(None, ge=1, le=100000)
+    chunk_size: int | None = Field(None, ge=100, le=8000)
+    chunk_overlap: int | None = Field(None, ge=0, le=2000)
+    split_by: SplitBy | None = None
+    chunking_strategy: ChunkingStrategy | None = None
+    extract_tables: Literal[False] | None = None
+    top_k: int | None = Field(None, ge=1, le=100)
+    max_context_chars: int | None = Field(None, ge=1, le=100000)
 
-    embedding_model: Optional[str] = None
-    embedding_dimension: Optional[int] = Field(None, ge=1)
-    embedding_api_key: Optional[str] = Field(None, max_length=255)
-    embedding_api_url: Optional[str] = Field(None, max_length=512)
+    embedding_model: str | None = None
+    embedding_dimension: int | None = Field(None, ge=1)
+    embedding_api_key: str | None = Field(None, max_length=255)
+    embedding_api_url: str | None = Field(None, max_length=512)
 
-    llm_model: Optional[str] = None
-    llm_api_key: Optional[str] = Field(None, max_length=255)
-    llm_api_url: Optional[str] = Field(None, max_length=512)
+    llm_model: str | None = None
+    llm_api_key: str | None = Field(None, max_length=255)
+    llm_api_url: str | None = Field(None, max_length=512)
 
-    system_prompt: Optional[str] = None
+    system_prompt: str | None = None
 
     @field_validator("embedding_api_url", "llm_api_url", mode="before")
     @classmethod
@@ -129,12 +128,12 @@ class ProjectResponse(BaseModel):
 
     embedding_model: str
     embedding_dimension: int
-    embedding_api_key: Optional[str]
-    embedding_api_url: Optional[str]
+    embedding_api_key: str | None
+    embedding_api_url: str | None
 
     llm_model: str
-    llm_api_key: Optional[str]
-    llm_api_url: Optional[str]
+    llm_api_key: str | None
+    llm_api_url: str | None
 
     system_prompt: str
 
@@ -145,7 +144,7 @@ class ProjectListResponse(BaseModel):
     """Список проектов с пагинацией."""
 
     total: int
-    items: List[ProjectResponse]
+    items: list[ProjectResponse]
 
 
 # ===========================================================================
@@ -163,8 +162,8 @@ class DataSourceCreate(BaseModel):
 
 class DataSourceStatusUpdate(BaseModel):
     status: DataSourceStatus
-    chunks_count: Optional[int] = Field(None, ge=0)
-    error_message: Optional[str] = None
+    chunks_count: int | None = Field(None, ge=0)
+    error_message: str | None = None
 
 
 class DataSourceResponse(BaseModel):
@@ -174,9 +173,9 @@ class DataSourceResponse(BaseModel):
     file_path: str
     status: DataSourceStatus
     chunks_count: int
-    error_message: Optional[str]
+    error_message: str | None
     created_at: datetime
-    document_version_id: Optional[UUID] = None
+    document_version_id: UUID | None = None
 
     @field_validator("error_message", mode="before")
     @classmethod
@@ -190,7 +189,7 @@ class DataSourceResponse(BaseModel):
 
 class DataSourceListResponse(BaseModel):
     total: int
-    items: List[DataSourceResponse]
+    items: list[DataSourceResponse]
 
 
 # ===========================================================================
@@ -214,9 +213,7 @@ class ChatMessageResponse(BaseModel):
     role: ChatRole
     content: str
     created_at: datetime
-    rag_metadata: Optional[dict] = None
-
-    model_config = {"from_attributes": True}
+    rag_metadata: dict | None = None
 
     model_config = {"from_attributes": True}
 
@@ -224,7 +221,7 @@ class ChatMessageResponse(BaseModel):
 class ChatHistoryResponse(BaseModel):
     session_id: UUID
     project_id: UUID
-    messages: List[ChatMessageResponse]
+    messages: list[ChatMessageResponse]
 
 
 # ===========================================================================
@@ -237,17 +234,17 @@ class GenerateRequest(BaseModel):
 
     model_config = {"extra": "forbid"}
 
-    max_context_chars: Optional[int] = Field(None, ge=1, le=100000)
+    max_context_chars: int | None = Field(None, ge=1, le=100000)
     max_attempts: int = Field(1, ge=1, le=3)
-    question_set_version_id: Optional[UUID] = None
-    question_example_id: Optional[UUID] = None
+    question_set_version_id: UUID | None = None
+    question_example_id: UUID | None = None
 
     query: str = Field(..., min_length=1, description="Вопрос пользователя")
     context: str = Field(default="", description="Найденные чанки (строка)")
-    session_id: Optional[UUID] = Field(
+    session_id: UUID | None = Field(
         None, description="ID сессии для сохранения истории"
     )
-    history: Optional[List[dict]] = Field(
+    history: list[dict] | None = Field(
         None,
         description='История диалога: [{"role": "user"|"assistant", "content": "..."}]',
     )

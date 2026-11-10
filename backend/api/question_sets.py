@@ -4,35 +4,35 @@ import copy
 import csv
 import io
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
+from backend.core.ingestion.parser import ParserError
 from backend.core.question_sets import (
     check_no_credentials,
-    project_or_404,
-    set_or_404,
-    latest_version,
-    editable_version,
-    normalize_examples,
-    example_input,
     create_version,
     current_documents,
+    editable_version,
+    example_input,
+    latest_version,
+    normalize_examples,
+    project_or_404,
+    set_or_404,
     version_result,
 )
-from backend.core.ingestion.parser import ParserError
 from backend.db.database import get_db
 from backend.db.models import QuestionSet, QuestionSetVersion
 from backend.db.question_set_schemas import (
-    SetCreate,
-    VersionCreate,
     ExampleCreate,
     ExampleEdit,
-    ExampleReview,
     ExampleInput,
+    ExampleReview,
+    SetCreate,
+    VersionCreate,
 )
 
 router = APIRouter(
@@ -292,9 +292,7 @@ def review_example(
         "status": payload.status,
         "reviewer": payload.reviewer if payload.status != "pending" else None,
         "reviewed_at": (
-            datetime.now(timezone.utc).isoformat()
-            if payload.status != "pending"
-            else None
+            datetime.now(UTC).isoformat() if payload.status != "pending" else None
         ),
     }
     return version_result(

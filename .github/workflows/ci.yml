@@ -10,36 +10,32 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  backend-tests:
+  backend-quality:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v5
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.14'
+          python-version: '3.12'
+
+      # Окружение в CI собирается из poetry.lock — те же версии, что локально.
+      - name: Install Poetry
+        run: pip install "poetry==2.5.1"
+
+      - name: Check lockfile consistency
+        run: poetry check --lock
 
       - name: Install dependencies
-        run: |
-          cd backend
-          pip install -r requirements.txt
+        run: poetry install --no-interaction
 
-      - name: Run black check
-        run: |
-          cd backend
-          black --check .
-
-      - name: Run flake8
-        run: |
-          cd backend
-          flake8 .
+      - name: Pre-commit hooks (hygiene, black, ruff)
+        run: poetry run pre-commit run --all-files --show-diff-on-failure
 
       - name: Run pytest
-        run: |
-          cd backend
-          pytest
+        run: poetry run pytest --cov=backend --cov-report=term-missing
 
   frontend-tests:
     runs-on: ubuntu-latest
@@ -71,7 +67,7 @@ jobs:
           npm run build
 
   docker-build:
-    needs: [backend-tests, frontend-tests]
+    needs: [backend-quality, frontend-tests]
     # Сборка образа ТОЛЬКО при push в main (т.е. при мерже PR)
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest

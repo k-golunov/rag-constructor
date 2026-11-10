@@ -2,19 +2,19 @@ import logging
 import shutil
 import zipfile
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from backend.core.Document import Document
-from backend.core.public_errors import ARCHIVE_PROCESSING_ERROR
 from backend.core.ingestion.parser import EmptyPDFError, ParserError, get_parser_for
 from backend.core.ingestion.splitter import RecursiveCharacterTextSplitter
+from backend.core.public_errors import ARCHIVE_PROCESSING_ERROR
 
 logger = logging.getLogger(__name__)
 
 
 def assign_embeddings(
-    chunks: List[Document],
-    embeddings: List[List[float]],
+    chunks: list[Document],
+    embeddings: list[list[float]],
     dimension: int,
     embedding_model: str | None = None,
 ) -> None:
@@ -31,7 +31,7 @@ def assign_embeddings(
                 f"Размерность эмбеддинга {len(embedding)} не соответствует "
                 f"настройкам проекта: {dimension}."
             )
-    for chunk, embedding in zip(chunks, embeddings):
+    for chunk, embedding in zip(chunks, embeddings, strict=True):
         chunk.embedding = embedding
         chunk.metadata["embedding_dimension"] = dimension
         if embedding_model is not None:
@@ -43,7 +43,7 @@ def process_file(
     source_name: str,
     chunk_size: int,
     chunk_overlap: int,
-) -> List[Document]:
+) -> list[Document]:
     parser = get_parser_for(source_name)
     if parser is None:
         raise ParserError(f"Неподдерживаемое расширение: {source_name}")
@@ -69,12 +69,12 @@ def process_archive(
     tmp_dir: Path,
     chunk_size: int,
     chunk_overlap: int,
-    operations: Dict[str, Dict[str, Any]],
+    operations: dict[str, dict[str, Any]],
     operation_id: str,
 ) -> None:
     extract_dir = tmp_dir / "extracted"
-    all_chunks: List[Document] = []
-    skipped: List[str] = []
+    all_chunks: list[Document] = []
+    skipped: list[str] = []
     try:
         extract_dir.mkdir(parents=True, exist_ok=True)
         with zipfile.ZipFile(archive_path) as zf:

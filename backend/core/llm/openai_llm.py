@@ -1,6 +1,6 @@
 """Реализация LLM на базе OpenAI Chat Completions API."""
 
-from typing import AsyncIterator, List, Optional
+from collections.abc import AsyncIterator
 
 from openai import AsyncOpenAI
 
@@ -27,7 +27,7 @@ class OpenAILLM(BaseLLM):
         self,
         model: str,
         api_key: str,
-        api_url: Optional[str] = None,
+        api_url: str | None = None,
         system_prompt: str = DEFAULT_SYSTEM_PROMPT,
         max_context_chars: int = MAX_CONTEXT_CHARS,
     ) -> None:
@@ -47,7 +47,7 @@ class OpenAILLM(BaseLLM):
         self,
         prompt: str,
         context: str,
-        history: Optional[List[dict]] = None,
+        history: list[dict] | None = None,
     ) -> str:
         """Генерирует текстовый ответ на вопрос с учётом контекста и истории.
 
@@ -85,7 +85,7 @@ class OpenAILLM(BaseLLM):
         self,
         prompt: str,
         context: str,
-        history: Optional[List[dict]] = None,
+        history: list[dict] | None = None,
     ) -> AsyncIterator[str]:
         """Стриминговая генерация ответа — chunks строки.
 
@@ -101,8 +101,8 @@ class OpenAILLM(BaseLLM):
         self,
         prompt: str,
         context: str,
-        history: List[dict],
-    ) -> List[dict]:
+        history: list[dict],
+    ) -> list[dict]:
         """Формирует список сообщений для Chat Completions.
 
         Струкра: system (промпт + контекст) → history → user (вопрос).
@@ -112,7 +112,7 @@ class OpenAILLM(BaseLLM):
             if context
             else self._system_prompt
         )
-        messages: List[dict] = [{"role": "system", "content": system_content}]
+        messages: list[dict] = [{"role": "system", "content": system_content}]
         messages.extend(history)
         messages.append({"role": "user", "content": prompt})
         return messages

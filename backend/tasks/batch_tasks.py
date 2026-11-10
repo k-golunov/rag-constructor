@@ -2,14 +2,14 @@
 
 import asyncio
 
+from celery.signals import worker_process_init
 from fastapi import HTTPException
 
-from backend.core.batch_queue import perform_job, dispatch_due
+from backend.core.batch_queue import dispatch_due, perform_job
 from backend.core.factories import build_embedder, build_vector_store
 from backend.core.rag import _generate_traced
 from backend.db.database import SessionLocal, engine
 from backend.tasks.worker import celery_app
-from celery.signals import worker_process_init
 
 
 @worker_process_init.connect

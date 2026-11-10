@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from backend.db.database import get_db
 from backend.db.models import DataSource
-from backend.db.schemas import DataSourceListResponse, DataSourceResponse
+from backend.db.schemas import DataSourceListResponse
 
 router = APIRouter(prefix="/api/v1/public/provider", tags=["data-sources"])
 

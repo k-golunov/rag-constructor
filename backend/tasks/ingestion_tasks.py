@@ -4,18 +4,19 @@ from pathlib import Path
 from types import SimpleNamespace
 from uuid import UUID
 
-from .worker import celery_app
 from backend.core.factories import build_embedder, build_vector_store
 from backend.core.public_errors import DOCUMENT_PROCESSING_ERROR
-from backend.db.database import SessionLocal
 from backend.core.versioning import (
-    register_document,
-    plan_index,
     ensure_index,
     indexing_settings,
     lock_project,
+    mark_sources,
+    plan_index,
+    register_document,
 )
-from backend.core.versioning import mark_sources
+from backend.db.database import SessionLocal
+
+from .worker import celery_app
 
 logger = logging.getLogger(__name__)
 

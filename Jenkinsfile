@@ -11,18 +11,21 @@ pipeline {
 
         stage('Backend install') {
             steps {
-                dir('backend') {
-                    sh 'python3 -m pip install --upgrade pip'
-                    sh 'python3 -m pip install -r requirements.txt'
-                }
+                sh 'python3 -m pip install --upgrade pip'
+                sh 'python3 -m pip install "poetry==2.5.1"'
+                sh 'poetry install'
+            }
+        }
+
+        stage('Backend lint') {
+            steps {
+                sh 'poetry run pre-commit run --all-files --show-diff-on-failure'
             }
         }
 
         stage('Backend tests') {
             steps {
-                dir('backend') {
-                    sh 'pytest'
-                }
+                sh 'poetry run pytest'
             }
         }
 

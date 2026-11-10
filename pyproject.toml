@@ -1,0 +1,107 @@
+[project]
+name = "rag-constructor"
+version = "0.1.0"
+description = "RAG Constructor: FastAPI backend and Angular frontend for document Q&A assistants"
+readme = "README.md"
+requires-python = ">=3.11,<3.15"
+license = "LicenseRef-Proprietary"
+authors = [{ name = "RAG Constructor team" }]
+
+dependencies = [
+    "fastapi>=0.135.3",
+    "uvicorn[standard]>=0.41.0",
+    "pydantic>=2.12.5",
+    "pydantic-settings>=2.13.1",
+    "sqlalchemy>=2.0.48",
+    "alembic>=1.18.4",
+    "psycopg2-binary>=2.9.10",
+    "celery>=5.6.3",
+    "redis>=7.2.0",
+    "qdrant-client>=1.17.1",
+    "openai>=2.26.0",
+    "pypdf>=6.8.0",
+    "python-docx>=1.1.2",
+    "langchain>=1.2.15",
+    "langchain-text-splitters>=0.3.9",
+    "python-multipart>=0.0.22",
+    "python-dotenv>=1.1.1",
+    "httpx>=0.28.1",
+]
+
+[tool.poetry]
+packages = [{ include = "backend" }]
+
+[tool.poetry.group.dev.dependencies]
+black = ">=26.10,<27"
+ruff = ">=0.17,<0.18"
+pre-commit = ">=3.7.0"
+pytest = ">=8.0.0"
+pytest-asyncio = ">=1.4.0"
+pytest-cov = ">=4.0.0"
+
+[build-system]
+requires = ["poetry-core>=2.0"]
+build-backend = "poetry.core.masonry.api"
+
+# ---------------------------------------------------------------------------
+# Ruff: единый линтер вместо flake8 + isort
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+# Миграции генерируются alembic, руками не правим.
+extend-exclude = ["backend/alembic/versions"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "I",    # isort
+    "UP",   # pyupgrade
+    "B",    # bugbear
+    "C4",   # comprehensions
+    "SIM",  # simplify
+    "PIE",  # misc
+    "RUF",  # ruff-specific
+]
+ignore = [
+    "E501",  # длину строк держит black
+    # Проект русскоязычный: кириллица в строках/докстрингах — норма, не опечатка.
+    "RUF001",
+    "RUF002",
+    "RUF003",
+]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI/Depends по умолчанию вызываются в аргументах — это не B008.
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.Header",
+    "fastapi.File",
+    "fastapi.Form",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"backend/tests/*" = ["B011", "B017"]
+
+# ---------------------------------------------------------------------------
+# Black: форматирование
+# ---------------------------------------------------------------------------
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+# ---------------------------------------------------------------------------
+# Pytest
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
+pythonpath = ["."]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-q"
