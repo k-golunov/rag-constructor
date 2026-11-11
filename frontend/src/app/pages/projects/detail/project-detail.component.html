@@ -839,6 +839,9 @@
         @if (activeTab() === 'batches') {
           <app-batches [projectId]="id" />
         }
+        @if (activeTab() === 'model-card') {
+          <app-model-card [projectId]="id" />
+        }
       </div><!-- /tabs__content -->
     </div><!-- /tabs -->
 
