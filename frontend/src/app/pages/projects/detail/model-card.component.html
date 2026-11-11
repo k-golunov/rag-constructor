@@ -1,0 +1,288 @@
+<section class="model-card" aria-labelledby="model-card-title">
+  <header class="heading">
+    <div>
+      <span class="eyebrow">ДОКУМЕНТАЦИЯ ПРОЕКТА</span>
+      <h2 id="model-card-title">Model Card</h2>
+      <p>Паспорт вашего RAG-ассистента: назначение, модели, данные и границы применения.</p>
+    </div>
+    @if (!editing()) {
+      <button class="button primary" (click)="edit()" [disabled]="busy()">
+        <span class="material-symbols-outlined" aria-hidden="true">edit_document</span>
+        {{ selected() ? 'Создать новую версию' : 'Составить карточку' }}
+      </button>
+    }
+  </header>
+  @if (error()) {
+    <p class="message error" role="alert">{{ error() }}</p>
+  }
+  @if (notice()) {
+    <p class="message notice" role="status">{{ notice() }}</p>
+  }
+  @if (busy()) {
+    <p class="loading" role="status">Подготавливаем карточку…</p>
+  }
+
+  <div class="workspace" [class.is-editing]="editing()">
+    <aside class="sidebar">
+      @if (editing()) {
+        <div class="editor-title">
+          <h3>Расскажите о проекте</h3>
+          <p>
+            Настройки подставятся автоматически. Пустые поля останутся отмечены как неизвестные.
+          </p>
+        </div>
+        <fieldset [disabled]="busy()">
+          @for (field of fields; track field.key) {
+            <label class="field" [for]="'card-' + field.key"
+              ><span>{{ field.label }}</span>
+              <textarea
+                [id]="'card-' + field.key"
+                [name]="field.key"
+                rows="3"
+                [maxlength]="field.max"
+                [(ngModel)]="context[field.key]"
+                (ngModelChange)="changed()"
+                [placeholder]="field.hint"
+                [attr.aria-describedby]="'hint-' + field.key"
+              ></textarea>
+              <small [id]="'hint-' + field.key">{{ field.hint }}</small>
+            </label>
+          }
+          <div class="measurements-heading">
+            <h3>Результаты проверки</h3>
+            <p>
+              Добавляйте только проведённые измерения. Они будут обозначены как введённые человеком.
+            </p>
+          </div>
+          @for (m of measurements; track $index; let i = $index) {
+            <div class="measurement">
+              <div class="measurement-top">
+                <strong>Измерение {{ i + 1 }}</strong
+                ><button
+                  class="text-button"
+                  (click)="removeMeasurement(i)"
+                  [attr.aria-label]="'Удалить измерение ' + (i + 1)"
+                >
+                  Удалить
+                </button>
+              </div>
+              <label class="field"
+                ><span>Показатель</span
+                ><input
+                  [(ngModel)]="m.name"
+                  (ngModelChange)="changed()"
+                  maxlength="200"
+                  placeholder="Например, корректность ответов"
+              /></label>
+              <div class="pair">
+                <label class="field"
+                  ><span>Значение</span
+                  ><input type="number" [(ngModel)]="m.value" (ngModelChange)="changed()"
+                /></label>
+                <label class="field"
+                  ><span>Единица</span
+                  ><input [(ngModel)]="m.unit" (ngModelChange)="changed()" maxlength="40"
+                /></label>
+              </div>
+              <label class="field"
+                ><span>Размер выборки</span
+                ><input
+                  type="number"
+                  min="1"
+                  max="100000000"
+                  step="1"
+                  [(ngModel)]="m.sample_size"
+                  (ngModelChange)="changed()"
+              /></label>
+              <label class="field"
+                ><span>Набор и версия данных</span
+                ><input [(ngModel)]="m.dataset" (ngModelChange)="changed()" maxlength="2000"
+              /></label>
+              <label class="field"
+                ><span>Как измеряли</span
+                ><textarea
+                  rows="3"
+                  [(ngModel)]="m.method"
+                  (ngModelChange)="changed()"
+                  maxlength="4000"
+                ></textarea>
+              </label>
+              <label class="field"
+                ><span>Дата измерения</span
+                ><input type="date" [(ngModel)]="m.measured_at" (ngModelChange)="changed()"
+              /></label>
+              <label class="field"
+                ><span>Кто проверил</span
+                ><input [(ngModel)]="m.reviewer" (ngModelChange)="changed()" maxlength="500"
+              /></label>
+            </div>
+          }
+          <button
+            class="button secondary full-width"
+            (click)="addMeasurement()"
+            [disabled]="measurements.length >= 50"
+          >
+            Добавить измерение
+          </button>
+        </fieldset>
+        <div class="editor-actions">
+          <button class="button secondary" (click)="prepare()" [disabled]="busy()">
+            Обновить предпросмотр
+          </button>
+          <button
+            class="button primary"
+            (click)="save()"
+            [disabled]="busy() || dirty() || !draft()"
+          >
+            Сохранить версию
+          </button>
+          @if (selected()) {
+            <button class="text-button" (click)="cancel()" [disabled]="busy()">Отменить</button>
+          }
+          @if (dirty()) {
+            <small>Перед сохранением обновите предпросмотр.</small>
+          }
+        </div>
+      } @else {
+        <div class="history-title">
+          <h3>История версий</h3>
+          <button class="text-button" (click)="loadVersions(true)" [disabled]="busy()">
+            Обновить
+          </button>
+        </div>
+        <p class="muted">Сохранённые карточки остаются неизменными.</p>
+        <nav aria-label="Версии Model Card">
+          @for (version of versions(); track version.id) {
+            <button
+              class="version"
+              [class.selected]="selected()?.id === version.id"
+              [attr.aria-current]="selected()?.id === version.id ? 'true' : null"
+              (click)="open(version.id)"
+              [disabled]="busy()"
+            >
+              <span
+                ><strong>Версия {{ version.number }}</strong
+                ><span class="status-dot" [class.stale]="version.is_stale"></span
+              ></span>
+              <small>{{ version.created_at | date: 'dd.MM.yyyy HH:mm' }}</small>
+              <small>{{ version.is_stale ? 'Проект изменился' : 'Соответствует проекту' }}</small>
+            </button>
+          }
+        </nav>
+        @if (versions().length < total()) {
+          <button
+            class="button secondary full-width"
+            (click)="loadVersions(false, true)"
+            [disabled]="busy()"
+          >
+            Показать ещё
+          </button>
+        }
+        <div class="about">
+          <span class="material-symbols-outlined" aria-hidden="true">info</span>
+          <p>
+            Девять разделов Google Model Cards. Составление не отправляет данные в AI и не запускает
+            оценку качества.
+          </p>
+        </div>
+      }
+    </aside>
+
+    <div class="preview-area">
+      @if (visible; as card) {
+        @if (card.is_stale) {
+          <div class="stale-message" role="status">
+            <strong>Проект изменился после сохранения</strong>
+            <p>
+              Изменения: {{ changes(card) || 'конфигурация проекта' }}. Эта версия остаётся
+              историческим снимком; прежние измерения не подтверждают качество текущего проекта.
+            </p>
+          </div>
+        }
+        <div class="preview-toolbar">
+          <span>{{
+            editing()
+              ? dirty()
+                ? 'Предпросмотр требует обновления'
+                : 'Предпросмотр готов'
+              : 'Сохранённая версия ' + card.number
+          }}</span>
+          @if (!editing()) {
+            <div>
+              <button
+                class="button secondary compact"
+                (click)="export('md')"
+                [disabled]="downloading()"
+              >
+                Markdown</button
+              ><button
+                class="button secondary compact"
+                (click)="export('docx')"
+                [disabled]="downloading()"
+              >
+                Word
+              </button>
+            </div>
+          }
+        </div>
+        <article class="paper" [class.outdated-preview]="editing() && dirty()">
+          <header class="paper-heading">
+            <span class="eyebrow">MODEL CARD</span>
+            <h2>{{ card.source_snapshot.project_name }}</h2>
+            <p>
+              {{ card.source_snapshot.configuration.llm_model }} <span aria-hidden="true">·</span>
+              {{ card.source_snapshot.configuration.embedding_model }}
+            </p>
+            <div class="facts">
+              <span>{{ card.source_snapshot.documents.length }} источников</span
+              ><span>top_k {{ card.source_snapshot.configuration.top_k }}</span
+              ><span
+                >{{ card.source_snapshot.configuration.max_context_chars | number }} символов
+                контекста</span
+              >
+            </div>
+            <small
+              >{{ card.created_at | date: 'dd.MM.yyyy HH:mm' }} ·
+              {{
+                card.measurements.length ? 'Есть ручные измерения' : 'Качество не оценивалось'
+              }}</small
+            >
+          </header>
+          @for (section of card.sections; track section.key; let i = $index) {
+            <section class="card-section">
+              <div class="section-heading">
+                <span class="section-number">{{ i + 1 < 10 ? '0' : '' }}{{ i + 1 }}</span>
+                <div>
+                  <h3>{{ section.title }}</h3>
+                  <small>{{ section.english_title }}</small>
+                </div>
+              </div>
+              @for (paragraph of section.paragraphs; track $index) {
+                <p>{{ paragraph }}</p>
+              }
+            </section>
+          }
+          <footer class="paper-footer">
+            <p>
+              По структуре
+              <a href="https://arxiv.org/abs/1810.03993" target="_blank" rel="noopener noreferrer"
+                >Google Model Cards</a
+              >
+            </p>
+            <p>Отпечаток конфигурации и данных</p>
+            <code>{{ card.source_sha256 }}</code>
+          </footer>
+        </article>
+      } @else if (!busy()) {
+        <div class="empty-state">
+          <span class="material-symbols-outlined" aria-hidden="true">description</span>
+          <h3>Опишите вашего ассистента</h3>
+          <p>Здесь появится карточка с настройками, назначением и ограничениями проекта.</p>
+          <button class="button primary" (click)="editing() ? prepare() : edit()">
+            Подготовить предпросмотр
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</section>

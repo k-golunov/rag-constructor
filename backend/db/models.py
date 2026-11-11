@@ -70,6 +70,8 @@ class Project(Base):
         default="Вы полезный ассистент, отвечающий на вопросы по документам.",
     )
 
+    model_cards = relationship("ModelCardVersion", cascade="all, delete-orphan")
+
     # ── Связи ────────────────────────────────────────────────────────────────
     data_sources = relationship(
         "DataSource",
@@ -444,6 +446,32 @@ class EvaluationCheck(Base):
     )
 
 
+class ModelCardVersion(Base):
+    """A frozen model card bound to public settings and a document manifest."""
+
+    __tablename__ = "model_card_versions"
+    __table_args__ = (UniqueConstraint("project_id", "number"),)
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    number = Column(Integer, nullable=False)
+    source_sha256 = Column(String(64), nullable=False)
+    content_sha256 = Column(String(64), nullable=False)
+    source_snapshot = Column(JSON, nullable=False)
+    context = Column(JSON, nullable=False)
+    measurements = Column(JSON, nullable=False)
+    sections = Column(JSON, nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+@event.listens_for(ModelCardVersion, "before_update")
 @event.listens_for(EvaluationCheck, "before_update")
 @event.listens_for(BatchVariant, "before_update")
 @event.listens_for(DocumentVersion, "before_update")
