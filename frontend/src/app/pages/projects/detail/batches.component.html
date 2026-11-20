@@ -467,6 +467,12 @@
               @if (result.example.unanswerable) {
                 <p class="hint">Пример размечен: ответа в документах нет.</p>
               }
+              @if (result.example.category) {
+                <p class="hint">Категория: {{ result.example.category }}</p>
+              }
+              @if (result.example.explanation) {
+                <p class="hint">Пояснение: {{ result.example.explanation }}</p>
+              }
               @for (evidence of result.example.evidence; track $index) {
                 <blockquote>{{ evidence.quote }}</blockquote>
                 <p class="hint">

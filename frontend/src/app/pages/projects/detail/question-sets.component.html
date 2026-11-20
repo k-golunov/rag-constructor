@@ -101,6 +101,10 @@
         <label class="checkbox"
           ><input type="checkbox" [(ngModel)]="unanswerable" /> В документах нет ответа</label
         >
+        <label
+          >Пояснение: какую ошибку выявляет пример
+          <textarea [(ngModel)]="explanation" rows="2" maxlength="2000"></textarea>
+        </label>
         <h3>Подтверждающие выдержки</h3>
         <label
           >Исходный документ
@@ -157,6 +161,9 @@
         }
         @if (example.reference_answer) {
           <p><strong>Эталон:</strong> {{ example.reference_answer }}</p>
+        }
+        @if (example.explanation) {
+          <p class="hint">Пояснение: {{ example.explanation }}</p>
         }
         @for (proof of example.evidence; track $index) {
           <blockquote>

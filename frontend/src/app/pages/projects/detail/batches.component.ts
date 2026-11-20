@@ -114,6 +114,7 @@ interface Result {
     unanswerable: boolean;
     evidence: Evidence[];
     category: string | null;
+    explanation?: string | null;
   };
   jobs?: unknown[];
   metric_input?: unknown;
