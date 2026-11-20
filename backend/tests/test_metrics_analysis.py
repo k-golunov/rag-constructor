@@ -216,11 +216,21 @@ def test_failed_and_retried_attempts_are_preserved_in_both_exports(qs, monkeypat
         rows[0]["error_code"] == "retrieval_error"
         and rows[1]["answer"] == pipeline.ANSWER
     )
+    assert rows[0]["explanation"] == ""
 
 
 def test_csv_formula_cells_are_safe_while_json_keeps_original(qs):
     version = sets.create(
-        qs, [{"question": "=2+3", "reference_answer": "@SUM(A1)", "split": "test"}]
+        qs,
+        [
+            {
+                "question": "=2+3",
+                "reference_answer": "@SUM(A1)",
+                "category": "Ловушки",
+                "explanation": "=HYPERLINK(1)",
+                "split": "test",
+            }
+        ],
     )
     version = sets.approve(qs, version)
     batch = batches.make(qs, version, variants=[{"name": "+variant"}])
@@ -230,6 +240,8 @@ def test_csv_formula_cells_are_safe_while_json_keeps_original(qs):
         rows[0]["question"] == "'=2+3"
         and rows[0]["reference_answer"] == "'@SUM(A1)"
         and rows[0]["variant"] == "'+variant"
+        and rows[0]["category"] == "Ловушки"
+        and rows[0]["explanation"] == "'=HYPERLINK(1)"
     )
     data = qs.client.get(f"{qs.batches}/{batch['id']}/export").json()
     assert data["results"][0]["example"]["question"] == "=2+3"

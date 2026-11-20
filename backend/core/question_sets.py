@@ -4,7 +4,8 @@ import copy
 import hashlib
 import logging
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+from uuid import UUID
 
 from fastapi import HTTPException
 
@@ -66,14 +67,54 @@ def check_no_credentials(value, project):
         )
 
 
-def _evidence(db, project_id, evidence, scope, text_cache):
-    identifier = str(evidence.document_version_id)
-    if identifier not in scope:
+def _base_name(name):
+    return PurePosixPath(name.replace("\\", "/")).name
+
+
+def document_lookup(documents):
+    by_id, by_name, by_base = {}, {}, {}
+    for item in documents:
+        identifier, name = item["document_version_id"], item["file_name"]
+        by_id[identifier] = name
+        by_name.setdefault(name, []).append(identifier)
+        by_base.setdefault(_base_name(name), []).append(identifier)
+    return by_id, by_name, by_base
+
+
+def resolve_document(evidence, lookup):
+    by_id, by_name, by_base = lookup
+    if evidence.document_version_id is not None:
+        identifier = str(evidence.document_version_id)
+        if identifier not in by_id:
+            raise HTTPException(
+                422,
+                "Подтверждение должно ссылаться на документ из состава этой версии набора.",
+            )
+        name = evidence.file_name
+        if name is not None and _base_name(name) != _base_name(by_id[identifier]):
+            raise HTTPException(
+                422, "document_version_id и file_name указывают на разные документы."
+            )
+        return identifier
+    matches = by_name.get(evidence.file_name) or by_base.get(
+        _base_name(evidence.file_name), []
+    )
+    if not matches:
         raise HTTPException(
             422,
-            "Подтверждение должно ссылаться на документ из состава этой версии набора.",
+            f"Документа «{evidence.file_name}» нет в составе версии набора.",
         )
-    version = db.get(DocumentVersion, evidence.document_version_id)
+    if len(matches) > 1:
+        raise HTTPException(
+            422,
+            f"Имени «{evidence.file_name}» соответствует несколько документов.",
+        )
+    return matches[0]
+
+
+def _evidence(db, project_id, evidence, lookup, text_cache):
+    identifier = resolve_document(evidence, lookup)
+    version = db.get(DocumentVersion, UUID(identifier))
     if version is None or version.project_id != project_id:
         raise HTTPException(422, "Версия исходного документа не найдена в проекте.")
     if identifier not in text_cache:
@@ -117,8 +158,8 @@ def _evidence(db, project_id, evidence, scope, text_cache):
 def normalize_examples(
     db, project, examples, documents, previous=(), reset_reviews=False
 ):
-    scope = {item["document_version_id"] for item in documents}
     old = {item["id"]: item for item in previous}
+    lookup = document_lookup(documents)
     seen_ids, seen_questions, result, text_cache = set(), set(), [], {}
     for example in examples:
         value = example.model_dump(mode="json")
@@ -132,8 +173,10 @@ def normalize_examples(
             )
         seen_ids.add(identity)
         seen_questions.add(normalized_question)
+        if value["explanation"] is None:
+            del value["explanation"]
         value["evidence"] = [
-            _evidence(db, project.id, item, scope, text_cache)
+            _evidence(db, project.id, item, lookup, text_cache)
             for item in example.evidence
         ]
         value["review"] = {"status": "pending", "reviewer": None, "reviewed_at": None}
@@ -156,7 +199,13 @@ def example_input(example):
     value["evidence"] = [
         {
             key: evidence[key]
-            for key in ("document_version_id", "quote", "start_char", "end_char")
+            for key in (
+                "document_version_id",
+                "file_name",
+                "quote",
+                "start_char",
+                "end_char",
+            )
         }
         for evidence in value["evidence"]
     ]

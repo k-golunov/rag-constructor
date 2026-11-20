@@ -175,12 +175,13 @@ def export_version(
     project_id: UUID, set_id: UUID, version_id: UUID, db: Session = Depends(get_db)
 ):
     version = _version(db, project_id, set_id, version_id)
-    return {
-        "schema_version": 1,
-        "examples": [
-            example_input(ex).model_dump(mode="json") for ex in version.examples
-        ],
-    }
+    examples = []
+    for ex in version.examples:
+        row = example_input(ex).model_dump(mode="json")
+        if row["explanation"] is None:
+            del row["explanation"]
+        examples.append(row)
+    return {"schema_version": 1, "examples": examples}
 
 
 @router.post("/{set_id}/versions", status_code=201)
@@ -316,6 +317,7 @@ def _import_examples(content, filename):
                 "category",
                 "unanswerable",
                 "split",
+                "explanation",
             }
             if (
                 not reader.fieldnames

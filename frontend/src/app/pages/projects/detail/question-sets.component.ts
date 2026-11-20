@@ -20,6 +20,7 @@ interface Example {
   category: string | null;
   unanswerable: boolean;
   split: 'tuning' | 'test';
+  explanation?: string | null;
   review: { status: string; reviewer: string | null; reviewed_at: string | null };
 }
 interface VersionSummary {
@@ -68,6 +69,7 @@ export class QuestionSetsComponent implements OnInit {
   category = '';
   split: 'tuning' | 'test' = 'tuning';
   unanswerable = false;
+  explanation = '';
   evidence: Evidence[] = [];
   evidenceDocument = '';
   evidenceQuote = '';
@@ -178,6 +180,7 @@ export class QuestionSetsComponent implements OnInit {
     this.category = '';
     this.split = 'tuning';
     this.unanswerable = false;
+    this.explanation = '';
     this.evidence = [];
     this.evidenceDocument = this.version()?.documents[0]?.document_version_id ?? '';
     this.evidenceQuote = '';
@@ -190,6 +193,7 @@ export class QuestionSetsComponent implements OnInit {
     this.category = example.category ?? '';
     this.split = example.split;
     this.unanswerable = example.unanswerable;
+    this.explanation = example.explanation ?? '';
     this.evidence = example.evidence.map((proof) => this.proofInput(proof));
   }
   proofInput(proof: Evidence): Evidence {
@@ -208,6 +212,7 @@ export class QuestionSetsComponent implements OnInit {
       category: example.category,
       split: example.split,
       unanswerable: example.unanswerable,
+      explanation: example.explanation ?? null,
       evidence: example.evidence.map((proof) => this.proofInput(proof)),
     };
   }
@@ -243,6 +248,7 @@ export class QuestionSetsComponent implements OnInit {
       category: this.category || null,
       split: this.split,
       unanswerable: this.unanswerable,
+      explanation: this.explanation || null,
       evidence: this.evidence,
     };
     const call = this.editingId

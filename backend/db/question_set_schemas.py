@@ -1,13 +1,14 @@
 from typing import Literal
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class EvidenceInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    document_version_id: UUID
+    document_version_id: UUID | None = None
+    file_name: str | None = Field(None, min_length=1, max_length=512)
     quote: str = Field(min_length=1)
     start_char: int | None = Field(None, ge=0)
     end_char: int | None = Field(None, ge=1)
@@ -18,6 +19,12 @@ class EvidenceInput(BaseModel):
         if not value.strip():
             raise ValueError("Выдержка не может состоять из пробелов.")
         return value
+
+    @model_validator(mode="after")
+    def has_document(self):
+        if self.document_version_id is None and self.file_name is None:
+            raise ValueError("Укажите document_version_id или file_name документа.")
+        return self
 
 
 class ExampleInput(BaseModel):
@@ -30,8 +37,9 @@ class ExampleInput(BaseModel):
     category: str | None = Field(None, max_length=128)
     unanswerable: bool = False
     split: Literal["tuning", "test"] = "tuning"
+    explanation: str | None = Field(None, max_length=2000)
 
-    @field_validator("reference_answer", "category")
+    @field_validator("reference_answer", "category", "explanation")
     @classmethod
     def empty_is_unknown(cls, value):
         return value or None
@@ -70,6 +78,7 @@ class ExampleEdit(BaseModel):
     category: str | None = Field(None, max_length=128)
     unanswerable: bool | None = None
     split: Literal["tuning", "test"] | None = None
+    explanation: str | None = Field(None, max_length=2000)
 
 
 class ExampleReview(BaseModel):
