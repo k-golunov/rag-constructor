@@ -249,12 +249,13 @@ async def _ensure_index(db, index, vector_store, embedder):
         raise
 
 
-def mark_sources(db, index):
-    for source in (
-        db.query(DataSource)
-        .filter_by(project_id=index.project_id, is_active=True)
-        .all()
-    ):
+def mark_sources(db, index, *, only_pending=False):
+    sources = db.query(DataSource).filter_by(
+        project_id=index.project_id, is_active=True
+    )
+    if only_pending:
+        sources = sources.filter_by(status="pending")
+    for source in sources.all():
         count = index.document_chunks.get(str(source.document_version_id))
         if count is not None:
             source.status = "completed"

@@ -1,0 +1,33 @@
+MkDocs 1.6.1
+Источник: https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/configuration.md#L533-L562
+
+### docs_dir
+
+The directory containing the documentation source markdown files. This can
+either be a relative directory, in which case it is resolved relative to the
+directory containing your configuration file, or it can be an absolute directory
+path from the root of your local file system.
+
+**default**: `'docs'`
+
+### site_dir
+
+The directory where the output HTML and other files are created. This can either
+be a relative directory, in which case it is resolved relative to the directory
+containing your configuration file, or it can be an absolute directory path from
+the root of your local file system.
+
+**default**: `'site'`
+
+> NOTE:
+> If you are using source code control you will normally want to ensure that
+> your *build output* files are not committed into the repository, and only
+> keep the *source* files under version control. For example, if using `git`
+> you might add the following line to your `.gitignore` file:
+>
+> ```text
+> site/
+> ```
+>
+> If you're using another source code control tool, you'll want to check its
+> documentation on how to ignore specific directories.

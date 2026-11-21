@@ -9,6 +9,7 @@ from backend.api.batches import router as batches_router
 from backend.api.chat import router as chat_router
 from backend.api.data_sources import router as data_sources_router
 from backend.api.evaluations import router as evaluations_router
+from backend.api.mkdocs_demo import router as mkdocs_demo_router
 from backend.api.projects import router as projects_router
 from backend.api.question_sets import router as question_sets_router
 from backend.api.upload import router as upload_router
@@ -87,6 +88,7 @@ async def health_check():
 # Роутеры
 # ---------------------------------------------------------------------------
 app.include_router(projects_router)
+app.include_router(mkdocs_demo_router)
 app.include_router(upload_router)
 app.include_router(data_sources_router)
 app.include_router(chat_router)

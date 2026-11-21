@@ -1,0 +1,59 @@
+MkDocs 1.6.1
+Источник: https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/configuration.md#L237-L292
+
+### nav
+
+This setting is used to determine the format and layout of the global navigation
+for the site. A minimal navigation configuration could look like this:
+
+```yaml
+nav:
+  - 'index.md'
+  - 'about.md'
+```
+
+All paths in the navigation configuration must be relative to the
+[`docs_dir`](#docs_dir) configuration option. See the section on [configuring
+pages and navigation] for a more detailed breakdown, including how to create
+sub-sections.
+
+Navigation items may also include links to external sites. While titles are
+optional for internal links, they are required for external links. An external
+link may be a full URL or a relative URL. Any path which is not found in the
+files is assumed to be an external link. See the section about [Meta-Data] on
+how MkDocs determines the page title of a document.
+
+```yaml
+nav:
+  - Introduction: 'index.md'
+  - 'about.md'
+  - 'Issue Tracker': 'https://example.com/'
+```
+
+In the above example, the first two items point to local files while the third
+points to an external site.
+
+However, sometimes the MkDocs site is hosted in a subdirectory of a project's
+site and you may want to link to other parts of the same site without including
+the full domain. In that case, you may use an appropriate relative URL.
+
+```yaml
+site_url: https://example.com/foo/
+
+nav:
+  - Home: '../'
+  - 'User Guide': 'user-guide.md'
+  - 'Bug Tracker': '/bugs/'
+```
+
+In the above example, two different styles of external links are used. First,
+note that the `site_url` indicates that the MkDocs site is hosted in the `/foo/`
+subdirectory of the domain. Therefore, the `Home` navigation item is a relative
+link that steps up one level to the server root and effectively points to
+`https://example.com/`. The `Bug Tracker` item uses an absolute path from the
+server root and effectively points to `https://example.com/bugs/`. Of course, the
+`User Guide` points to a local MkDocs page.
+
+**default**: By default `nav` will contain an alphanumerically sorted, nested
+list of all the Markdown files found within the `docs_dir` and its
+sub-directories. Index files will always be listed first within a sub-section.

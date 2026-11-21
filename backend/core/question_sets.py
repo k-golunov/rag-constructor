@@ -163,7 +163,7 @@ def example_input(example):
     return ExampleInput.model_validate(value)
 
 
-def create_version(db, dataset, examples, documents, number):
+def stage_version(db, dataset, examples, documents, number):
     snapshot = copy.deepcopy({"examples": examples, "documents": documents})
     version = QuestionSetVersion(
         question_set_id=dataset.id,
@@ -174,6 +174,11 @@ def create_version(db, dataset, examples, documents, number):
         examples=snapshot["examples"],
     )
     db.add(version)
+    return version
+
+
+def create_version(db, dataset, examples, documents, number):
+    version = stage_version(db, dataset, examples, documents, number)
     db.commit()
     db.refresh(version)
     return version

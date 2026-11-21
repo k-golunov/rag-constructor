@@ -34,8 +34,12 @@ export class ProjectCreateComponent {
 
   readonly DEFAULT_PROMPT =
     'Вы полезный ассистент, отвечающий на вопросы по документам.';
+  readonly MKDOCS_PROMPT =
+    'Отвечайте по-русски по предоставленным фрагментам документации MkDocs. Если в них недостаточно информации, прямо скажите об этом.';
+  readonly MKDOCS_TITLE = 'Помощник по MkDocs';
 
   submitting   = signal<boolean>(false);
+  mkdocsDemo = signal(false);
   serverError  = signal<string | null>(null);
   showEmbedKey = signal<boolean>(false);
   showLlmKey   = signal<boolean>(false);
@@ -78,7 +82,21 @@ export class ProjectCreateComponent {
 
   get f() { return this.form.controls; }
 
+  selectTemplate(event: Event): void {
+    const useDemo = (event.target as HTMLSelectElement).value === 'mkdocs';
+    this.mkdocsDemo.set(useDemo);
+
+    const name = this.f['name'];
+    const prompt = this.f['system_prompt'];
+    if (useDemo && !name.value) name.setValue(this.MKDOCS_TITLE);
+    if (!useDemo && name.value === this.MKDOCS_TITLE) name.setValue('');
+    if (prompt.value === (useDemo ? this.DEFAULT_PROMPT : this.MKDOCS_PROMPT)) {
+      prompt.setValue(useDemo ? this.MKDOCS_PROMPT : this.DEFAULT_PROMPT);
+    }
+  }
+
   onSubmit(): void {
+    if (this.submitting()) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -88,8 +106,11 @@ export class ProjectCreateComponent {
     this.serverError.set(null);
 
     const payload: ProjectCreate = this.form.getRawValue() as ProjectCreate;
+    const creation = this.mkdocsDemo()
+      ? this.projectService.createMkDocsDemo(payload)
+      : this.projectService.createProject(payload);
 
-    this.projectService.createProject(payload).subscribe({
+    creation.subscribe({
       next: (created) => {
         this.router.navigate(['/projects', created.id]);
       },

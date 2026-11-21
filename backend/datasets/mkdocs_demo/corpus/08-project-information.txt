@@ -1,0 +1,46 @@
+MkDocs 1.6.1
+Источник: https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/configuration.md#L17-L59
+
+### site_name
+
+This is a **required setting**, and should be a string that is used as the main
+title for the project documentation. For example:
+
+```yaml
+site_name: Marshmallow Generator
+```
+
+When rendering the theme this setting will be passed as the `site_name` context
+variable.
+
+### site_url
+
+Set the canonical URL of the site. This will add a `link` tag with the
+`canonical` URL to the `head` section of each HTML page. If the 'root' of the
+MkDocs site will be within a subdirectory of a domain, be sure to include that
+subdirectory in the setting (`https://example.com/foo/`).
+
+This setting is also used for `mkdocs serve`: the server will be mounted onto a
+path taken from the path component of the URL, e.g. `some/page.md` will be
+served from `http://127.0.0.1:8000/foo/some/page/` to mimic the expected remote
+layout.
+
+**default**: `null`
+
+### repo_url
+
+When set, provides a link to your repository (GitHub, Bitbucket, GitLab, ...)
+on each page.
+
+```yaml
+repo_url: https://github.com/example/repository/
+```
+
+**default**: `null`
+
+### repo_name
+
+When set, provides the name for the link to your repository on each page.
+
+**default**: `'GitHub'`, `'Bitbucket'` or `'GitLab'` if the `repo_url` matches
+those domains, otherwise the hostname from the `repo_url`.

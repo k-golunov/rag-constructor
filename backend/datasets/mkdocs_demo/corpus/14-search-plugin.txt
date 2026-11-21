@@ -1,0 +1,190 @@
+MkDocs 1.6.1
+Источник: https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/configuration.md#L867-L1053
+
+### plugins
+
+A list of plugins (with optional configuration settings) to use when building
+the site. See the [Plugins] documentation for full details.
+
+**default**: `['search']` (the "search" plugin included with MkDocs).
+
+If the `plugins` config setting is defined in the `mkdocs.yml` config file, then
+any defaults (such as `search`) are ignored and you need to explicitly re-enable
+the defaults if you would like to continue using them:
+
+```yaml
+plugins:
+  - search
+  - your_other_plugin
+```
+
+To define options for a given plugin, use a nested set of key/value pairs:
+
+```yaml
+plugins:
+  - search
+  - your_other_plugin:
+      option1: value
+      option2: other value
+```
+
+To completely disable all plugins, including any defaults, set the `plugins`
+setting to an empty list:
+
+```yaml
+plugins: []
+```
+
+#### `enabled` option
+
+> NEW: **New in MkDocs 1.6.**
+>
+> Each plugin has its own options keys. However MkDocs also ensures that each plugin has the `enabled` boolean option. This can be used to conditionally enable a particular plugin, as in the following example:
+>
+> ```yaml
+> plugins:
+>   - search
+>   - code-validator:
+>       enabled: !ENV [LINT, false]
+> ```
+>
+> See: [Environment variables](#environment-variables)
+
+#### Alternate syntax
+
+In the above examples, each plugin is a list item (starts with a `-`). As an
+alternative, key/value pairs can be used instead. However, in that case an empty
+value must be provided for plugins for which no options are defined. Therefore,
+the last example above could also be defined as follows:
+
+```yaml
+plugins:
+  search: {}
+  your_other_plugin:
+    option1: value
+    option2: other value
+```
+
+This alternative syntax is required if you intend to override some options via
+[inheritance].
+
+#### Search
+
+A search plugin is provided by default with MkDocs which uses [lunr.js] as a
+search engine. The following config options are available to alter the behavior
+of the search plugin:
+
+##### **separator**
+
+A regular expression which matches the characters used as word separators when
+building the index. By default whitespace and the hyphen (`-`) are used. To add
+the dot (`.`) as a word separator you might do this:
+
+```yaml
+plugins:
+  - search:
+      separator: '[\s\-\.]+'
+```
+
+**default**: `'[\s\-]+'`
+
+##### **min_search_length**
+
+An integer value that defines the minimum length for a search query. By default
+searches shorter than 3 chars in length are ignored as search result quality with
+short search terms are poor. However, for some use cases (such as documentation
+about Message Queues which might generate searches for 'MQ') it may be preferable
+to set a shorter limit.
+
+```yaml
+plugins:
+  - search:
+      min_search_length: 2
+```
+
+**default**: 3
+
+##### **lang**
+
+A list of languages to use when building the search index as identified by their
+[ISO 639-1] language codes. With [Lunr Languages], the following languages are
+supported:
+
+* `ar`: Arabic
+* `da`: Danish
+* `nl`: Dutch
+* `en`: English
+* `fi`: Finnish
+* `fr`: French
+* `de`: German
+* `hu`: Hungarian
+* `it`: Italian
+* `ja`: Japanese
+* `no`: Norwegian
+* `pt`: Portuguese
+* `ro`: Romanian
+* `ru`: Russian
+* `es`: Spanish
+* `sv`: Swedish
+* `th`: Thai
+* `tr`: Turkish
+* `vi`: Vietnamese
+
+You may [contribute additional languages].
+
+WARNING:
+While search does support using multiple languages together, it is best not
+to add additional languages unless you really need them. Each additional
+language adds significant bandwidth requirements and uses more browser
+resources. Generally, it is best to keep each instance of MkDocs to a single
+language.
+
+NOTE:
+Lunr Languages does not currently include support for Chinese or other Asian
+languages. However, some users have reported decent results using Japanese.
+
+**default**: The value of `theme.locale` if set, otherwise `[en]`.
+
+##### **prebuild_index**
+
+Optionally generates a pre-built index of all pages, which provides some
+performance improvements for larger sites. Before enabling, confirm that the
+theme you are using explicitly supports using a prebuilt index (the builtin
+themes do). Set to `true` to enable.
+
+WARNING:
+This option requires that [Node.js] be installed and the command `node` be
+on the system path. If the call to `node` fails for any reason, a warning
+is issued and the build continues uninterrupted. You may use the `--strict`
+flag when building to cause such a failure to raise an error instead.
+
+NOTE:
+On smaller sites, using a pre-built index is not recommended as it creates a
+significant increase is bandwidth requirements with little to no noticeable
+improvement to your users. However, for larger sites (hundreds of pages),
+the bandwidth increase is relatively small and your users will notice a
+significant improvement in search performance.
+
+**default**: `False`
+
+##### **indexing**
+
+Configures what strategy the search indexer will use when building the index
+for your pages. This property is particularly useful if your project is large
+in scale, and the index takes up an enormous amount of disk space.
+
+```yaml
+plugins:
+  - search:
+      indexing: 'full'
+```
+
+###### Options
+
+Option | Description
+------ | -----------
+`full` | Indexes the title, section headings, and full text of each page.
+`sections` | Indexes the title and section headings of each page.
+`titles` | Indexes only the title of each page.
+
+**default**: `full`

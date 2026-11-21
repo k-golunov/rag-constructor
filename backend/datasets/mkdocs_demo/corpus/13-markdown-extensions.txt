@@ -1,0 +1,87 @@
+MkDocs 1.6.1
+Источник: https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/configuration.md#L724-L807
+
+### markdown_extensions
+
+MkDocs uses the [Python Markdown][pymkd] library to translate Markdown files
+into HTML. Python Markdown supports a variety of [extensions][pymdk-extensions]
+that customize how pages are formatted. This setting lets you enable a list of
+extensions beyond the ones that MkDocs uses by default (`meta`, `toc`, `tables`,
+and `fenced_code`).
+
+For example, to enable the [SmartyPants typography extension][smarty], use:
+
+```yaml
+markdown_extensions:
+  - smarty
+```
+
+Some extensions provide configuration options of their own. If you would like to
+set any configuration options, then you can nest a key/value mapping
+(`option_name: option value`) of any options that a given extension supports.
+See the documentation for the extension you are using to determine what options
+they support.
+
+For example, to enable permalinks in the (included) `toc` extension, use:
+
+```yaml
+markdown_extensions:
+  - toc:
+      permalink: true
+```
+
+Note that a colon (`:`) must follow the extension name (`toc`) and then on a new
+line the option name and value must be indented and separated by a colon. If you
+would like to define multiple options for a single extension, each option must be
+defined on a separate line:
+
+```yaml
+markdown_extensions:
+  - toc:
+      permalink: true
+      separator: "_"
+```
+
+Add an additional item to the list for each extension. If you have no
+configuration options to set for a specific extension, then simply omit options
+for that extension:
+
+```yaml
+markdown_extensions:
+  - smarty
+  - toc:
+      permalink: true
+  - sane_lists
+```
+
+> NOTE: **Dynamic config values.**
+>
+> To dynamically configure the extensions, you can get the config values from [environment variables](#environment-variables) or [obtain paths](#paths-relative-to-the-current-file-or-site) of the currently rendered Markdown file or the overall MkDocs site.
+
+In the above examples, each extension is a list item (starts with a `-`). As an
+alternative, key/value pairs can be used instead. However, in that case an empty
+value must be provided for extensions for which no options are defined.
+Therefore, the last example above could also be defined as follows:
+
+```yaml
+markdown_extensions:
+  smarty: {}
+  toc:
+    permalink: true
+  sane_lists: {}
+```
+
+This alternative syntax is required if you intend to override some options via
+[inheritance].
+
+> NOTE: **More extensions.**
+>
+> The Python-Markdown documentation provides a [list of extensions][exts]
+> which are available out-of-the-box. For a list of configuration options
+> available for a given extension, see the documentation for that extension.
+>
+> You may also install and use various third party extensions ([Python-Markdown wiki], [MkDocs project catalog][catalog]). Consult
+> the documentation provided by those extensions for installation instructions
+> and available configuration options.
+
+**default**: `[]` (an empty list).

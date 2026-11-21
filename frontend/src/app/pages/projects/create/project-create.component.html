@@ -39,6 +39,23 @@
             <span class="form-section__num">1</span>Основное
           </h2>
           <div class="field">
+            <label class="field__label" for="project-template">Шаблон проекта</label>
+            <div class="select-wrap">
+              <select id="project-template" class="field__select" (change)="selectTemplate($event)"
+                [disabled]="submitting()"
+                [attr.aria-describedby]="mkdocsDemo() ? 'project-template-hint' : null">
+                <option value="blank">Пустой проект</option>
+                <option value="mkdocs">Помощник по MkDocs</option>
+              </select>
+              <span class="material-symbols-outlined select-arrow">expand_more</span>
+            </div>
+            @if (mkdocsDemo()) {
+              <span id="project-template-hint" class="field__hint">
+                В проекте будут 20 документов и 90 вопросов. Для первого прогона укажите параметры провайдеров моделей.
+              </span>
+            }
+          </div>
+          <div class="field">
             <label class="field__label" for="name">Название проекта <span class="field__req">*</span></label>
             <input id="name" type="text" class="field__input"
               [class.field__input--error]="f['name'].invalid && f['name'].touched"

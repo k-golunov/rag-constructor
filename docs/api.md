@@ -5,6 +5,7 @@
 | Метод | Путь | Результат |
 | --- | --- | --- |
 | POST | `/projects/` | 201, проект |
+| POST | `/projects/demo/mkdocs` | 201, проект с корпусом MkDocs и набором вопросов |
 | GET | `/projects/?skip=0&limit=50` | 200, `{total, items}` |
 | GET | `/projects/{project_id}` | 200, проект |
 | PATCH | `/projects/{project_id}` | 200, обновлённый проект |
