@@ -39,6 +39,10 @@ export class ProjectService {
     return this.http.post<Project>(this.baseUrl + '/', project);
   }
 
+  createMkDocsDemo(project: ProjectCreate): Observable<Project> {
+    return this.http.post<Project>(`${this.baseUrl}/demo/mkdocs`, project);
+  }
+
   /**
    * Частично обновляет поля проекта (PATCH).
    * Передавать только изменившиеся поля.

@@ -21,7 +21,12 @@ from backend.core.execution import (
 from backend.core.factories import build_llm
 from backend.core.question_sets import evaluation_example, project_or_404
 from backend.core.response_trace import ResponseTrace
-from backend.core.versioning import ensure_index, index_snapshot, plan_index
+from backend.core.versioning import (
+    ensure_index,
+    index_snapshot,
+    mark_sources,
+    plan_index,
+)
 from backend.db.models import ChatHistory
 from backend.db.rag_schemas import ChatResponse
 
@@ -224,6 +229,8 @@ async def execute_rag(
             payload.max_attempts,
             lambda: index_usage["value"],
         )
+        if prepared is None:
+            mark_sources(db, index, only_pending=True)
         run.details = {**run.details, "index_reused": not built}
 
         async def embed_question():

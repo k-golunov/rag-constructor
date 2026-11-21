@@ -1,0 +1,159 @@
+MkDocs 1.6.1
+Источник: https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/writing-your-docs.md#L192-L347
+
+### Internal links
+
+MkDocs allows you to interlink your documentation by using regular Markdown
+[links]. However, there are a few additional benefits to formatting those links
+specifically for MkDocs as outlined below.
+
+[links]: https://daringfireball.net/projects/markdown/syntax#link
+
+#### Linking to pages
+
+When linking between pages in the documentation you can simply use the regular
+Markdown [linking][links] syntax, including the *relative path* to the Markdown
+document you wish to link to.
+
+```markdown
+Please see the [project license](license.md) for further details.
+```
+
+When the MkDocs build runs, these Markdown links will automatically be
+transformed into an HTML hyperlink to the appropriate HTML page.
+
+WARNING:
+Using absolute paths with links is not officially supported. Relative paths
+are adjusted by MkDocs to ensure they are always relative to the page. Absolute
+paths are not modified at all. This means that your links using absolute paths
+might work fine in your local environment but they might break once you deploy
+them to your production server.
+
+If the target documentation file is in another directory you'll need to make
+sure to include any relative directory path in the link.
+
+```markdown
+Please see the [project license](../about/license.md) for further details.
+```
+
+The [toc] extension is used by MkDocs to generate an ID for every header in your
+Markdown documents. You can use that ID to link to a section within a target
+document by using an anchor link. The generated HTML will correctly transform
+the path portion of the link, and leave the anchor portion intact.
+
+```markdown
+Please see the [project license](about.md#license) for further details.
+```
+
+Note that IDs are created from the text of a header. All text is converted to
+lowercase and any disallowed characters, including white-space, are converted to
+dashes. Consecutive dashes are then reduced to a single dash.
+
+There are a few configuration settings provided by the toc extension which you
+can set in your `mkdocs.yml` configuration file to alter the default behavior:
+
+*   **`permalink`**
+
+    Generate permanent links at the end of each header. Default: `False`.
+
+    When set to True the paragraph symbol (&para; or `&para;`) is used as the
+    link text. When set to a string, the provided string is used as the link
+    text. For example, to use the hash symbol (`#`) instead, do:
+
+    ```yaml
+    markdown_extensions:
+      - toc:
+          permalink: "#"
+    ```
+
+*   **`baselevel`**
+
+    Base level for headers. Default: `1`.
+
+    This setting allows the header levels to be automatically adjusted to fit
+    within the hierarchy of your HTML templates. For example, if the Markdown
+    text for a page should not contain any headers higher than level 2 (`<h2>`),
+    do:
+
+    ```yaml
+    markdown_extensions:
+      - toc:
+          baselevel: 2
+    ```
+
+    Then any headers in your document would be increased by 1. For example, the
+    header `# Header` would be rendered as a level 2 header (`<h2>`) in the HTML
+    output.
+
+*   **`separator`**
+
+    Word separator. Default: `-`.
+
+    Character which replaces white-space in generated IDs. If you prefer
+    underscores, then do:
+
+    ```yaml
+    markdown_extensions:
+      - toc:
+          separator: "_"
+    ```
+
+Note that if you would like to define multiple of the above settings, you must
+do so under a single `toc` entry in the `markdown_extensions` configuration
+option.
+
+```yml
+markdown_extensions:
+  - toc:
+      permalink: "#"
+      baselevel: 2
+      separator: "_"
+```
+
+[toc]: https://python-markdown.github.io/extensions/toc/
+
+#### Linking to images and media
+
+As well as the Markdown source files, you can also include other file types in
+your documentation, which will be copied across when generating your
+documentation site. These might include images and other media.
+
+For example, if your project documentation needed to include a [GitHub Pages
+CNAME file] and a PNG formatted screenshot image then your file layout might
+look as follows:
+
+```text
+mkdocs.yml
+docs/
+    CNAME
+    index.md
+    about.md
+    license.md
+    img/
+        screenshot.png
+```
+
+To include images in your documentation source files, simply use any of the
+regular Markdown image syntaxes:
+
+```Markdown
+Cupcake indexer is a snazzy new project for indexing small cakes.
+
+![Screenshot](img/screenshot.png)
+
+*Above: Cupcake indexer in progress*
+```
+
+Your image will now be embedded when you build the documentation, and should
+also be previewed if you're working on the documentation with a Markdown editor.
+
+[GitHub Pages CNAME file]: https://help.github.com/articles/using-a-custom-domain-with-github-pages/
+
+#### Linking from raw HTML
+
+Markdown allows document authors to fall back to raw HTML when the Markdown
+syntax does not meets the author's needs. MkDocs does not limit Markdown in this
+regard. However, as all raw HTML is ignored by the Markdown parser, MkDocs is
+not able to validate or convert links contained in raw HTML. When including
+internal links within raw HTML, you will need to manually format the link
+appropriately for the rendered document.

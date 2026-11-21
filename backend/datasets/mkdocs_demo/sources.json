@@ -1,0 +1,22 @@
+{
+  "01-installation.txt": "https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/installation.md#L7-L107",
+  "02-first-project.txt": "https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/getting-started.md#L17-L189",
+  "03-file-layout.txt": "https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/writing-your-docs.md#L7-L95",
+  "04-navigation.txt": "https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/configuration.md#L237-L292",
+  "05-internal-links.txt": "https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/writing-your-docs.md#L192-L347",
+  "06-page-metadata.txt": "https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/writing-your-docs.md#L349-L465",
+  "07-tables-and-code.txt": "https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/writing-your-docs.md#L467-L540",
+  "08-project-information.txt": "https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/configuration.md#L17-L59",
+  "09-build-directories.txt": "https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/configuration.md#L533-L562",
+  "10-exclusions-and-drafts.txt": "https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/configuration.md#L294-L375",
+  "11-preview-and-urls.txt": "https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/configuration.md#L641-L720",
+  "12-css-and-javascript.txt": "https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/configuration.md#L564-L612",
+  "13-markdown-extensions.txt": "https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/configuration.md#L724-L807",
+  "14-search-plugin.txt": "https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/configuration.md#L867-L1053",
+  "15-built-in-themes.txt": "https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/choosing-your-theme.md#L19-L211",
+  "16-theme-localization.txt": "https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/localizing-your-theme.md#L7-L53",
+  "17-link-validation.txt": "https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/configuration.md#L377-L469",
+  "18-github-pages.txt": "https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/deploying-your-docs.md#L7-L104",
+  "19-static-deployment.txt": "https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/deploying-your-docs.md#L118-L223",
+  "20-custom-themes.txt": "https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/customizing-your-theme.md#L13-L226"
+}

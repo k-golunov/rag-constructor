@@ -1,0 +1,1333 @@
+{
+  "schema_version": 1,
+  "examples": [
+    {
+      "id": "25e3b59e-cbd4-5f5e-93d6-0aedfc66bda0",
+      "question": "Какой менеджер пакетов руководство использует для установки MkDocs?",
+      "reference_answer": "pip.",
+      "evidence": [
+        {
+          "file_name": "01-installation.txt",
+          "quote": "MkDocs requires a recent version of [Python] and the Python package\nmanager, [pip], to be installed on your system."
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "6920ce85-1777-50e6-84af-80a2d4b38285",
+      "question": "Как проверить из терминала, что команда MkDocs установилась?",
+      "reference_answer": "Выполнить `mkdocs --version`.",
+      "evidence": [
+        {
+          "file_name": "01-installation.txt",
+          "quote": "You should now have the `mkdocs` command installed on your system. Run `mkdocs\n--version` to check that everything worked okay."
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "30f1393f-abc6-5630-bdab-e952723cd520",
+      "question": "Что попробовать на Windows, если установленная команда `mkdocs` не находится в PATH?",
+      "reference_answer": "Вызвать MkDocs как модуль командой `python -m mkdocs`. Для постоянного решения можно добавить каталог `Scripts` установленного Python в PATH.",
+      "evidence": [
+        {
+          "file_name": "01-installation.txt",
+          "quote": "> python -m mkdocs"
+        },
+        {
+          "file_name": "01-installation.txt",
+          "quote": "> variable to include the `Scripts` directory of your Python installation."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "b3fd5d6c-6436-53eb-b381-485f9cf722cc",
+      "question": "Какие две команды в руководстве создают man-страницы MkDocs в выбранном каталоге?",
+      "reference_answer": "Сначала `pip install click-man`, затем `click-man --target path/to/man/pages mkdocs`, подставив нужный каталог.",
+      "evidence": [
+        {
+          "file_name": "01-installation.txt",
+          "quote": "> pip install click-man\n> click-man --target path/to/man/pages mkdocs"
+        }
+      ],
+      "category": "Перечисления",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "84c8711f-4de0-57fa-a5ff-741d325acde9",
+      "question": "Как создать каркас проекта в папке `my-project`?",
+      "reference_answer": "Выполнить `mkdocs new my-project`.",
+      "evidence": [
+        {
+          "file_name": "02-first-project.txt",
+          "quote": "```bash\nmkdocs new my-project\ncd my-project\n```"
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "e5e165db-5c24-5420-853e-b98b52c44a3a",
+      "question": "Какой файл править, чтобы изменить настройки проекта из быстрого старта?",
+      "reference_answer": "Файл `mkdocs.yml` в корне проекта.",
+      "evidence": [
+        {
+          "file_name": "02-first-project.txt",
+          "quote": "There's a single configuration file named `mkdocs.yml`, and a folder named\n`docs` that will contain your documentation source files (`docs` is\nthe default value for the [docs_dir] configuration setting). Right now the `docs`\nfolder just contains a single documentation page, named `index.md`."
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "8c8d5d29-2bdc-5f47-9806-e66e96b4b48c",
+      "question": "Нужно ли вручную обновлять страницу в браузере после сохранения правок, пока работает `mkdocs serve`?",
+      "reference_answer": "Обычно нет. Сервер предпросмотра подхватывает изменения, и открытая страница перезагружается автоматически.",
+      "evidence": [
+        {
+          "file_name": "02-first-project.txt",
+          "quote": "The dev-server also supports auto-reloading, and will rebuild your documentation\nwhenever anything in the configuration file, documentation directory, or theme\ndirectory changes."
+        },
+        {
+          "file_name": "02-first-project.txt",
+          "quote": "Open the `docs/index.md` document in your text editor of choice, change the\ninitial heading to `MkLorum`, and save your changes. Your browser will\nauto-reload and you should see your updated documentation immediately."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "4f605c5e-4173-5ff1-852d-eb863c7139f7",
+      "question": "Куда поместить свой `favicon.ico` в стандартном проекте?",
+      "reference_answer": "В каталог `docs/img/`, то есть по пути `docs/img/favicon.ico`.",
+      "evidence": [
+        {
+          "file_name": "02-first-project.txt",
+          "quote": "By default, MkDocs uses the [MkDocs favicon] icon. To use a different icon, create\nan `img` subdirectory in the `docs` directory and copy your custom `favicon.ico`\nfile to that directory. MkDocs will automatically detect and use that file as your\nfavicon icon."
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "43707e21-fc4f-5557-ae01-2e450a967898",
+      "question": "Как обычно называется исходный Markdown-файл домашней страницы?",
+      "reference_answer": "`index.md`.",
+      "evidence": [
+        {
+          "file_name": "03-file-layout.txt",
+          "quote": "By convention your project homepage should be named `index.md` (see [Index\npages](#index-pages) below for details). Any of the following file\nextensions may be used for your Markdown source files: `markdown`, `mdown`,\n`mkdn`, `mkd`, `md`. All Markdown files included in your documentation\ndirectory will be rendered in the built site regardless of any settings."
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "461fc58f-bb70-5383-9ff8-8427b6d4fd99",
+      "question": "Что будет, если в одном каталоге лежат `README.md` и `index.md`?",
+      "reference_answer": "MkDocs использует `index.md` и игнорирует `README.md`.",
+      "evidence": [
+        {
+          "file_name": "03-file-layout.txt",
+          "quote": "If both an `index.md` file and a `README.md` file are found in the same\ndirectory, then the `index.md` file is used and the `README.md` file is\nignored."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "81da9c63-b297-5421-ae7c-efe388e32fc9",
+      "question": "Можно ли использовать `README.md` как индексную страницу подкаталога?",
+      "reference_answer": "Да. При отсутствии `index.md` MkDocs использует `README.md` и выводит его как `index.html`.",
+      "evidence": [
+        {
+          "file_name": "03-file-layout.txt",
+          "quote": "Many repository hosting sites provide special treatment for README files by\ndisplaying the contents of the README file when browsing the contents of a\ndirectory. Therefore, MkDocs will allow you to name your index pages as\n`README.md` instead of `index.md`. In that way, when users are browsing your\nsource code, the repository host can display the index page of that directory as\nit is a README file. However, when MkDocs renders your site, the file will be\nrenamed to `index.html` so that the server will serve it as a proper index file."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "9b1d2909-e5d9-59eb-9414-8803598b0857",
+      "question": "Что происходит с файлами, не являющимися Markdown, из каталога документации, если они не исключены из сборки?",
+      "reference_answer": "Они копируются в результат сборки без изменений.",
+      "evidence": [
+        {
+          "file_name": "03-file-layout.txt",
+          "quote": "Any files which are not identified as Markdown files (by their file extension)\nwithin the [documentation directory](configuration.md#docs_dir) are copied by\nMkDocs to the built site unaltered. See\n[how to link to images and media](#linking-to-images-and-media) below for details."
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "a0942c56-5965-534f-97f3-9f2e28700387",
+      "question": "От какой папки отсчитываются пути к локальным страницам в `nav`?",
+      "reference_answer": "От каталога, заданного в `docs_dir`.",
+      "evidence": [
+        {
+          "file_name": "04-navigation.txt",
+          "quote": "All paths in the navigation configuration must be relative to the\n[`docs_dir`](#docs_dir) configuration option. See the section on [configuring\npages and navigation] for a more detailed breakdown, including how to create\nsub-sections."
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "e897ec70-2145-5e39-818b-dc2205b78e77",
+      "question": "Можно ли опустить подпись пункта `nav`, который ведёт на внешний сайт?",
+      "reference_answer": "Нет. Для внешней ссылки заголовок обязателен, а для внутренней страницы его можно опустить.",
+      "evidence": [
+        {
+          "file_name": "04-navigation.txt",
+          "quote": "Navigation items may also include links to external sites. While titles are\noptional for internal links, they are required for external links. An external\nlink may be a full URL or a relative URL. Any path which is not found in the\nfiles is assumed to be an external link. See the section about [Meta-Data] on\nhow MkDocs determines the page title of a document."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "0abb84f6-ad92-5204-a213-53f1d00f73c4",
+      "question": "Из каких файлов и в каком порядке MkDocs сам строит навигацию при отсутствии `nav`?",
+      "reference_answer": "MkDocs строит вложенный алфавитно-цифровой список Markdown-файлов из `docs_dir` и подкаталогов. Индексная страница идёт первой в своём подразделе.",
+      "evidence": [
+        {
+          "file_name": "04-navigation.txt",
+          "quote": "**default**: By default `nav` will contain an alphanumerically sorted, nested\nlist of all the Markdown files found within the `docs_dir` and its\nsub-directories. Index files will always be listed first within a sub-section."
+        }
+      ],
+      "category": "Перечисления",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "f0682244-e209-5e70-9f70-b334e144b1ea",
+      "question": "Как сослаться из `nav` на корень того же сайта, если документация живёт в `/foo/`?",
+      "reference_answer": "Задать `site_url` с `/foo/` и использовать `../` для перехода на уровень вверх.",
+      "evidence": [
+        {
+          "file_name": "04-navigation.txt",
+          "quote": "nav:\n  - Home: '../'\n  - 'User Guide': 'user-guide.md'\n  - 'Bug Tracker': '/bugs/'\n```"
+        },
+        {
+          "file_name": "04-navigation.txt",
+          "quote": "In the above example, two different styles of external links are used. First,\nnote that the `site_url` indicates that the MkDocs site is hosted in the `/foo/`\nsubdirectory of the domain. Therefore, the `Home` navigation item is a relative\nlink that steps up one level to the server root and effectively points to\n`https://example.com/`. The `Bug Tracker` item uses an absolute path from the\nserver root and effectively points to `https://example.com/bugs/`. Of course, the\n`User Guide` points to a local MkDocs page."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "32d3581b-0923-5bcf-b6fa-9c318240ca1c",
+      "question": "Как записать внутреннюю Markdown-ссылку на исходник `license.md` в той же папке?",
+      "reference_answer": "Указать относительный путь к исходнику Markdown, например `[Лицензия](license.md)`.",
+      "evidence": [
+        {
+          "file_name": "05-internal-links.txt",
+          "quote": "```markdown\nPlease see the [project license](license.md) for further details.\n```"
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "b111944d-7dad-5382-a33e-7ad3437f1fb0",
+      "question": "Каким символом по умолчанию разделяются слова в автоматически созданном идентификаторе заголовка?",
+      "reference_answer": "Дефисом (`-`).",
+      "evidence": [
+        {
+          "file_name": "05-internal-links.txt",
+          "quote": "Word separator. Default: `-`."
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "96412b49-5ace-599f-a204-5fb747f8ed39",
+      "question": "Что нужно включить, чтобы permalink появлялся в конце заголовков?",
+      "reference_answer": "Настроить `permalink` расширения `toc`. По умолчанию эта настройка выключена.",
+      "evidence": [
+        {
+          "file_name": "05-internal-links.txt",
+          "quote": "Generate permanent links at the end of each header. Default: `False`."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "1fe955b8-3507-525b-85e0-a0d8550edf68",
+      "question": "Будет ли MkDocs переписывать ссылку на документ, записанную внутри сырого HTML-тега?",
+      "reference_answer": "Нет. MkDocs не проверяет и не преобразует ссылки в сыром HTML.",
+      "evidence": [
+        {
+          "file_name": "05-internal-links.txt",
+          "quote": "Markdown allows document authors to fall back to raw HTML when the Markdown\nsyntax does not meets the author's needs. MkDocs does not limit Markdown in this\nregard. However, as all raw HTML is ignored by the Markdown parser, MkDocs is\nnot able to validate or convert links contained in raw HTML. When including\ninternal links within raw HTML, you will need to manually format the link\nappropriately for the rendered document."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "3dcc52e7-8e96-56f0-9c0c-d794234bc29a",
+      "question": "В какой очередности MkDocs ищет заголовок страницы?",
+      "reference_answer": "Название из `nav`, затем `title` из метаданных, затем Markdown-заголовок первого уровня в первой строке тела, затем имя файла.",
+      "evidence": [
+        {
+          "file_name": "06-page-metadata.txt",
+          "quote": "MkDocs will attempt to determine the title of a document in the following\n    ways, in order:"
+        },
+        {
+          "file_name": "06-page-metadata.txt",
+          "quote": "1.  A title defined in the [nav] configuration setting for a document."
+        },
+        {
+          "file_name": "06-page-metadata.txt",
+          "quote": "2.  A title defined in the `title` meta-data key of a document."
+        },
+        {
+          "file_name": "06-page-metadata.txt",
+          "quote": "3.  A level 1 Markdown header on the first line of the document body.\n        ([Setext-style] headers are supported *only since MkDocs 1.5*.)"
+        },
+        {
+          "file_name": "06-page-metadata.txt",
+          "quote": "4.  The filename of a document."
+        }
+      ],
+      "category": "Перечисления",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "f1a4d9f4-7f7f-5cc6-b856-06a4e1b6f77e",
+      "question": "Как указать отдельный шаблон для одной Markdown-страницы?",
+      "reference_answer": "Задать ключ `template` в её метаданных. Шаблон должен быть доступен по путям темы. Стандартный шаблон для Markdown-страниц — `main.html`.",
+      "evidence": [
+        {
+          "file_name": "06-page-metadata.txt",
+          "quote": "By default, MkDocs uses the `main.html` template of a theme to render\n    Markdown pages. You can use the `template` meta-data key to define a\n    different template file for that specific page. The template file must be\n    available on the path(s) defined in the theme's environment."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "661c87a0-d43d-55fa-aff5-136b48ac5ccc",
+      "question": "Что будет с блоком YAML-метаданных, если на верхнем уровне получился список?",
+      "reference_answer": "MkDocs не распознает его как метаданные: свойство `meta` будет пустым, а блок останется в документе. Нужны пары ключ–значение на верхнем уровне.",
+      "evidence": [
+        {
+          "file_name": "06-page-metadata.txt",
+          "quote": "YAML is able to detect data types. Therefore, in the above example, the values\nof `title`, `summary` and `some_url` are strings, the value of `authors` is a\nlist of strings and the value of `date` is a `datetime.date` object. Note that\nthe YAML keys are case sensitive and MkDocs expects keys to be all lowercase.\nThe top level of the YAML must be a collection of key/value pairs, which results\nin a Python `dict` being returned. If any other type is returned or the YAML\nparser encounters an error, then MkDocs does not recognize the section as\nmeta-data, the page's `meta` attribute will be empty, and the section is not\nremoved from the document."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "405ad273-65f9-5117-aa1a-e178b3ba0a09",
+      "question": "Чем заканчивается блок метаданных в формате MultiMarkdown?",
+      "reference_answer": "Первой пустой строкой. Поэтому такой блок не может начинаться с пустой строки.",
+      "evidence": [
+        {
+          "file_name": "06-page-metadata.txt",
+          "quote": "The first blank line ends all meta-data for the document. Therefore, the first\nline of a document must not be blank."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "98a11645-d658-5026-9197-1a9081fbf455",
+      "question": "Можно ли поместить многострочный абзац или другой блочный элемент внутрь ячейки таблицы Markdown?",
+      "reference_answer": "Нет. Ячейки содержат только однострочный текст с возможной строчной Markdown-разметкой.",
+      "evidence": [
+        {
+          "file_name": "07-tables-and-code.txt",
+          "quote": "Note that table cells cannot contain any block level elements and cannot contain\nmultiple lines of text. They can, however, include inline Markdown as defined in\nMarkdown's [syntax] rules."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "2b71926c-61f0-5f8a-8764-9cec6fd30d30",
+      "question": "Как установить выравнивание столбцов в Markdown-таблице?",
+      "reference_answer": "Двоеточиями в строке-разделителе. Слева — выравнивание по левому краю, с обеих сторон — по центру, справа — по правому краю.",
+      "evidence": [
+        {
+          "file_name": "07-tables-and-code.txt",
+          "quote": "Specify alignment for each column by adding colons to separator lines:"
+        },
+        {
+          "file_name": "07-tables-and-code.txt",
+          "quote": "```markdown\nFirst Header | Second Header | Third Header\n:----------- |:-------------:| -----------:\nLeft         | Center        | Right\nLeft         | Center        | Right\n```"
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "098ff007-2a1a-55f4-935f-6e83856fd360",
+      "question": "Где задаётся язык подсветки для ограждённого блока кода?",
+      "reference_answer": "Необязательное имя языка указывается на строке открытия сразу после обратных кавычек, например `python`.",
+      "evidence": [
+        {
+          "file_name": "07-tables-and-code.txt",
+          "quote": "With this approach, the language can optionally be specified on the first line\nafter the backticks which informs any syntax highlighters of the language used:"
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "a2ee2725-c5e7-5a85-aefa-66186b7b4d12",
+      "question": "Можно ли вложить обычный fenced-блок в элемент списка, добавив отступ?",
+      "reference_answer": "Нет. Документация стандартного расширения требует, чтобы ограждающие строки не имели отступа.",
+      "evidence": [
+        {
+          "file_name": "07-tables-and-code.txt",
+          "quote": "Note that fenced code blocks can not be indented. Therefore, they cannot be\nnested inside list items, blockquotes, etc."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "aa312341-5090-5299-bd10-25bb2e2701d7",
+      "question": "Какое поле имени сайта обязательно в конфигурации MkDocs?",
+      "reference_answer": "`site_name`.",
+      "evidence": [
+        {
+          "file_name": "08-project-information.txt",
+          "quote": "This is a **required setting**, and should be a string that is used as the main\ntitle for the project documentation. For example:"
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "16243b65-483a-5ab1-a867-06180960ccb6",
+      "question": "Какое поле задаёт канонический URL и где этот URL отражается в HTML?",
+      "reference_answer": "`site_url`. MkDocs добавляет ссылку `canonical` в `head` каждой HTML-страницы.",
+      "evidence": [
+        {
+          "file_name": "08-project-information.txt",
+          "quote": "Set the canonical URL of the site. This will add a `link` tag with the\n`canonical` URL to the `head` section of each HTML page. If the 'root' of the\nMkDocs site will be within a subdirectory of a domain, be sure to include that\nsubdirectory in the setting (`https://example.com/foo/`)."
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "a21ba13b-88ac-5043-b80f-745949183c55",
+      "question": "Какой параметр включает ссылку на репозиторий в теме?",
+      "reference_answer": "`repo_url`. Тема может показать эту ссылку на страницах сайта.",
+      "evidence": [
+        {
+          "file_name": "08-project-information.txt",
+          "quote": "When set, provides a link to your repository (GitHub, Bitbucket, GitLab, ...)\non each page."
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "5190c4f5-be2b-5162-9e1a-e70f4a2bd429",
+      "question": "Какие имена MkDocs автоматически подставляет в `repo_name` для распознанных хостингов и что использует для остальных?",
+      "reference_answer": "Для соответствующих адресов — `GitHub`, `Bitbucket` или `GitLab`, в остальных случаях — имя хоста из `repo_url`.",
+      "evidence": [
+        {
+          "file_name": "08-project-information.txt",
+          "quote": "**default**: `'GitHub'`, `'Bitbucket'` or `'GitLab'` if the `repo_url` matches\nthose domains, otherwise the hostname from the `repo_url`."
+        }
+      ],
+      "category": "Перечисления",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "e4f02892-591e-5fd1-be6f-ee10b418dbd6",
+      "question": "Какие имена у каталогов исходников и результата сборки по умолчанию?",
+      "reference_answer": "Исходники — `docs` (`docs_dir`), собранный сайт — `site` (`site_dir`).",
+      "evidence": [
+        {
+          "file_name": "09-build-directories.txt",
+          "quote": "**default**: `'docs'`"
+        },
+        {
+          "file_name": "09-build-directories.txt",
+          "quote": "**default**: `'site'`"
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "3b27f8cb-9301-5586-9959-98500f06a35a",
+      "question": "Откуда MkDocs отсчитывает относительное значение `site_dir`?",
+      "reference_answer": "От каталога, в котором находится конфигурационный файл MkDocs.",
+      "evidence": [
+        {
+          "file_name": "09-build-directories.txt",
+          "quote": "The directory where the output HTML and other files are created. This can either\nbe a relative directory, in which case it is resolved relative to the directory\ncontaining your configuration file, or it can be an absolute directory path from\nthe root of your local file system."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "e7d274be-4f50-5aa6-b556-5896d6c1c346",
+      "question": "Можно ли задать `docs_dir` абсолютным путём?",
+      "reference_answer": "Да. `docs_dir` принимает и абсолютный, и относительный путь.",
+      "evidence": [
+        {
+          "file_name": "09-build-directories.txt",
+          "quote": "The directory containing the documentation source markdown files. This can\neither be a relative directory, in which case it is resolved relative to the\ndirectory containing your configuration file, or it can be an absolute directory\npath from the root of your local file system."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "297ccb28-66a0-5e39-9104-403d8e08a0a4",
+      "question": "Какие пути MkDocs исключает из выдачи `exclude_docs` по умолчанию?",
+      "reference_answer": "Скрытые файлы и каталоги, чьи имена начинаются с точки, а также каталог `templates` верхнего уровня внутри `docs_dir`.",
+      "evidence": [
+        {
+          "file_name": "10-exclusions-and-drafts.txt",
+          "quote": "The following defaults are always implicitly prepended - to exclude dot-files (and directories) as well as the top-level `templates` directory:"
+        },
+        {
+          "file_name": "10-exclusions-and-drafts.txt",
+          "quote": "```yaml\nexclude_docs: |\n  .*\n  /templates/\n```"
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "d9611ba5-4bfa-5b79-9dd4-e161f9b5dd68",
+      "question": "Как посмотреть обычную сборку в `serve`, скрыв черновики `draft_docs`?",
+      "reference_answer": "Запустить `mkdocs serve --clean`.",
+      "evidence": [
+        {
+          "file_name": "10-exclusions-and-drafts.txt",
+          "quote": "This config defines patterns of files (under [`docs_dir`](#docs_dir)) to be treated as a draft.  Draft files are available during `mkdocs serve` and include a \"DRAFT\" mark but will not be included in the build. To prevent this effect and make \"serve\" behave the same as \"build\", you can run `mkdocs serve --clean`."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "b30a954a-5b89-596c-9c66-4bcb26937944",
+      "question": "Как убрать страницу из меню, но оставить её доступной по ссылке и подавить предупреждение об отсутствии в навигации?",
+      "reference_answer": "Добавить путь к `not_in_nav`. Это скрывает страницу из автоматически выведенной навигации в MkDocs 1.6 и подавляет предупреждение. При явном `nav` не добавлять страницу в меню.",
+      "evidence": [
+        {
+          "file_name": "10-exclusions-and-drafts.txt",
+          "quote": "> NEW: **New in version 1.6:**\n>\n> If the [`nav`](#nav) config is not specified at all, pages specified in this config will now be excluded from the inferred navigation."
+        },
+        {
+          "file_name": "10-exclusions-and-drafts.txt",
+          "quote": "Adding such patterns of files (relative to [`docs_dir`](#docs_dir)) into the `not_in_nav` config will prevent such warnings."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "28cfeae7-e5cf-55a5-b5bd-b1cbbcdbacf1",
+      "question": "Как указать дополнительный каталог для наблюдения в `mkdocs serve`?",
+      "reference_answer": "Добавить его в список `watch` в YAML или передать флаг `-w`/`--watch`. Путь из конфигурации отсчитывается от каталога файла конфигурации.",
+      "evidence": [
+        {
+          "file_name": "11-preview-and-urls.txt",
+          "quote": "Determines additional directories to watch when running `mkdocs serve`.\nConfiguration is a YAML list."
+        },
+        {
+          "file_name": "11-preview-and-urls.txt",
+          "quote": "Allows a custom default to be set without the need to pass it through the `-w`/`--watch`\noption every time the `mkdocs serve` command is called."
+        },
+        {
+          "file_name": "11-preview-and-urls.txt",
+          "quote": "> NOTE:\n> The paths provided via the configuration file are relative to the configuration file.\n>\n> The paths provided via the `-w`/`--watch` CLI parameters are not."
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "c6833606-3635-591e-b011-e36978b60065",
+      "question": "Что происходит при предупреждении во время сборки со включённым `strict`?",
+      "reference_answer": "Обработка останавливается. Можно задать `strict: true` в конфигурации или передать `--strict`.",
+      "evidence": [
+        {
+          "file_name": "11-preview-and-urls.txt",
+          "quote": "Determines how warnings are handled. Set to `true` to halt processing when a\nwarning is raised. Set to `false` to print a warning and continue processing."
+        },
+        {
+          "file_name": "11-preview-and-urls.txt",
+          "quote": "This is also available as a command line flag: `--strict`."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "a2757b84-7d5b-50bd-951f-a3e8086d5c1b",
+      "question": "Какой адрес и порт у сервера разработки MkDocs по умолчанию?",
+      "reference_answer": "`127.0.0.1:8000`.",
+      "evidence": [
+        {
+          "file_name": "11-preview-and-urls.txt",
+          "quote": "Determines the address used when running `mkdocs serve`. Must be of the format\n`IP:PORT`."
+        },
+        {
+          "file_name": "11-preview-and-urls.txt",
+          "quote": "**default**: `'127.0.0.1:8000'`"
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "6389f609-6118-5482-89c9-f2573796919b",
+      "question": "Как подключить `css/custom.css` ко всем страницам сайта через конфигурацию?",
+      "reference_answer": "Поместить файл внутрь `docs_dir` и добавить `css/custom.css` в список `extra_css`.",
+      "evidence": [
+        {
+          "file_name": "12-css-and-javascript.txt",
+          "quote": "Set a list of CSS files (relative to `docs_dir`) to be included by the theme, typically as `<link>` tags."
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "df38584a-7164-5f45-97a2-4ab5ee498658",
+      "question": "Как `extra_javascript` автоматически распознаёт JavaScript-модуль?",
+      "reference_answer": "Если файл указан строкой и имеет расширение `.mjs`, MkDocs добавляет `type=\"module\"`. В объекте с `path` нужно явно задать `type: module`.",
+      "evidence": [
+        {
+          "file_name": "12-css-and-javascript.txt",
+          "quote": "Only the plain string variant detects the `.mjs` extension and adds `type=\"module\"`, otherwise `type: module` must be written out regardless of extension."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "a3c21ef2-e132-5a5f-a37d-902f862a6b46",
+      "question": "Какие атрибуты загрузки скрипта можно явным образом передать в объекте `extra_javascript` с полем `path`?",
+      "reference_answer": "`type`, `async` и `defer`.",
+      "evidence": [
+        {
+          "file_name": "12-css-and-javascript.txt",
+          "quote": "* a plain string, or\n* a mapping that has the required `path` key and 3 optional keys `type` (string), `async` (boolean), `defer` (boolean)."
+        }
+      ],
+      "category": "Перечисления",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "1e2da644-3401-543e-8b48-3891c734e498",
+      "question": "Какие расширения Markdown встроены в MkDocs по умолчанию?",
+      "reference_answer": "`meta`, `toc`, `tables` и `fenced_code`.",
+      "evidence": [
+        {
+          "file_name": "13-markdown-extensions.txt",
+          "quote": "MkDocs uses the [Python Markdown][pymkd] library to translate Markdown files\ninto HTML. Python Markdown supports a variety of [extensions][pymdk-extensions]\nthat customize how pages are formatted. This setting lets you enable a list of\nextensions beyond the ones that MkDocs uses by default (`meta`, `toc`, `tables`,\nand `fenced_code`)."
+        }
+      ],
+      "category": "Перечисления",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "4922e741-c0f8-52ec-8e81-7f5d87248948",
+      "question": "Куда в `markdown_extensions` поместить параметр `permalink` расширения `toc`?",
+      "reference_answer": "В словарь настроек под ключом `toc`, например `toc: {permalink: true}`.",
+      "evidence": [
+        {
+          "file_name": "13-markdown-extensions.txt",
+          "quote": "```yaml\nmarkdown_extensions:\n  smarty: {}\n  toc:\n    permalink: true\n  sane_lists: {}\n```"
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "d535e95e-04b8-537a-92f4-fc520de02987",
+      "question": "Как записать расширение `smarty` без параметров, если `markdown_extensions` задано YAML-словарём?",
+      "reference_answer": "Указать пустой словарь настроек: `smarty: {}`.",
+      "evidence": [
+        {
+          "file_name": "13-markdown-extensions.txt",
+          "quote": "In the above examples, each extension is a list item (starts with a `-`). As an\nalternative, key/value pairs can be used instead. However, in that case an empty\nvalue must be provided for extensions for which no options are defined.\nTherefore, the last example above could also be defined as follows:"
+        },
+        {
+          "file_name": "13-markdown-extensions.txt",
+          "quote": "```yaml\nmarkdown_extensions:\n  smarty: {}\n  toc:\n    permalink: true\n  sane_lists: {}\n```"
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "0ccea70d-68e0-5aac-9cd4-c5a4dc9527b9",
+      "question": "Как называется поисковый движок, который использует встроенный плагин `search`?",
+      "reference_answer": "Lunr.js.",
+      "evidence": [
+        {
+          "file_name": "14-search-plugin.txt",
+          "quote": "A search plugin is provided by default with MkDocs which uses [lunr.js] as a\nsearch engine. The following config options are available to alter the behavior\nof the search plugin:"
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "1b03872b-88a8-515d-b98d-e48b976dbeb0",
+      "question": "Почему поиск пропадает после добавления стороннего плагина в явный список `plugins`?",
+      "reference_answer": "Явный список заменяет настройки по умолчанию. Чтобы сохранить встроенный поиск, нужно включить `search` в этот список.",
+      "evidence": [
+        {
+          "file_name": "14-search-plugin.txt",
+          "quote": "If the `plugins` config setting is defined in the `mkdocs.yml` config file, then\nany defaults (such as `search`) are ignored and you need to explicitly re-enable\nthe defaults if you would like to continue using them:"
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "7ba48cec-a64d-559d-9f9e-ffafbdcd3b0e",
+      "question": "Какие три значения поддерживает уровень наполнения индекса плагина `search`?",
+      "reference_answer": "`full` индексирует заголовки, секции и текст, `sections` — заголовки страниц и секций, `titles` — только заголовки страниц.",
+      "evidence": [
+        {
+          "file_name": "14-search-plugin.txt",
+          "quote": "Option | Description\n------ | -----------\n`full` | Indexes the title, section headings, and full text of each page.\n`sections` | Indexes the title and section headings of each page.\n`titles` | Indexes only the title of each page."
+        }
+      ],
+      "category": "Перечисления",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "954fa573-e6b9-504c-ae68-528dcc2bf0fe",
+      "question": "Какие режимы цвета поддерживает встроенная тема `mkdocs`?",
+      "reference_answer": "`light`, `dark` и `auto`. По умолчанию используется `light`, а `auto` ориентируется на системную настройку пользователя.",
+      "evidence": [
+        {
+          "file_name": "15-built-in-themes.txt",
+          "quote": "*   **`color_mode`**: Set the default color mode for the theme to one of `light`,\n    `dark`, or `auto`. The `auto` mode will switch to `light` or `dark` based on\n    the system configuration of the user's device. Default: `light`."
+        }
+      ],
+      "category": "Перечисления",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "8b770ad7-5c2c-597e-804a-7ab90cc0ca4a",
+      "question": "Как сделать видимый переключатель цветового режима в теме `mkdocs`?",
+      "reference_answer": "Включить `user_color_mode_toggle`. Начальный выбор переключателя соответствует `color_mode`.",
+      "evidence": [
+        {
+          "file_name": "15-built-in-themes.txt",
+          "quote": "*   **`user_color_mode_toggle`**: Enable a toggle menu in the navigation bar\n    which allows users to select their preferred `color_mode` (light, dark, auto)\n    from within the browser and save their preference for future page loads. The\n    default selection of the toggle menu on first page load is the value set to\n    `color_mode`. Default: `false`."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "7f7c7cfb-e854-5051-8643-f4106864342d",
+      "question": "Какие значения глубины оглавления по умолчанию у тем `mkdocs` и `readthedocs`?",
+      "reference_answer": "У `mkdocs` — 2, у `readthedocs` — 4.",
+      "evidence": [
+        {
+          "file_name": "15-built-in-themes.txt",
+          "quote": "*   **`navigation_depth`**: The maximum depth of the navigation tree in the\n    sidebar. Default: `2`."
+        },
+        {
+          "file_name": "15-built-in-themes.txt",
+          "quote": "*   **`navigation_depth`**: The maximum depth of the navigation tree in the\n    sidebar. Default: `4`."
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "1c8a945a-22df-5a6c-a4a8-5ff60e15fd5e",
+      "question": "Как задать французскую локаль для встроенной темы `mkdocs`?",
+      "reference_answer": "В `mkdocs.yml` задать `theme.name: mkdocs` и `theme.locale: fr`.",
+      "evidence": [
+        {
+          "file_name": "16-theme-localization.txt",
+          "quote": "```yaml\ntheme:\n  name: mkdocs\n  locale: fr\n```"
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "e38d4ac9-f453-5632-8f69-0f9328f2d22f",
+      "question": "Что происходит, если заданная локаль не поддерживается используемой темой?",
+      "reference_answer": "MkDocs использует локаль этой темы по умолчанию.",
+      "evidence": [
+        {
+          "file_name": "16-theme-localization.txt",
+          "quote": "WARNING:\nIf you configure a language locale which is not yet supported by the theme\nthat you are using, MkDocs will fall back to the theme's default locale."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "3a72bcc8-30be-502a-bb07-3814b8959259",
+      "question": "Переводит ли `theme.locale` сам текст статей?",
+      "reference_answer": "Нет. Эта настройка локализует интерфейс темы, например ссылки перехода вперёд и назад. Для многоязычного содержимого нужен отдельный плагин.",
+      "evidence": [
+        {
+          "file_name": "16-theme-localization.txt",
+          "quote": "NOTE:\nTheme localization only translates the text elements of the theme itself\n(such as \"next\" and \"previous\" links), not the actual content of your\ndocumentation. If you wish to create multilingual documentation, you need\nto combine theme localization as described here with a third-party\ninternationalization/localization plugin."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "9e3ef545-ef15-5d79-bc89-7f584195e867",
+      "question": "Что меняет значение `relative_to_docs` для `validation.links.absolute_links`?",
+      "reference_answer": "Ссылки Markdown, начинающиеся с `/`, рассматриваются как пути от корня `docs_dir`, проверяются и превращаются в относительные при генерации HTML.",
+      "evidence": [
+        {
+          "file_name": "17-link-validation.txt",
+          "quote": "If you set the setting `validation.links.absolute_links` to the new value `relative_to_docs`, all Markdown links starting with `/` will be understood as being relative to the `docs_dir` root. The links will then be validated for correctness according to all the other rules that were already working for relative links in prior versions of MkDocs. For the HTML output, these links will still be turned relative so that the site still works reliably."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "c08bae4b-aac6-5517-a105-bf8bd9b49fe7",
+      "question": "Какие три уровня можно задать для разных сигналов `validation`?",
+      "reference_answer": "`warn` — предупреждение, `info` — информационное сообщение, `ignore` — сообщение опускается.",
+      "evidence": [
+        {
+          "file_name": "17-link-validation.txt",
+          "quote": "This is a tree of configs, and for each one the value can be one of the three: `warn`, `info`, `ignore`. Which cause a logging message of the corresponding severity to be produced. The `warn` level is, of course, intended for use with `mkdocs build --strict` (where it becomes an error), which you can employ in continuous testing."
+        }
+      ],
+      "category": "Перечисления",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "f7ae3267-a223-57b8-9981-c7f4b9d244de",
+      "question": "Как в MkDocs 1.6 по умолчанию проверяются отсутствующие якоря в ссылках на заголовки?",
+      "reference_answer": "Проверка `validation.links.anchors` по умолчанию имеет уровень `info`.",
+      "evidence": [
+        {
+          "file_name": "17-link-validation.txt",
+          "quote": ">? EXAMPLE: **Defaults of this config as of MkDocs 1.6:**\n>\n> ```yaml\n> validation:\n>   nav:\n>     omitted_files: info\n>     not_found: warn\n>     absolute_links: info\n>   links:\n>     not_found: warn\n>     anchors: info\n>     absolute_links: info\n>     unrecognized_links: info\n> ```\n>\n> (Note: you shouldn't copy this whole example, because it only duplicates the defaults. Only individual items that differ should be set.)"
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "12e38271-7928-530e-9f7d-dbe89d091587",
+      "question": "В какую ветку по умолчанию выкладываются Project Pages при `mkdocs gh-deploy`?",
+      "reference_answer": "В `gh-pages` репозитория проекта.",
+      "evidence": [
+        {
+          "file_name": "18-github-pages.txt",
+          "quote": "Project Pages sites are simpler as the site files get deployed to a branch\nwithin the project repository (`gh-pages` by default). After you `checkout` the\nprimary working branch (usually `master`) of the git repository where you\nmaintain the source documentation for your project, run the following command:"
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "30bac5a8-b9b6-50e9-b59a-26a05c4d6dab",
+      "question": "Как просмотреть сайт перед `gh-deploy`, если команда собирает и отправляет его сразу?",
+      "reference_answer": "Заранее выполнить `mkdocs build` или `mkdocs serve` и проверить собранный сайт.",
+      "evidence": [
+        {
+          "file_name": "18-github-pages.txt",
+          "quote": "Be aware that you will not be able to review the built site before it is pushed\nto GitHub. Therefore, you may want to verify any changes you make to the docs\nbeforehand by using the `build` or `serve` commands and reviewing the built\nfiles locally."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "f2281729-aaad-5a8b-8c89-6c6f7c45ae47",
+      "question": "Где хранить `CNAME`, чтобы публикация GitHub Pages с пользовательским доменом его сохраняла?",
+      "reference_answer": "В корне каталога исходников документации `docs_dir`, чтобы файл попадал в сборку.",
+      "evidence": [
+        {
+          "file_name": "18-github-pages.txt",
+          "quote": "so that MkDocs will work with your custom domain. You need to add a `CNAME` file\nto the root of your [docs_dir]. The file must contain a single bare domain or"
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "007628f8-ef87-54df-bc8c-0909398eebef",
+      "question": "Какой результат сборки нужно передать провайдеру обычного статического хостинга?",
+      "reference_answer": "Содержимое `site_dir` с собранными HTML и статическими файлами. По умолчанию это каталог `site`.",
+      "evidence": [
+        {
+          "file_name": "19-static-deployment.txt",
+          "quote": "When you build your site (using the `mkdocs build` command), all of the files\nare written to the directory assigned to the [site_dir] configuration option\n(defaults to `\"site\"`) in your `mkdocs.yaml` config file. Generally, you will\nsimply need to copy the contents of that directory to the root directory of your\nhosting provider's server. Depending on your hosting provider's setup, you may\nneed to use a graphical or command line [ftp], [ssh] or [scp] client to transfer\nthe files."
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "395a93bb-79f2-5ca8-b758-d336d7871af4",
+      "question": "Как настроить сайт для просмотра из папки через `file://` без веб-сервера?",
+      "reference_answer": "Установить `use_directory_urls: false` в конфигурации и собрать сайт с прямыми ссылками на HTML-файлы.",
+      "evidence": [
+        {
+          "file_name": "19-static-deployment.txt",
+          "quote": "```yaml\n    use_directory_urls: false\n    ```"
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "8c532f3a-200d-50d9-a219-3191c599a5d9",
+      "question": "Когда GitHub Pages автоматически использует `404.html`, созданный MkDocs?",
+      "reference_answer": "При публикации на пользовательском домене.",
+      "evidence": [
+        {
+          "file_name": "19-static-deployment.txt",
+          "quote": "When MkDocs builds the documentation it will include a 404.html file in the\n[build directory][site_dir]. This file will be automatically used when\ndeploying to [GitHub](#github-pages) but only on a custom domain. Other web\nservers may be configured to use it but the feature won't always be available.\nSee the documentation for your server of choice for more information."
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "02f5ad4b-c719-5080-a825-812997e0d016",
+      "question": "Какой Jinja-тег позволяет расширить шаблон родительской темы и поменять отдельный блок?",
+      "reference_answer": "`{% extends \"base.html\" %}` для наследования и `{% block ... %}` для переопределения нужного блока.",
+      "evidence": [
+        {
+          "file_name": "20-custom-themes.txt",
+          "quote": "```django\n{% extends \"base.html\" %}\n\n{% block htmltitle %}\n<title>Custom title goes here</title>\n{% endblock %}\n```"
+        },
+        {
+          "file_name": "20-custom-themes.txt",
+          "quote": "In the above example, the `htmltitle` block defined in your custom `main.html` file\nwill be used in place of the default `htmltitle` block defined in the parent theme.\nYou may re-define as many blocks as you desire, as long as those blocks are\ndefined in the parent. For example, you could replace the Google Analytics\nscript with one for a different service or replace the search feature with your\nown. You will need to consult the parent theme you are using to determine what\nblocks are available to override. The MkDocs and ReadTheDocs themes provide the\nfollowing blocks:"
+        }
+      ],
+      "category": "Факты",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "6c944d49-43eb-50c5-9526-d5b7e8857644",
+      "question": "Какие типы файлов можно положить в `theme.custom_dir`, чтобы расширить выбранную тему?",
+      "reference_answer": "Шаблоны, JavaScript, CSS, изображения и другие ресурсы темы.",
+      "evidence": [
+        {
+          "file_name": "20-custom-themes.txt",
+          "quote": "The [`theme.custom_dir`][custom_dir] configuration option can be used to point\nto a directory of files which override the files in a parent theme. The parent\ntheme would be the theme defined in the [`theme.name`][name] configuration\noption. Any file in the `custom_dir` with the same name as a file in the\nparent theme will replace the file of the same name in the parent theme. Any\nadditional files in the `custom_dir` will be added to the parent theme. The\ncontents of the `custom_dir` should mirror the directory structure of the\nparent theme. You may include templates, JavaScript files, CSS files, images,\nfonts, or any other media included in a theme."
+        }
+      ],
+      "category": "Перечисления",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "279b4e88-d82c-561d-9919-7851803e7d38",
+      "question": "Куда добавить JavaScript-библиотеку, которая должна быть загружена в `head` до содержимого страницы?",
+      "reference_answer": "В `custom_dir` темы и шаблон с переопределением `libs`, например через `main.html`.",
+      "evidence": [
+        {
+          "file_name": "20-custom-themes.txt",
+          "quote": "NOTE:\nAny extra CSS or JavaScript files will be added to the generated HTML\ndocument after the page content. If you desire to include a JavaScript\nlibrary, you may have better success including the library by using the\ntheme [custom_dir]."
+        },
+        {
+          "file_name": "20-custom-themes.txt",
+          "quote": "* `libs`: Contains the JavaScript libraries (jQuery, etc) included in the page header."
+        },
+        {
+          "file_name": "20-custom-themes.txt",
+          "quote": "A link to the `custom_theme/js/somelib.js` file needs to be added to the\ntemplate. As `somelib.js` is a JavaScript library, it would logically go in the\n`libs` block. However, a new `libs` block that only includes the new script will\nreplace the block defined in the parent template and any links to libraries in\nthe parent template will be removed. To avoid breaking the template, a\n[super block] can be used with a call to `super` from within the block:"
+        }
+      ],
+      "category": "Условия и исключения",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "87439282-314e-50c5-a0ad-a6d6058fe40c",
+      "question": "Как добиться, чтобы скрытая из меню страница публиковалась, а черновик был виден только локально?",
+      "reference_answer": "Для опубликованной страницы использовать `not_in_nav` и убрать её из явного `nav`, если он задан. Для черновика использовать `draft_docs`: обычный `serve` его покажет, производственная сборка не включит.",
+      "evidence": [
+        {
+          "file_name": "04-navigation.txt",
+          "quote": "All paths in the navigation configuration must be relative to the\n[`docs_dir`](#docs_dir) configuration option. See the section on [configuring\npages and navigation] for a more detailed breakdown, including how to create\nsub-sections."
+        },
+        {
+          "file_name": "10-exclusions-and-drafts.txt",
+          "quote": "This config defines patterns of files (under [`docs_dir`](#docs_dir)) to be treated as a draft.  Draft files are available during `mkdocs serve` and include a \"DRAFT\" mark but will not be included in the build. To prevent this effect and make \"serve\" behave the same as \"build\", you can run `mkdocs serve --clean`."
+        },
+        {
+          "file_name": "10-exclusions-and-drafts.txt",
+          "quote": "Adding such patterns of files (relative to [`docs_dir`](#docs_dir)) into the `not_in_nav` config will prevent such warnings."
+        }
+      ],
+      "category": "Несколько разделов",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "8279e599-b489-58a4-8d7b-7ab74e6f30de",
+      "question": "Что определяет название сайта в целом и что поставить для отдельной страницы в ручном меню?",
+      "reference_answer": "Сайт называет `site_name`. Для страницы можно явно задать название в `nav`, которое имеет приоритет над `title` в её метаданных.",
+      "evidence": [
+        {
+          "file_name": "08-project-information.txt",
+          "quote": "This is a **required setting**, and should be a string that is used as the main\ntitle for the project documentation. For example:"
+        },
+        {
+          "file_name": "06-page-metadata.txt",
+          "quote": "MkDocs will attempt to determine the title of a document in the following\n    ways, in order:"
+        },
+        {
+          "file_name": "06-page-metadata.txt",
+          "quote": "1.  A title defined in the [nav] configuration setting for a document."
+        },
+        {
+          "file_name": "06-page-metadata.txt",
+          "quote": "2.  A title defined in the `title` meta-data key of a document."
+        }
+      ],
+      "category": "Несколько разделов",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "8b1ea866-f6f2-55cc-9739-16664704fc67",
+      "question": "Как включить режим ошибок на предупреждениях и сделать отсутствующий якорь именно предупреждением?",
+      "reference_answer": "Задать `validation.links.anchors: warn` и включить `strict`, например флагом `--strict`.",
+      "evidence": [
+        {
+          "file_name": "17-link-validation.txt",
+          "quote": ">? EXAMPLE: **Defaults of this config as of MkDocs 1.6:**\n>\n> ```yaml\n> validation:\n>   nav:\n>     omitted_files: info\n>     not_found: warn\n>     absolute_links: info\n>   links:\n>     not_found: warn\n>     anchors: info\n>     absolute_links: info\n>     unrecognized_links: info\n> ```\n>\n> (Note: you shouldn't copy this whole example, because it only duplicates the defaults. Only individual items that differ should be set.)"
+        },
+        {
+          "file_name": "17-link-validation.txt",
+          "quote": "This is a tree of configs, and for each one the value can be one of the three: `warn`, `info`, `ignore`. Which cause a logging message of the corresponding severity to be produced. The `warn` level is, of course, intended for use with `mkdocs build --strict` (where it becomes an error), which you can employ in continuous testing."
+        },
+        {
+          "file_name": "11-preview-and-urls.txt",
+          "quote": "Determines how warnings are handled. Set to `true` to halt processing when a\nwarning is raised. Set to `false` to print a warning and continue processing."
+        }
+      ],
+      "category": "Несколько разделов",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "906d3aff-be71-5524-a647-fc8e15b3c80a",
+      "question": "Документация хранится в `manual/`, а результат нужен в `public/`. Какие поля задать и как тогда писать пути в меню?",
+      "reference_answer": "Задать `docs_dir: manual` и `site_dir: public`. В `nav` писать пути относительно `manual/`, например `index.md`, без префикса `manual/`.",
+      "evidence": [
+        {
+          "file_name": "09-build-directories.txt",
+          "quote": "The directory containing the documentation source markdown files. This can\neither be a relative directory, in which case it is resolved relative to the\ndirectory containing your configuration file, or it can be an absolute directory\npath from the root of your local file system."
+        },
+        {
+          "file_name": "09-build-directories.txt",
+          "quote": "The directory where the output HTML and other files are created. This can either\nbe a relative directory, in which case it is resolved relative to the directory\ncontaining your configuration file, or it can be an absolute directory path from\nthe root of your local file system."
+        },
+        {
+          "file_name": "04-navigation.txt",
+          "quote": "All paths in the navigation configuration must be relative to the\n[`docs_dir`](#docs_dir) configuration option. See the section on [configuring\npages and navigation] for a more detailed breakdown, including how to create\nsub-sections."
+        }
+      ],
+      "category": "Несколько разделов",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "724fb920-d0ab-551e-a3f7-69995cf31a86",
+      "question": "Как локализовать кнопки темы на французский и сохранить встроенный поиск после подключения второго плагина?",
+      "reference_answer": "Установить поддержку `mkdocs[i18n]`, выбрать тему с французским переводом и задать `theme.locale: fr`. В явном списке `plugins` оставить `search` наряду со вторым плагином.",
+      "evidence": [
+        {
+          "file_name": "16-theme-localization.txt",
+          "quote": "```bash\npip install 'mkdocs[i18n]'\n```"
+        },
+        {
+          "file_name": "16-theme-localization.txt",
+          "quote": "```yaml\ntheme:\n  name: mkdocs\n  locale: fr\n```"
+        },
+        {
+          "file_name": "14-search-plugin.txt",
+          "quote": "If the `plugins` config setting is defined in the `mkdocs.yml` config file, then\nany defaults (such as `search`) are ignored and you need to explicitly re-enable\nthe defaults if you would like to continue using them:"
+        }
+      ],
+      "category": "Несколько разделов",
+      "unanswerable": false,
+      "split": "tuning"
+    },
+    {
+      "id": "427efb41-35eb-5525-91b5-450acdb81b84",
+      "question": "Почему `guide.md` при сборке превращается в `guide/index.html` и как получить именно `guide.html` для просмотра с диска?",
+      "reference_answer": "По умолчанию `use_directory_urls: true` создаёт каталог с `index.html`. Для прямых HTML-ссылок и вывода `guide.html` нужен `use_directory_urls: false`.",
+      "evidence": [
+        {
+          "file_name": "11-preview-and-urls.txt",
+          "quote": "The default style of `use_directory_urls: true` creates more user friendly URLs,\nand is usually what you'll want to use."
+        },
+        {
+          "file_name": "11-preview-and-urls.txt",
+          "quote": "This setting is needed when the documentation is hosted on systems that can't\naccess the file `X/index.html` when given the URL `X`. When set to `false`,\nno additional `X` directory is created, and the file is simply stored as `X.html`.\nLinks are created that point directly to the target *file* rather than a target\n*directory*."
+        },
+        {
+          "file_name": "19-static-deployment.txt",
+          "quote": "```yaml\n    use_directory_urls: false\n    ```"
+        }
+      ],
+      "category": "Несколько разделов",
+      "unanswerable": false,
+      "split": "test"
+    },
+    {
+      "id": "9502d103-13a0-5e3a-8d33-1cfd1567d7e8",
+      "question": "Какова максимально поддерживаемая длина названия в `site_name`, в символах?",
+      "reference_answer": "В корпусе нет ответа.",
+      "evidence": [],
+      "category": "Нет ответа",
+      "unanswerable": true,
+      "split": "test",
+      "explanation": "Раздел о `site_name` объясняет назначение и обязательность поля, но не задаёт ограничение длины."
+    },
+    {
+      "id": "fcedb0ad-095b-55d2-9fc2-07391c45a28c",
+      "question": "Сколько мегабайт оперативной памяти займёт MkDocs при сборке каталога из тысячи страниц?",
+      "reference_answer": "В корпусе нет ответа.",
+      "evidence": [],
+      "category": "Нет ответа",
+      "unanswerable": true,
+      "split": "tuning",
+      "explanation": "В документации нет измерений памяти для такого корпуса и окружения."
+    },
+    {
+      "id": "fd0e9216-8d03-5767-b0c8-e9841502b4e7",
+      "question": "Сколько секунд занимает стандартная сборка MkDocs на конкретном GitHub-hosted runner с 50 страницами?",
+      "reference_answer": "В корпусе нет ответа.",
+      "evidence": [],
+      "category": "Нет ответа",
+      "unanswerable": true,
+      "split": "test",
+      "explanation": "Быстрый старт и публикация описывают команды без такого замера производительности."
+    },
+    {
+      "id": "e5a8de68-0196-50d4-8183-5eb4af2bbd08",
+      "question": "Какой максимальный объём одного Markdown-файла MkDocs официально поддерживает, в мегабайтах?",
+      "reference_answer": "В корпусе нет ответа.",
+      "evidence": [],
+      "category": "Нет ответа",
+      "unanswerable": true,
+      "split": "test",
+      "explanation": "Описание структуры и Markdown не устанавливает максимальный размер исходного файла."
+    },
+    {
+      "id": "cfa2a40d-f8c8-5126-aa45-bdbc58488f2c",
+      "question": "Какой код HTTP получает клиент при превышении квоты на загрузку файлов в GitHub Pages?",
+      "reference_answer": "В корпусе нет ответа.",
+      "evidence": [],
+      "category": "Нет ответа",
+      "unanswerable": true,
+      "split": "tuning",
+      "explanation": "Раздел о публикации не описывает квоты хостинга или коды ответа на их превышение."
+    },
+    {
+      "id": "5d28f952-7f40-514f-8106-68e9c65d5f7f",
+      "question": "Какой сертификат и с каким сроком действия выдаст GitHub Pages для домена `docs.example.com` сегодня?",
+      "reference_answer": "В корпусе нет ответа.",
+      "evidence": [],
+      "category": "Нет ответа",
+      "unanswerable": true,
+      "split": "test",
+      "explanation": "Указания по CNAME не содержат фактического сертификата и срока его действия."
+    },
+    {
+      "id": "52e8ec53-49b6-5a5e-88a0-3f256057a700",
+      "question": "Какой параметр MkDocs включает аутентификацию SAML перед чтением развернутого сайта?",
+      "reference_answer": "В корпусе нет ответа.",
+      "evidence": [],
+      "category": "Нет ответа",
+      "unanswerable": true,
+      "split": "test",
+      "explanation": "Разделы описывают генерацию и настройку сайта. Настройка SAML в них отсутствует."
+    },
+    {
+      "id": "538fd86b-c8d6-5115-81f7-f92678b9ddec",
+      "question": "Где задать API-ключ собственного сервиса автоперевода Markdown для французской версии сайта?",
+      "reference_answer": "В корпусе нет ответа.",
+      "evidence": [],
+      "category": "Нет ответа",
+      "unanswerable": true,
+      "split": "tuning",
+      "explanation": "Раздел локализации описывает перевод интерфейса и не содержит настройки конкретного сервиса машинного перевода."
+    },
+    {
+      "id": "5d891a2d-38a7-5fb7-a0b8-1b0961cbc531",
+      "question": "Какой предел числа элементов `nav` задан в схеме конфигурации MkDocs?",
+      "reference_answer": "В корпусе нет ответа.",
+      "evidence": [],
+      "category": "Нет ответа",
+      "unanswerable": true,
+      "split": "test",
+      "explanation": "Руководство приводит структуру и правила путей для `nav`, но верхнего предела не указывает."
+    },
+    {
+      "id": "8e7c9372-08e5-50e4-8e12-19a12973307e",
+      "question": "Какие разрешения IAM нужны для загрузки результата сборки в конкретный бакет AWS?",
+      "reference_answer": "В корпусе нет ответа.",
+      "evidence": [],
+      "category": "Нет ответа",
+      "unanswerable": true,
+      "split": "test",
+      "explanation": "Статическая публикация и режим URL описаны, но политика доступа AWS IAM отсутствует."
+    },
+    {
+      "id": "d835d6a1-0334-5fe8-8f9d-c3ab6c6c4b1f",
+      "question": "Назовите точный номер версии lunr.js в поставке MkDocs 1.6.1.",
+      "reference_answer": "В корпусе нет ответа.",
+      "evidence": [],
+      "category": "Нет ответа",
+      "unanswerable": true,
+      "split": "tuning",
+      "explanation": "Раздел поиска называет движок и параметры плагина, но не указывает версию зависимости."
+    },
+    {
+      "id": "f27dd15e-3060-5bb8-b960-427f863ee03e",
+      "question": "Где в конфигурации плагина `search` указать пользовательские веса BM25 для заголовков?",
+      "reference_answer": "В корпусе нет ответа.",
+      "evidence": [],
+      "category": "Нет ответа",
+      "unanswerable": true,
+      "split": "test",
+      "explanation": "Параметры встроенного поиска не описывают настройку весов BM25."
+    },
+    {
+      "id": "ab276856-14db-5874-b906-20969975563c",
+      "question": "При каком максимальном числе одновременных соединений `mkdocs serve` начинает отклонять запросы?",
+      "reference_answer": "В корпусе нет ответа.",
+      "evidence": [],
+      "category": "Нет ответа",
+      "unanswerable": true,
+      "split": "test",
+      "explanation": "Параметры предпросмотра описывают адрес и наблюдение за файлами без лимита одновременных соединений."
+    },
+    {
+      "id": "5cdaab3d-e833-57c2-9351-ca35a99ce410",
+      "question": "Какой meta-тег в MkDocs по умолчанию запрещает индексировать страницы через Googlebot?",
+      "reference_answer": "В корпусе нет ответа.",
+      "evidence": [],
+      "category": "Нет ответа",
+      "unanswerable": true,
+      "split": "tuning",
+      "explanation": "Документация обсуждает URL, HTML-метаданные и внутренний поиск, но не устанавливает такой тег по умолчанию."
+    },
+    {
+      "id": "6c8c29f4-386c-593e-b960-40f71211c121",
+      "question": "Какое значение поля `site_url` использует внутренняя документация команды, если её конфигурация не предоставлена?",
+      "reference_answer": "В корпусе нет ответа.",
+      "evidence": [],
+      "category": "Нет ответа",
+      "unanswerable": true,
+      "split": "test",
+      "explanation": "Примеры настройки и значение по умолчанию не раскрывают конфигурацию отдельного проекта команды."
+    },
+    {
+      "id": "7148e6a2-4e56-588c-9610-c2ecbfb376c0",
+      "question": "Какой SHA-256 у HTML-файла `index.html`, который получится из моего локального проекта?",
+      "reference_answer": "В корпусе нет ответа.",
+      "evidence": [],
+      "category": "Нет ответа",
+      "unanswerable": true,
+      "split": "test",
+      "explanation": "Корпус описывает процесс сборки, но не содержит исходников проекта или результата его сборки."
+    }
+  ]
+}

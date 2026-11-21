@@ -1,0 +1,83 @@
+MkDocs 1.6.1
+Источник: https://github.com/mkdocs/mkdocs/blob/bb7e8b62185b11d9f59bb7f50b13c15134f62f8a/docs/user-guide/configuration.md#L641-L720
+
+## Live Reloading
+
+### watch
+
+Determines additional directories to watch when running `mkdocs serve`.
+Configuration is a YAML list.
+
+```yaml
+watch:
+  - directory_a
+  - directory_b
+```
+
+Allows a custom default to be set without the need to pass it through the `-w`/`--watch`
+option every time the `mkdocs serve` command is called.
+
+> NOTE:
+> The paths provided via the configuration file are relative to the configuration file.
+>
+> The paths provided via the `-w`/`--watch` CLI parameters are not.
+
+### use_directory_urls
+
+This setting controls the directory structure of the generated documentation, and thereby the URL format used for linking to pages.
+
+The following tables demonstrate how the directory structure and URLs used on the site differ when
+setting `use_directory_urls` to `true` or `false`.
+
+**`use_directory_urls: false`**
+
+This setting is needed when the documentation is hosted on systems that can't
+access the file `X/index.html` when given the URL `X`. When set to `false`,
+no additional `X` directory is created, and the file is simply stored as `X.html`.
+Links are created that point directly to the target *file* rather than a target
+*directory*.
+
+Source file      | Generated File     | URL Format
+---------------- | ------------------ | -------------------
+index.md         | index.html         | /index.html
+api-guide.md     | api-guide.html     | /api-guide.html
+about/license.md | about/license.html | /about/license.html
+
+For example, this needs to be set to `false` when:
+
+* opening pages directly from the file system
+* publishing the documentation to a static S3 website.
+
+**`use_directory_urls: true`**
+
+The default style of `use_directory_urls: true` creates more user friendly URLs,
+and is usually what you'll want to use.
+
+Source file      | Generated File            | URL Format
+---------------- | ------------------------- | --------------
+index.md         | /index.html               | /
+api-guide.md     | /api-guide/index.html     | /api-guide/
+about/license.md | /about/license/index.html | /about/license
+
+**default**: `true`
+
+### strict
+
+Determines how warnings are handled. Set to `true` to halt processing when a
+warning is raised. Set to `false` to print a warning and continue processing.
+
+This is also available as a command line flag: `--strict`.
+
+**default**: `false`
+
+### dev_addr
+
+Determines the address used when running `mkdocs serve`. Must be of the format
+`IP:PORT`.
+
+Allows a custom default to be set without the need to pass it through the
+`--dev-addr` option every time the `mkdocs serve` command is called.
+
+**default**: `'127.0.0.1:8000'`
+
+See also: [site_url](#site_url).
